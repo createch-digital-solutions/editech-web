@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Createch Learning Platform — Web Application (`createch-web`)
+
+This repo is independently installable and runnable. It does not depend on any other Createch repo at build or install time — only at runtime, over HTTP, against `NEXT_PUBLIC_API_BASE_URL` / CORS-allowed origins.
+
+> **Context Pointer**: For full architectural rules and AI agent boundaries, see [CLAUDE.md](./CLAUDE.md). For deferred backlog items, see [TODO.md](./TODO.md).
+
+---
+
+## Tech Stack
+- **Framework**: Next.js 16+ (App Router) + TypeScript + React 19
+- **Styling**: Tailwind CSS + shadcn/ui (light/dark themeable)
+- **Auth**: Clerk (`@clerk/nextjs`)
+- **Testing**: Vitest + React Testing Library (unit/smoke) & Playwright (E2E) in `tests/`
+- **Analytics/Monitoring**: PostHog & Sentry SDK wrappers
+
+---
+
+## Prerequisites
+- Node.js >= 20.0.0
+- pnpm >= 9.0.0
+
+---
 
 ## Getting Started
 
-First, run the development server:
-
+### 1. Installation
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Configure Environment
+```bash
+cp .env.example .env.local
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. Run Development Server
+```bash
+pnpm dev
+```
+Navigate to [http://localhost:3000](http://localhost:3000).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## Testing & Quality Commands
+```bash
+# Run unit & smoke tests (Vitest)
+pnpm test
 
-To learn more about Next.js, take a look at the following resources:
+# Run E2E tests (Playwright)
+pnpm test:e2e
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Run linter
+pnpm lint
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Run type check
+pnpm typecheck
 
-## Deploy on Vercel
+# Build for production
+pnpm build
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Shared Contracts & Types Note
+Any type or contract that both `createch-web` and `createch-api` need (e.g. "what a Course looks like in an API response") is currently maintained locally inside `src/types/`.
+
+Once the API contracts stabilize, this will be published as an independent, versioned npm package (e.g. `@createch/api-contracts`) and installed as a normal external dependency — never as a local path/workspace reference.
+
+---
+
+## What is NOT Built Yet (MVP Scope)
+The following are deferred until Phase 6+ PRD implementation:
+- Real course catalog retrieval and checkout flows
+- Interactive AI Tutor floating chat widget
+- Learner lesson player and quiz submission engine
+- Instructor course creator wizard & rich content upload
+- Admin dashboard analytics & user moderation actions
