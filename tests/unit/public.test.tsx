@@ -3,11 +3,11 @@ import { render, screen } from '@testing-library/react';
 import HomePage from '@/app/(public)/page';
 
 describe('Public Route Group — HomePage', () => {
-  it('renders the public homepage title and marketplace placeholder', () => {
+  it('renders the homepage features and popular courses sections', () => {
     render(<HomePage />);
     expect(
-      screen.getByText('Welcome to Createch Learning Platform')
+      screen.getByText('Everything you need to level up')
     ).toBeInTheDocument();
-    expect(screen.getByText('Marketplace Catalog')).toBeInTheDocument();
+    expect(screen.getByText('Popular Courses')).toBeInTheDocument();
   });
 });
