@@ -23,9 +23,19 @@ const isAdminRoute = createRouteMatcher(['/admin(.*)']);
  * The backend writes the role to Clerk publicMetadata when PATCH /auth/role is called,
  * so it is embedded in the JWT and available here at the Edge without a DB call.
  */
-function getRoleFromClaims(sessionClaims: Record<string, unknown> | null | undefined): UserRole | null {
-  const metadata = sessionClaims?.publicMetadata as { role?: UserRole } | undefined;
-  return metadata?.role ?? null;
+function getRoleFromClaims(
+  sessionClaims: CustomJwtSessionClaims | Record<string, unknown> | null | undefined
+): UserRole | null {
+  if (!sessionClaims) return null;
+  const claims = sessionClaims as Record<string, unknown>;
+  const publicMeta = claims.publicMetadata as { role?: UserRole } | undefined;
+  const meta = claims.metadata as { role?: UserRole } | undefined;
+  return (
+    (claims.role as UserRole | undefined) ??
+    publicMeta?.role ??
+    meta?.role ??
+    null
+  );
 }
 
 // --- Middleware ---------------------------------------------------------------
