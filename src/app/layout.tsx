@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import { ClerkProvider } from '@clerk/nextjs';
 import { ThemeProvider } from '@/components/providers/theme-provider';
 import { QueryProvider } from '@/components/providers/query-provider';
+import { AuthProvider } from '@/contexts/auth-context';
 import './globals.css';
 
 const geistSans = Geist({
@@ -40,11 +41,13 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <QueryProvider>
-              {children}
+              <AuthProvider>
+                {children}
+              </AuthProvider>
             </QueryProvider>
           </ThemeProvider>
         </body>
       </html>
-   </ClerkProvider>
+    </ClerkProvider>
   );
 }
