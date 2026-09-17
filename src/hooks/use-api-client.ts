@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { useAuth } from '@clerk/nextjs';
-import { apiClient, RequestOptions } from '@/lib/api-client';
+import { apiClient, type RequestOptions } from '@/lib/api-client';
 
 export interface UseApiClientOptions {
   /** Optional custom Clerk JWT template name */
@@ -11,16 +11,20 @@ export interface UseApiClientOptions {
 
 /**
  * React hook that returns an ApiClient configured with Clerk's `useAuth()` token resolver.
- * Perfect for React Query hooks and client-side mutations.
+ *
+ * Features:
+ * - Automatically injects Clerk Bearer tokens into every request
+ * - Supports force-refresh on 401 responses (token expiry recovery)
+ * - Returns isLoaded / isSignedIn state for query enabling guards
  *
  * @example
  * ```tsx
  * const api = useApiClient();
  *
- * const { data, isLoading } = useQuery({
- *   queryKey: ['courses'],
+ * const { data } = useQuery({
+ *   queryKey: queryKeys.courses.all(),
  *   queryFn: () => api.get<Course[]>('/courses'),
- *   enabled: api.isLoaded,
+ *   enabled: api.isLoaded && api.isSignedIn,
  * });
  * ```
  */
@@ -31,13 +35,20 @@ export function useApiClient(options?: UseApiClientOptions) {
   const client = useMemo(() => {
     return apiClient.createChildClient({
       defaultJwtTemplate: jwtTemplate,
-      tokenProvider: async () => {
-        if (!isSignedIn) {
+      // Refreshable provider: passes forceRefresh flag through to Clerk
+      refreshableTokenProvider: async (forceRefresh = false) => {
+        if (!isSignedIn) return null;
+        try {
+          return await getToken(
+            forceRefresh
+              ? { template: jwtTemplate ?? undefined }
+              : jwtTemplate
+              ? { template: jwtTemplate }
+              : undefined
+          );
+        } catch {
           return null;
         }
-        return await getToken(
-          jwtTemplate ? { template: jwtTemplate } : undefined
-        );
       },
     });
   }, [getToken, isSignedIn, jwtTemplate]);
