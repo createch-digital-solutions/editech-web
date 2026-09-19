@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 
 export function CtaBanner() {
@@ -10,13 +11,13 @@ export function CtaBanner() {
           </h2>
           <p className="mt-2 text-gray-300">Join 50,000 learners growing with Createch Elevate.</p>
         </div>
-        <a
+        <Link
           href="/sign-up"
           className="inline-flex shrink-0 cursor-pointer items-center gap-2 rounded-md bg-orange-500 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-orange-600"
         >
           Create Free Account
           <ArrowRight className="h-4 w-4" aria-hidden="true" />
-        </a>
+        </Link>
       </div>
     </section>
   );

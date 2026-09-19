@@ -8,6 +8,8 @@ const isPublicRoute = createRouteMatcher([
   '/',
   '/sign-in(.*)',
   '/sign-up(.*)',
+  '/forgot-password(.*)',
+  '/sso-callback(.*)',
   '/unauthorized(.*)',
   '/courses(.*)',
 ]);
@@ -19,9 +21,16 @@ const isAdminRoute = createRouteMatcher(['/admin(.*)']);
 // --- Role helpers ------------------------------------------------------------
 
 /**
- * Extract role from Clerk session claims (publicMetadata).
- * The backend writes the role to Clerk publicMetadata when PATCH /auth/role is called,
- * so it is embedded in the JWT and available here at the Edge without a DB call.
+ * Extract role from Clerk session claims (publicMetadata) — and ONLY
+ * publicMetadata. publicMetadata is the sole claim guaranteed to be
+ * backend-written (via PATCH /auth/role); it is embedded in the JWT and
+ * available here at the Edge without a DB call.
+ *
+ * Deliberately does NOT fall back to a bare `claims.role` or `claims.metadata`
+ * key: those aren't populated by Clerk by default, and would only exist if a
+ * custom session token template maps something into them — possibly
+ * unsafeMetadata, which is client-writable. Trusting them here would let a
+ * user grant themselves a role by editing their own unsafeMetadata.
  */
 function getRoleFromClaims(
   sessionClaims: CustomJwtSessionClaims | Record<string, unknown> | null | undefined
@@ -29,13 +38,7 @@ function getRoleFromClaims(
   if (!sessionClaims) return null;
   const claims = sessionClaims as Record<string, unknown>;
   const publicMeta = claims.publicMetadata as { role?: UserRole } | undefined;
-  const meta = claims.metadata as { role?: UserRole } | undefined;
-  return (
-    (claims.role as UserRole | undefined) ??
-    publicMeta?.role ??
-    meta?.role ??
-    null
-  );
+  return publicMeta?.role ?? null;
 }
 
 // --- Middleware ---------------------------------------------------------------
