@@ -1,5 +1,8 @@
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
-import { Search } from 'lucide-react';
+import { Menu, Search, X } from 'lucide-react';
 
 const navLinks = [
   { label: 'Courses', href: '/courses' },
@@ -8,6 +11,8 @@ const navLinks = [
 ];
 
 export function Navbar() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
     <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/95 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center gap-6 px-6 py-3 lg:px-8">
@@ -32,7 +37,7 @@ export function Navbar() {
           ))}
         </nav>
 
-        <div className="ml-auto hidden flex-1 items-center justify-end gap-3 sm:flex">
+        <div className="ml-auto hidden flex-1 items-center justify-end gap-3 md:flex">
           <label className="relative hidden max-w-xs flex-1 md:block">
             <span className="sr-only">Search courses</span>
             <Search
@@ -58,7 +63,64 @@ export function Navbar() {
             Get Started Free →
           </Link>
         </div>
+
+        <button
+          type="button"
+          onClick={() => setMenuOpen((open) => !open)}
+          aria-expanded={menuOpen}
+          aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+          className="ml-auto flex h-9 w-9 cursor-pointer items-center justify-center rounded-md text-gray-700 hover:bg-gray-100 md:hidden"
+        >
+          {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </button>
       </div>
+
+      {menuOpen && (
+        <div className="border-t border-gray-200 bg-white px-6 py-4 md:hidden">
+          <nav className="flex flex-col gap-1">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMenuOpen(false)}
+                className="rounded-md px-2 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+
+          <label className="relative mt-3 block">
+            <span className="sr-only">Search courses</span>
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+              aria-hidden="true"
+            />
+            <input
+              type="search"
+              placeholder="Search"
+              className="w-full rounded-full border border-gray-300 py-2 pl-9 pr-4 text-sm text-gray-700 placeholder:text-gray-400 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
+            />
+          </label>
+
+          <div className="mt-4 flex flex-col gap-2">
+            <Link
+              href="/sign-in"
+              onClick={() => setMenuOpen(false)}
+              className="cursor-pointer rounded-md border border-orange-300 px-4 py-2.5 text-center text-sm font-semibold text-orange-600 hover:bg-orange-50"
+            >
+              Log In
+            </Link>
+            <Link
+              href="/sign-up"
+              onClick={() => setMenuOpen(false)}
+              className="cursor-pointer rounded-md bg-orange-500 px-4 py-2.5 text-center text-sm font-semibold text-white hover:bg-orange-600"
+            >
+              Get Started Free →
+            </Link>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
