@@ -15,17 +15,20 @@ import type { User, UserRole } from './user';
  */
 export interface ClerkPublicMetadata {
   role?: UserRole;
+  status?: string;
 }
 
 /**
  * The full session claims object available in Clerk middleware.
- * Clerk embeds `publicMetadata` in the JWT so it is available
- * without a network call.
+ * Directly mirrors the single canonical Clerk session template.
  */
 export interface SessionClaims {
-  sub: string;
-  email?: string;
-  publicMetadata?: ClerkPublicMetadata;
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: UserRole | string;
+  status: string | null;
 }
 
 // --- Auth Context State ------------------------------------------------------

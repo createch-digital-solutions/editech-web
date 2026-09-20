@@ -28,7 +28,7 @@ function SignUpForm() {
   const { user, isLoaded: isUserLoaded, isSignedIn } = useUser();
   const { signOut } = useSignOut();
 
-  const [role, setRole] = useState<SignUpRole>('learner');
+  const [role, setRole] = useState<SignUpRole>('LEARNER');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');

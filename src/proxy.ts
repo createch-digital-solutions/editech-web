@@ -36,8 +36,25 @@ function getRoleFromClaims(
 ): UserRole | null {
   if (!sessionClaims) return null;
   const claims = sessionClaims as Record<string, unknown>;
-  const publicMeta = claims.publicMetadata as { role?: UserRole } | undefined;
-  return publicMeta?.role ?? null;
+  const rawRole = claims.role as string | undefined;
+
+  if (!rawRole) return null;
+  const upper = rawRole.toUpperCase();
+  if (upper === 'ADMIN' || upper === 'INSTRUCTOR' || upper === 'LEARNER') {
+    return upper as UserRole;
+  }
+  return null;
+}
+
+function getStatusFromClaims(
+  sessionClaims: CustomJwtSessionClaims | Record<string, unknown> | null | undefined
+): string | null {
+  if (!sessionClaims) return null;
+  const claims = sessionClaims as Record<string, unknown>;
+  const rawStatus = claims.status as string | undefined;
+
+  if (!rawStatus) return null;
+  return rawStatus.toUpperCase();
 }
 
 function getRoleDashboard(role?: UserRole | null): string {
@@ -72,7 +89,13 @@ export default clerkMiddleware(async (auth, req) => {
   }
 
   const role = getRoleFromClaims(sessionClaims as Record<string, unknown>);
+  const status = getStatusFromClaims(sessionClaims as Record<string, unknown>);
   const unauthorizedUrl = new URL('/unauthorized', req.url);
+
+  // If account is suspended or deactivated, block access to protected areas
+  if (status === 'SUSPENDED' || status === 'DEACTIVATED') {
+    return NextResponse.redirect(unauthorizedUrl);
+  }
 
   // Admin-only routes
   if (isAdminRoute(req)) {
