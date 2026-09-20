@@ -2,7 +2,10 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useUser } from '@clerk/nextjs';
 import { Menu, Search, X } from 'lucide-react';
+import { useSignOut } from '@/hooks/auth';
+import { getRoleDashboard } from '@/lib/auth-redirect';
 
 const navLinks = [
   { label: 'Courses', href: '/courses' },
@@ -12,6 +15,13 @@ const navLinks = [
 
 export function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { user, isLoaded, isSignedIn } = useUser();
+  const { signOut } = useSignOut();
+
+  const role = user?.publicMetadata?.role as string | undefined;
+  const dashboardHref = getRoleDashboard(role);
+  const dashboardLabel =
+    role === 'ADMIN' ? 'Admin Console' : role === 'INSTRUCTOR' ? 'Instructor Portal' : 'Dashboard';
 
   return (
     <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/95 backdrop-blur">
@@ -50,18 +60,39 @@ export function Navbar() {
               className="w-full rounded-full border border-gray-300 py-2 pl-9 pr-4 text-sm text-gray-700 placeholder:text-gray-400 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
             />
           </label>
-          <Link
-            href="/sign-in"
-            className="cursor-pointer whitespace-nowrap rounded-md border border-orange-300 px-4 py-2 text-sm font-semibold text-orange-600 transition-colors hover:bg-orange-50"
-          >
-            Log In
-          </Link>
-          <Link
-            href="/sign-up"
-            className="cursor-pointer whitespace-nowrap rounded-md bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-orange-600"
-          >
-            Get Started Free →
-          </Link>
+
+          {isLoaded && isSignedIn ? (
+            <div className="flex items-center gap-3">
+              <Link
+                href={dashboardHref}
+                className="cursor-pointer whitespace-nowrap rounded-md bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-orange-600"
+              >
+                {dashboardLabel} &rarr;
+              </Link>
+              <button
+                type="button"
+                onClick={() => signOut()}
+                className="cursor-pointer whitespace-nowrap rounded-md border border-gray-300 px-3.5 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100"
+              >
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <>
+              <Link
+                href="/sign-in"
+                className="cursor-pointer whitespace-nowrap rounded-md border border-orange-300 px-4 py-2 text-sm font-semibold text-orange-600 transition-colors hover:bg-orange-50"
+              >
+                Log In
+              </Link>
+              <Link
+                href="/sign-up"
+                className="cursor-pointer whitespace-nowrap rounded-md bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-orange-600"
+              >
+                Get Started Free &rarr;
+              </Link>
+            </>
+          )}
         </div>
 
         <button
@@ -103,22 +134,44 @@ export function Navbar() {
             />
           </label>
 
-          <div className="mt-4 flex flex-col gap-2">
-            <Link
-              href="/sign-in"
-              onClick={() => setMenuOpen(false)}
-              className="cursor-pointer rounded-md border border-orange-300 px-4 py-2.5 text-center text-sm font-semibold text-orange-600 hover:bg-orange-50"
-            >
-              Log In
-            </Link>
-            <Link
-              href="/sign-up"
-              onClick={() => setMenuOpen(false)}
-              className="cursor-pointer rounded-md bg-orange-500 px-4 py-2.5 text-center text-sm font-semibold text-white hover:bg-orange-600"
-            >
-              Get Started Free →
-            </Link>
-          </div>
+          {isLoaded && isSignedIn ? (
+            <div className="mt-4 flex flex-col gap-2">
+              <Link
+                href={dashboardHref}
+                onClick={() => setMenuOpen(false)}
+                className="cursor-pointer rounded-md bg-orange-500 px-4 py-2.5 text-center text-sm font-semibold text-white hover:bg-orange-600"
+              >
+                {dashboardLabel} &rarr;
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  signOut();
+                }}
+                className="cursor-pointer rounded-md border border-gray-300 px-4 py-2.5 text-center text-sm font-semibold text-gray-700 hover:bg-gray-100"
+              >
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <div className="mt-4 flex flex-col gap-2">
+              <Link
+                href="/sign-in"
+                onClick={() => setMenuOpen(false)}
+                className="cursor-pointer rounded-md border border-orange-300 px-4 py-2.5 text-center text-sm font-semibold text-orange-600 hover:bg-orange-50"
+              >
+                Log In
+              </Link>
+              <Link
+                href="/sign-up"
+                onClick={() => setMenuOpen(false)}
+                className="cursor-pointer rounded-md bg-orange-500 px-4 py-2.5 text-center text-sm font-semibold text-white hover:bg-orange-600"
+              >
+                Get Started Free &rarr;
+              </Link>
+            </div>
+          )}
         </div>
       )}
     </header>

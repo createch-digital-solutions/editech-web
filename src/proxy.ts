@@ -14,6 +14,11 @@ const isPublicRoute = createRouteMatcher([
   '/courses(.*)',
 ]);
 
+const isAuthRoute = createRouteMatcher([
+  '/sign-in(.*)',
+  '/sign-up(.*)',
+]);
+
 const isLearnerRoute = createRouteMatcher(['/dashboard(.*)']);
 const isInstructorRoute = createRouteMatcher(['/instructor(.*)', '/portal(.*)']);
 const isAdminRoute = createRouteMatcher(['/admin(.*)']);
@@ -25,12 +30,6 @@ const isAdminRoute = createRouteMatcher(['/admin(.*)']);
  * publicMetadata. publicMetadata is the sole claim guaranteed to be
  * backend-written (via PATCH /auth/role); it is embedded in the JWT and
  * available here at the Edge without a DB call.
- *
- * Deliberately does NOT fall back to a bare `claims.role` or `claims.metadata`
- * key: those aren't populated by Clerk by default, and would only exist if a
- * custom session token template maps something into them — possibly
- * unsafeMetadata, which is client-writable. Trusting them here would let a
- * user grant themselves a role by editing their own unsafeMetadata.
  */
 function getRoleFromClaims(
   sessionClaims: CustomJwtSessionClaims | Record<string, unknown> | null | undefined
@@ -41,19 +40,35 @@ function getRoleFromClaims(
   return publicMeta?.role ?? null;
 }
 
+function getRoleDashboard(role?: UserRole | null): string {
+  if (role === 'ADMIN') return '/admin';
+  if (role === 'INSTRUCTOR') return '/portal';
+  return '/dashboard';
+}
+
 // --- Middleware ---------------------------------------------------------------
 
 export default clerkMiddleware(async (auth, req) => {
-  // Public routes: always allow
+  const { userId, sessionClaims } = await auth();
+
+  // If already authenticated and visiting sign-in / sign-up, redirect to destination
+  if (userId && isAuthRoute(req)) {
+    const redirectUrl = req.nextUrl.searchParams.get('redirect_url');
+    if (redirectUrl && redirectUrl.startsWith('/') && !redirectUrl.startsWith('//')) {
+      return NextResponse.redirect(new URL(redirectUrl, req.url));
+    }
+    const role = getRoleFromClaims(sessionClaims as Record<string, unknown>);
+    return NextResponse.redirect(new URL(getRoleDashboard(role), req.url));
+  }
+
+  // Public routes: allow access
   if (isPublicRoute(req)) return;
 
   // All non-public routes require authentication
-  const { userId, sessionClaims } = await auth();
-
   if (!userId) {
-    // Redirect unauthenticated users to sign-in
-    await auth.protect();
-    return;
+    const signInUrl = new URL('/sign-in', req.url);
+    signInUrl.searchParams.set('redirect_url', req.nextUrl.pathname + req.nextUrl.search);
+    return NextResponse.redirect(signInUrl);
   }
 
   const role = getRoleFromClaims(sessionClaims as Record<string, unknown>);
