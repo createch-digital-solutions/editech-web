@@ -10,7 +10,7 @@ interface AuthShellProps {
 export function AuthShell({ leftContent, children }: AuthShellProps) {
   return (
     <main className="flex min-h-screen flex-col lg:flex-row">
-      <div className="relative flex flex-col justify-between overflow-hidden bg-gradient-to-br from-[#241a12] via-[#1e2740] to-[#1a2a52] px-8 py-10 lg:w-1/2 lg:px-16 lg:py-16">
+      <div className="relative flex flex-col justify-between overflow-hidden bg-linear-to-br from-[#241a12] via-[#1e2740] to-[#1a2a52] px-8 py-10 lg:w-1/2 lg:px-16 lg:py-16">
         <div
           className="pointer-events-none absolute inset-0 opacity-60"
           style={{ backgroundImage: trianglePatternBackground, backgroundSize: '60px 52px' }}

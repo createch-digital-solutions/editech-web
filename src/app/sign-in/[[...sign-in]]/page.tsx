@@ -7,6 +7,7 @@ import { useSignIn, useUser } from '@clerk/nextjs';
 import { Award, Sparkles, Trophy } from 'lucide-react';
 import { AuthShell } from '@/components/auth/auth-shell';
 import { TextField, Divider, SocialButtons, SubmitButton, FormError } from '@/components/auth/form-controls';
+import { VerifyEmailForm } from '@/components/auth/verify-email-form';
 import { useSignOut } from '@/hooks/auth';
 import { getAuthDestination } from '@/lib/auth-redirect';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,7 @@ function SignInForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
+  const [step, setStep] = useState<'form' | 'verify'>('form');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSessionExists, setIsSessionExists] = useState(false);
@@ -71,13 +73,64 @@ function SignInForm() {
         const role = user?.publicMetadata?.role as string | undefined;
         const destination = getAuthDestination(redirectUrl, role);
         window.location.href = destination;
-      } else {
-        setError('Additional verification is required to finish signing in.');
-        setIsSubmitting(false);
+        return;
       }
+
+      // If email verification is pending / factor is missing
+      if (signIn.status === 'needs_first_factor') {
+        const { error: sendError } = await signIn.emailCode.sendCode();
+        if (sendError) {
+          setError(sendError.longMessage ?? sendError.message);
+          setIsSubmitting(false);
+          return;
+        }
+        setStep('verify');
+        setIsSubmitting(false);
+        return;
+      }
+
+      setError('Additional verification is required to finish signing in.');
+      setIsSubmitting(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred during sign in.');
       setIsSubmitting(false);
+    }
+  }
+
+  async function handleVerifyCode(verificationCode: string): Promise<{ success: boolean; error?: string }> {
+    setIsSubmitting(true);
+    try {
+      const { error: verifyError } = await signIn.emailCode.verifyCode({ code: verificationCode });
+      if (verifyError) {
+        setIsSubmitting(false);
+        return { success: false, error: verifyError.longMessage ?? verifyError.message };
+      }
+
+      if (signIn.status === 'complete') {
+        await signIn.finalize();
+        const role = user?.publicMetadata?.role as string | undefined;
+        const destination = getAuthDestination(redirectUrl, role);
+        window.location.href = destination;
+        return { success: true };
+      }
+
+      setIsSubmitting(false);
+      return { success: false, error: 'Verification succeeded but session is incomplete.' };
+    } catch (err) {
+      setIsSubmitting(false);
+      return { success: false, error: err instanceof Error ? err.message : 'Failed to verify code.' };
+    }
+  }
+
+  async function handleResendCode(): Promise<{ success: boolean; error?: string }> {
+    try {
+      const { error: sendError } = await signIn.emailCode.sendCode();
+      if (sendError) {
+        return { success: false, error: sendError.longMessage ?? sendError.message };
+      }
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err instanceof Error ? err.message : 'Failed to resend code.' };
     }
   }
 
@@ -129,6 +182,25 @@ function SignInForm() {
           </div>
         </div>
       </div>
+    );
+  }
+
+  if (step === 'verify') {
+    return (
+      <VerifyEmailForm
+        email={email}
+        loading={loading}
+        onVerify={handleVerifyCode}
+        onResend={handleResendCode}
+        onCancel={async () => {
+          try {
+            await signIn.reset?.();
+          } catch {
+            // ignore
+          }
+          setStep('form');
+        }}
+      />
     );
   }
 

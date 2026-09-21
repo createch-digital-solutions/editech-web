@@ -8,6 +8,7 @@ import { Mail } from 'lucide-react';
 import { AuthShell } from '@/components/auth/auth-shell';
 import { RoleToggle, SignUpRole } from '@/components/auth/role-toggle';
 import { TextField, Divider, SocialButtons, SubmitButton, FormError } from '@/components/auth/form-controls';
+import { VerifyEmailForm } from '@/components/auth/verify-email-form';
 import { useSignOut } from '@/hooks/auth';
 import { getAuthDestination } from '@/lib/auth-redirect';
 import { Button } from '@/components/ui/button';
@@ -85,13 +86,7 @@ function SignUpForm() {
         return;
       }
 
-      if (signUp.status === 'complete') {
-        await signUp.finalize();
-        const destination = getAuthDestination(redirectUrl, role.toUpperCase());
-        window.location.href = destination;
-        return;
-      }
-
+      // Email verification is mandatory before proceeding to complete account creation.
       const { error: sendCodeError } = await signUp.verifications.sendEmailCode();
       if (sendCodeError) {
         setError(sendCodeError.longMessage ?? sendCodeError.message);
@@ -106,30 +101,39 @@ function SignUpForm() {
     }
   }
 
-  async function handleVerify(e: FormEvent) {
-    e.preventDefault();
-    setError(null);
+  async function handleVerifyCode(verificationCode: string): Promise<{ success: boolean; error?: string }> {
     setIsSubmitting(true);
-
     try {
-      const { error: verifyError } = await signUp.verifications.verifyEmailCode({ code });
+      const { error: verifyError } = await signUp.verifications.verifyEmailCode({ code: verificationCode });
       if (verifyError) {
-        setError(verifyError.longMessage ?? verifyError.message);
         setIsSubmitting(false);
-        return;
+        return { success: false, error: verifyError.longMessage ?? verifyError.message };
       }
 
       if (signUp.status === 'complete') {
         await signUp.finalize();
         const destination = getAuthDestination(redirectUrl, role.toUpperCase());
         window.location.href = destination;
-      } else {
-        setError('Additional verification is required to finish creating your account.');
-        setIsSubmitting(false);
+        return { success: true };
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred during email verification.');
+
       setIsSubmitting(false);
+      return { success: false, error: 'Additional verification is required to complete your account.' };
+    } catch (err) {
+      setIsSubmitting(false);
+      return { success: false, error: err instanceof Error ? err.message : 'Failed to verify code.' };
+    }
+  }
+
+  async function handleResendCode(): Promise<{ success: boolean; error?: string }> {
+    try {
+      const { error: sendError } = await signUp.verifications.sendEmailCode();
+      if (sendError) {
+        return { success: false, error: sendError.longMessage ?? sendError.message };
+      }
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err instanceof Error ? err.message : 'Failed to resend code.' };
     }
   }
 
@@ -293,41 +297,20 @@ function SignUpForm() {
           </form>
         </>
       ) : (
-        <div className="text-center">
-          <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-orange-100 text-orange-500">
-            <Mail className="h-6 w-6" aria-hidden="true" />
-          </span>
-          <h2 className="mt-4 text-2xl font-extrabold text-gray-900">Check your inbox</h2>
-          <p className="mt-2 text-sm text-gray-500">
-            We sent a 6-digit verification code to
-            <br />
-            <span className="font-semibold text-gray-900">{email}</span>
-          </p>
-
-          <form onSubmit={handleVerify} className="mt-6 space-y-4 text-left">
-            {error && <FormError message={error} />}
-
-            <TextField
-              label="Verification code"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              placeholder="123456"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              required
-            />
-
-            <SubmitButton loading={loading}>Verify Email &rarr;</SubmitButton>
-
-            <button
-              type="button"
-              onClick={() => signUp.verifications.sendEmailCode()}
-              className="w-full cursor-pointer text-center text-sm text-gray-500 hover:text-gray-700"
-            >
-              Didn&apos;t get it? <span className="font-semibold text-orange-600">Resend code</span>
-            </button>
-          </form>
-        </div>
+        <VerifyEmailForm
+          email={email}
+          loading={loading}
+          onVerify={handleVerifyCode}
+          onResend={handleResendCode}
+          onCancel={async () => {
+            try {
+              await signUp.reset?.();
+            } catch {
+              // ignore
+            }
+            setStep('form');
+          }}
+        />
       )}
     </>
   );

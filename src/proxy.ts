@@ -97,6 +97,14 @@ export default clerkMiddleware(async (auth, req) => {
     return NextResponse.redirect(unauthorizedUrl);
   }
 
+  // If email verification has not been completed or account is not ACTIVE,
+  // do not allow access to protected dashboards; redirect to sign-in to complete verification
+  if (status !== 'ACTIVE') {
+    const signInUrl = new URL('/sign-in', req.url);
+    signInUrl.searchParams.set('redirect_url', req.nextUrl.pathname + req.nextUrl.search);
+    return NextResponse.redirect(signInUrl);
+  }
+
   // Admin-only routes
   if (isAdminRoute(req)) {
     if (role !== 'ADMIN') {
