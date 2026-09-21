@@ -104,7 +104,7 @@ export function VerifyEmailForm({
           required
         />
 
-        <SubmitButton loading={loading}>Verify Email &rarr;</SubmitButton>
+        <SubmitButton loading={loading} loadingText="Verifying code...">Verify Email &rarr;</SubmitButton>
 
         <div className="flex items-center justify-between pt-2">
           <button

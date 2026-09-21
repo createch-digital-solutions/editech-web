@@ -1,7 +1,7 @@
 'use client';
 
 import { InputHTMLAttributes, ReactNode, forwardRef, useId, useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { GoogleIcon, AppleIcon } from './provider-icons';
 
@@ -68,28 +68,47 @@ interface SocialButtonsProps {
   onGoogle: () => void;
   onApple: () => void;
   disabled?: boolean;
+  loadingProvider?: 'google' | 'apple' | null;
 }
 
-export function SocialButtons({ onGoogle, onApple, disabled }: SocialButtonsProps) {
+export function SocialButtons({ onGoogle, onApple, disabled, loadingProvider }: SocialButtonsProps) {
   return (
     <div className="grid grid-cols-2 gap-3">
       <button
         type="button"
         onClick={onGoogle}
-        disabled={disabled}
-        className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-gray-300 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+        disabled={disabled || !!loadingProvider}
+        className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-gray-300 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        <GoogleIcon className="h-4 w-4" />
-        Continue with Google
+        {loadingProvider === 'google' ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin text-gray-600" />
+            <span>Connecting...</span>
+          </>
+        ) : (
+          <>
+            <GoogleIcon className="h-4 w-4" />
+            <span>Continue with Google</span>
+          </>
+        )}
       </button>
       <button
         type="button"
         onClick={onApple}
-        disabled={disabled}
-        className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-gray-300 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+        disabled={disabled || !!loadingProvider}
+        className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-gray-300 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        <AppleIcon className="h-4 w-4" />
-        Continue with Apple
+        {loadingProvider === 'apple' ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin text-gray-600" />
+            <span>Connecting...</span>
+          </>
+        ) : (
+          <>
+            <AppleIcon className="h-4 w-4" />
+            <span>Continue with Apple</span>
+          </>
+        )}
       </button>
     </div>
   );
@@ -98,17 +117,29 @@ export function SocialButtons({ onGoogle, onApple, disabled }: SocialButtonsProp
 interface SubmitButtonProps {
   children: ReactNode;
   loading?: boolean;
+  loadingText?: ReactNode;
   disabled?: boolean;
+  className?: string;
 }
 
-export function SubmitButton({ children, loading, disabled }: SubmitButtonProps) {
+export function SubmitButton({
+  children,
+  loading = false,
+  loadingText,
+  disabled = false,
+  className,
+}: SubmitButtonProps) {
   return (
     <button
       type="submit"
       disabled={loading || disabled}
-      className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-md bg-gradient-to-r from-orange-500 to-orange-600 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+      className={cn(
+        'flex w-full cursor-pointer items-center justify-center gap-2 rounded-md bg-gradient-to-r from-orange-500 to-orange-600 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-75',
+        className
+      )}
     >
-      {children}
+      {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+      <span>{loading && loadingText ? loadingText : children}</span>
     </button>
   );
 }
