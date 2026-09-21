@@ -15,6 +15,13 @@ vi.mock('@clerk/nextjs', () => ({
     isSignedIn: false,
     signOut: vi.fn(),
   }),
+  useSession: () => ({
+    session: {
+      getToken: vi.fn().mockResolvedValue(null),
+    },
+    isLoaded: true,
+    isSignedIn: false,
+  }),
   useSignIn: () => ({
     signIn: {
       password: vi.fn(),
