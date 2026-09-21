@@ -46,8 +46,6 @@ export interface AuthState {
   dbUser: User | null;
   /** True while the GET /auth/me query is in flight. */
   isLoadingUser: boolean;
-  /** True when user is authenticated with Clerk but application account provisioning/sync is pending. */
-  isPending: boolean;
   /** Re-fetches GET /auth/me (e.g., after a role change). */
   refetchUser: () => void;
 }

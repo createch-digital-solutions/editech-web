@@ -17,8 +17,7 @@ const AuthContext = createContext<AuthState | null>(null);
 
 /**
  * AuthProvider fetches the Createch DB user (GET /auth/me) once Clerk confirms
- * the user is signed in, handles pending provisioning/activation state,
- * forces token refresh when ready, and exposes state via `useAuthContext()`.
+ * the user is signed in, ensures session synchronization, and exposes state via `useAuthContext()`.
  *
  * Mount this inside both <ClerkProvider> and <QueryProvider>.
  */
@@ -31,7 +30,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const {
     data: dbUser = null,
     isLoading: isLoadingUser,
-    error: userError,
   } = useQuery<User, ApiClientError>({
     queryKey: queryKeys.auth.me(),
     queryFn: () => api.get<User>('/auth/me'),
@@ -40,29 +38,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // User profile is stable — refetch every 5 minutes or on window focus
     staleTime: 5 * 60 * 1000,
     retry: (failureCount, error) => {
-      // Treat 404 as temporary provisioning pending: retry up to 10 times with backoff
-      if (error?.status === 404) {
-        return failureCount < 10;
-      }
-      // Never retry 401 or 403
-      if (error?.status === 401 || error?.status === 403) {
+      // Never retry 401 or 403 or 404
+      if (error?.status === 401 || error?.status === 403 || error?.status === 404) {
         return false;
       }
       return failureCount < 2;
     },
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 8000),
   });
-
-  // Determine if account provisioning / activation is pending:
-  // 1. Signed in with Clerk, but /auth/me returned 404 (user not in DB yet)
-  // 2. Or /auth/me is loading initial state
-  // 3. Or user returned from DB, but status is not 'ACTIVE'
-  const isPending =
-    isLoaded &&
-    !!isSignedIn &&
-    (isLoadingUser ||
-      userError?.status === 404 ||
-      (!!dbUser && dbUser.status !== 'ACTIVE'));
 
   // Once the account is confirmed active, refresh the Clerk session token once
   // so that the current session receives the latest role/status claims synchronized by the backend/webhook
@@ -96,10 +79,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isSignedIn: !!isSignedIn,
       dbUser,
       isLoadingUser,
-      isPending,
       refetchUser,
     }),
-    [isLoaded, isSignedIn, dbUser, isLoadingUser, isPending]
+    [isLoaded, isSignedIn, dbUser, isLoadingUser]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
