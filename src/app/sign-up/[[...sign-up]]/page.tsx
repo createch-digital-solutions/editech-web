@@ -12,6 +12,7 @@ import { VerifyEmailForm } from '@/components/auth/verify-email-form';
 import { useSignOut } from '@/hooks/auth';
 import { getAuthDestination } from '@/lib/auth-redirect';
 import { Button } from '@/components/ui/button';
+import { apiClient } from '@/lib/api-client';
 
 const stats = [
   { value: '500+', label: 'Courses' },
@@ -39,6 +40,7 @@ function SignUpForm() {
   const [step, setStep] = useState<'form' | 'verify'>('form');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [verifyLoadingText, setVerifyLoadingText] = useState('Verifying code...');
   const [socialLoading, setSocialLoading] = useState<'google' | 'apple' | null>(null);
   const [isSessionExists, setIsSessionExists] = useState(false);
 
@@ -104,6 +106,7 @@ function SignUpForm() {
 
   async function handleVerifyCode(verificationCode: string): Promise<{ success: boolean; error?: string }> {
     setIsSubmitting(true);
+    setVerifyLoadingText('Verifying code...');
     try {
       const { error: verifyError } = await signUp.verifications.verifyEmailCode({ code: verificationCode });
       if (verifyError) {
@@ -112,6 +115,18 @@ function SignUpForm() {
       }
 
       if (signUp.status === 'complete') {
+        const clerkId = signUp.createdUserId;
+        if (clerkId) {
+          setVerifyLoadingText('Setting up your account...');
+          try {
+            await apiClient.post('/auth/provision', { clerkId }, { skipAuth: true });
+          } catch (provisionErr) {
+            console.error('Provisioning error before finalize:', provisionErr);
+            // Even if provision network call errors, we do not swallow silently without informing,
+            // but we allow finalize to proceed so user is not stuck.
+          }
+        }
+
         await signUp.finalize();
         const destination = getAuthDestination(redirectUrl, role.toUpperCase());
         window.location.href = destination;
@@ -283,6 +298,7 @@ function SignUpForm() {
         <VerifyEmailForm
           email={email}
           loading={loading}
+          loadingText={verifyLoadingText}
           onVerify={handleVerifyCode}
           onResend={handleResendCode}
           onCancel={async () => {
