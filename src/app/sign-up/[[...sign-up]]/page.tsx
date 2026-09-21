@@ -176,12 +176,12 @@ function SignUpForm() {
     }
   }
 
-  // If already signed in, show a clean, minimal spinner while redirecting to avoid layout flash
+  // If already signed in or completing sign-up, show setting up your account state
   if (isUserLoaded && isSignedIn) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
-        <p className="mt-4 text-sm font-medium text-gray-600">Redirecting to your dashboard...</p>
+        <p className="mt-4 text-sm font-medium text-gray-700">Setting up your account...</p>
       </div>
     );
   }
