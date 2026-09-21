@@ -1,5 +1,5 @@
 'use client';
-
+import { useState } from 'react';
 import { useClerk } from '@clerk/nextjs';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -19,8 +19,10 @@ import { useQueryClient } from '@tanstack/react-query';
 export function useSignOut() {
   const { signOut } = useClerk();
   const queryClient = useQueryClient();
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const handleSignOut = async (redirectUrl?: string) => {
+    setIsSigningOut(true);
     // Clear all cached data before signing out
     queryClient.clear();
 
@@ -29,5 +31,6 @@ export function useSignOut() {
 
   return {
     signOut: handleSignOut,
+    isSigningOut,
   };
 }

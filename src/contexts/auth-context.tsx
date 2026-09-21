@@ -1,12 +1,13 @@
 'use client';
 
-import React, { createContext, useContext, useMemo } from 'react';
-import { useAuth } from '@clerk/nextjs';
+import React, { createContext, useContext, useEffect, useMemo } from 'react';
+import { useAuth, useSession } from '@clerk/nextjs';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useApiClient } from '@/hooks/use-api-client';
 import { queryKeys } from '@/lib/query-keys';
 import type { AuthState } from '@/types/auth';
 import type { User } from '@/types/user';
+import type { ApiClientError } from '@/lib/api-client';
 
 // --- Context -----------------------------------------------------------------
 
@@ -16,26 +17,68 @@ const AuthContext = createContext<AuthState | null>(null);
 
 /**
  * AuthProvider fetches the Createch DB user (GET /auth/me) once Clerk confirms
- * the user is signed in, and exposes it via `useAuthContext()`.
+ * the user is signed in, handles pending provisioning/activation state,
+ * forces token refresh when ready, and exposes state via `useAuthContext()`.
  *
  * Mount this inside both <ClerkProvider> and <QueryProvider>.
  */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { isLoaded, isSignedIn } = useAuth();
+  const { session } = useSession();
   const api = useApiClient();
   const queryClient = useQueryClient();
 
   const {
     data: dbUser = null,
     isLoading: isLoadingUser,
-  } = useQuery<User>({
+    error: userError,
+  } = useQuery<User, ApiClientError>({
     queryKey: queryKeys.auth.me(),
     queryFn: () => api.get<User>('/auth/me'),
     // Only run when Clerk is done loading and the user is signed in
     enabled: isLoaded && !!isSignedIn,
     // User profile is stable — refetch every 5 minutes or on window focus
     staleTime: 5 * 60 * 1000,
+    retry: (failureCount, error) => {
+      // Treat 404 as temporary provisioning pending: retry up to 10 times with backoff
+      if (error?.status === 404) {
+        return failureCount < 10;
+      }
+      // Never retry 401 or 403
+      if (error?.status === 401 || error?.status === 403) {
+        return false;
+      }
+      return failureCount < 2;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 8000),
   });
+
+  // Determine if account provisioning / activation is pending:
+  // 1. Signed in with Clerk, but /auth/me returned 404 (user not in DB yet)
+  // 2. Or /auth/me is loading initial state
+  // 3. Or user returned from DB, but status is not 'ACTIVE'
+  const isPending =
+    isLoaded &&
+    !!isSignedIn &&
+    (isLoadingUser ||
+      userError?.status === 404 ||
+      (!!dbUser && dbUser.status !== 'ACTIVE'));
+
+  // Once the account is confirmed active, force-refresh the Clerk session token
+  // so that the current session receives the latest role/status claims synchronized by the webhook
+  useEffect(() => {
+    if (dbUser && dbUser.status === 'ACTIVE') {
+      if (session) {
+        const s = session as unknown as { touch?: () => Promise<unknown>; getToken?: (opts?: unknown) => Promise<string | null> };
+        void s.touch?.();
+        void s.getToken?.({ forceRefresh: true });
+      } else if (typeof window !== 'undefined' && window.Clerk?.session) {
+        const s = window.Clerk.session as unknown as { touch?: () => Promise<unknown>; getToken?: (opts?: unknown) => Promise<string | null> };
+        void s.touch?.();
+        void s.getToken?.({ forceRefresh: true });
+      }
+    }
+  }, [dbUser, session]);
 
   const refetchUser = () => {
     void queryClient.invalidateQueries({ queryKey: queryKeys.auth.me() });
@@ -47,10 +90,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isSignedIn: !!isSignedIn,
       dbUser,
       isLoadingUser,
+      isPending,
       refetchUser,
     }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [isLoaded, isSignedIn, dbUser, isLoadingUser]
+    [isLoaded, isSignedIn, dbUser, isLoadingUser, isPending]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

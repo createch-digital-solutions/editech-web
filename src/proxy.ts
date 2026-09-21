@@ -19,6 +19,7 @@ const isAuthRoute = createRouteMatcher([
   '/sign-up(.*)',
 ]);
 
+const isAuthPendingRoute = createRouteMatcher(['/auth/pending(.*)']);
 const isLearnerRoute = createRouteMatcher(['/dashboard(.*)']);
 const isInstructorRoute = createRouteMatcher(['/instructor(.*)', '/portal(.*)']);
 const isAdminRoute = createRouteMatcher(['/admin(.*)']);
@@ -68,13 +69,20 @@ function getRoleDashboard(role?: UserRole | null): string {
 export default clerkMiddleware(async (auth, req) => {
   const { userId, sessionClaims } = await auth();
 
-  // If already authenticated and visiting sign-in / sign-up, redirect to destination
+  // If already authenticated and visiting sign-in / sign-up:
   if (userId && isAuthRoute(req)) {
+    const role = getRoleFromClaims(sessionClaims as Record<string, unknown>);
+    const status = getStatusFromClaims(sessionClaims as Record<string, unknown>);
+
+    // If account provisioning is still pending, route to /auth/pending
+    if (status !== 'ACTIVE') {
+      return NextResponse.redirect(new URL('/auth/pending', req.url));
+    }
+
     const redirectUrl = req.nextUrl.searchParams.get('redirect_url');
     if (redirectUrl && redirectUrl.startsWith('/') && !redirectUrl.startsWith('//')) {
       return NextResponse.redirect(new URL(redirectUrl, req.url));
     }
-    const role = getRoleFromClaims(sessionClaims as Record<string, unknown>);
     return NextResponse.redirect(new URL(getRoleDashboard(role), req.url));
   }
 
@@ -88,6 +96,11 @@ export default clerkMiddleware(async (auth, req) => {
     return NextResponse.redirect(signInUrl);
   }
 
+  // Authenticated pending route: accessible to any authenticated user
+  if (isAuthPendingRoute(req)) {
+    return;
+  }
+
   const role = getRoleFromClaims(sessionClaims as Record<string, unknown>);
   const status = getStatusFromClaims(sessionClaims as Record<string, unknown>);
   const unauthorizedUrl = new URL('/unauthorized', req.url);
@@ -97,12 +110,15 @@ export default clerkMiddleware(async (auth, req) => {
     return NextResponse.redirect(unauthorizedUrl);
   }
 
-  // If email verification has not been completed or account is not ACTIVE,
-  // do not allow access to protected dashboards; redirect to sign-in to complete verification
+  // If application status is not ACTIVE (e.g. pending webhook sync),
+  // route to /auth/pending so AuthProvider can sync and refresh token
   if (status !== 'ACTIVE') {
-    const signInUrl = new URL('/sign-in', req.url);
-    signInUrl.searchParams.set('redirect_url', req.nextUrl.pathname + req.nextUrl.search);
-    return NextResponse.redirect(signInUrl);
+    const pendingUrl = new URL('/auth/pending', req.url);
+    const redirectUrl = req.nextUrl.pathname + req.nextUrl.search;
+    if (redirectUrl && redirectUrl !== '/' && !redirectUrl.startsWith('/auth/pending')) {
+      pendingUrl.searchParams.set('redirect_url', redirectUrl);
+    }
+    return NextResponse.redirect(pendingUrl);
   }
 
   // Admin-only routes
