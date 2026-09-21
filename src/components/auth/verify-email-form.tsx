@@ -10,6 +10,7 @@ interface VerifyEmailFormProps {
   onVerify: (code: string) => Promise<{ success: boolean; error?: string }>;
   onResend: () => Promise<{ success: boolean; error?: string }>;
   loading?: boolean;
+  loadingText?: string;
   onCancel?: () => void;
 }
 
@@ -18,6 +19,7 @@ export function VerifyEmailForm({
   onVerify,
   onResend,
   loading = false,
+  loadingText = 'Verifying code...',
   onCancel,
 }: VerifyEmailFormProps) {
   const [code, setCode] = useState('');
@@ -104,7 +106,7 @@ export function VerifyEmailForm({
           required
         />
 
-        <SubmitButton loading={loading} loadingText="Verifying code...">Verify Email &rarr;</SubmitButton>
+        <SubmitButton loading={loading} loadingText={loadingText}>Verify Email &rarr;</SubmitButton>
 
         <div className="flex items-center justify-between pt-2">
           <button

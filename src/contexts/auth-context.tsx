@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useRef } from 'react';
 import { useAuth, useSession } from '@clerk/nextjs';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useApiClient } from '@/hooks/use-api-client';
@@ -64,17 +64,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       userError?.status === 404 ||
       (!!dbUser && dbUser.status !== 'ACTIVE'));
 
-  // Once the account is confirmed active, force-refresh the Clerk session token
-  // so that the current session receives the latest role/status claims synchronized by the webhook
+  // Once the account is confirmed active, refresh the Clerk session token once
+  // so that the current session receives the latest role/status claims synchronized by the backend/webhook
+  const hasRefreshedTokenRef = useRef<string | null>(null);
+
   useEffect(() => {
     if (dbUser && dbUser.status === 'ACTIVE') {
+      const userKey = `${dbUser.id}-${dbUser.role}-${dbUser.status}`;
+      if (hasRefreshedTokenRef.current === userKey) {
+        return;
+      }
+      hasRefreshedTokenRef.current = userKey;
+
       if (session) {
-        const s = session as unknown as { touch?: () => Promise<unknown>; getToken?: (opts?: unknown) => Promise<string | null> };
-        void s.touch?.();
+        const s = session as unknown as { getToken?: (opts?: unknown) => Promise<string | null> };
         void s.getToken?.({ forceRefresh: true });
       } else if (typeof window !== 'undefined' && window.Clerk?.session) {
-        const s = window.Clerk.session as unknown as { touch?: () => Promise<unknown>; getToken?: (opts?: unknown) => Promise<string | null> };
-        void s.touch?.();
+        const s = window.Clerk.session as unknown as { getToken?: (opts?: unknown) => Promise<string | null> };
         void s.getToken?.({ forceRefresh: true });
       }
     }
