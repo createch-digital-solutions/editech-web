@@ -20,6 +20,11 @@ vi.mock('@clerk/nextjs', () => ({
       password: vi.fn(),
       finalize: vi.fn(),
       sso: vi.fn(),
+      reset: vi.fn().mockResolvedValue({}),
+      emailCode: {
+        sendCode: vi.fn(),
+        verifyCode: vi.fn(),
+      },
     },
     fetchStatus: 'idle',
   }),
@@ -28,6 +33,7 @@ vi.mock('@clerk/nextjs', () => ({
       password: vi.fn(),
       finalize: vi.fn(),
       sso: vi.fn(),
+      reset: vi.fn().mockResolvedValue({}),
       verifications: {
         sendEmailCode: vi.fn(),
         verifyEmailCode: vi.fn(),

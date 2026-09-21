@@ -4,9 +4,10 @@ import { FormEvent, useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useSignIn, useUser } from '@clerk/nextjs';
-import { Award, Sparkles, Trophy } from 'lucide-react';
+import { Award, Sparkles, Trophy, Loader2 } from 'lucide-react';
 import { AuthShell } from '@/components/auth/auth-shell';
 import { TextField, Divider, SocialButtons, SubmitButton, FormError } from '@/components/auth/form-controls';
+import { VerifyEmailForm } from '@/components/auth/verify-email-form';
 import { useSignOut } from '@/hooks/auth';
 import { getAuthDestination } from '@/lib/auth-redirect';
 import { Button } from '@/components/ui/button';
@@ -29,8 +30,10 @@ function SignInForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
+  const [step, setStep] = useState<'form' | 'verify'>('form');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [socialLoading, setSocialLoading] = useState<'google' | 'apple' | null>(null);
   const [isSessionExists, setIsSessionExists] = useState(false);
 
   const loading = fetchStatus === 'fetching' || isSubmitting;
@@ -71,64 +74,115 @@ function SignInForm() {
         const role = user?.publicMetadata?.role as string | undefined;
         const destination = getAuthDestination(redirectUrl, role);
         window.location.href = destination;
-      } else {
-        setError('Additional verification is required to finish signing in.');
-        setIsSubmitting(false);
+        return;
       }
+
+      // If email verification is pending / factor is missing
+      if (signIn.status === 'needs_first_factor') {
+        const { error: sendError } = await signIn.emailCode.sendCode();
+        if (sendError) {
+          setError(sendError.longMessage ?? sendError.message);
+          setIsSubmitting(false);
+          return;
+        }
+        setStep('verify');
+        setIsSubmitting(false);
+        return;
+      }
+
+      setError('Additional verification is required to finish signing in.');
+      setIsSubmitting(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred during sign in.');
       setIsSubmitting(false);
     }
   }
 
-  async function handleOAuth(strategy: 'oauth_google' | 'oauth_apple') {
-    setError(null);
-    setIsSessionExists(false);
-    const callbackDestination = getAuthDestination(redirectUrl);
-    const { error: ssoError } = await signIn.sso({
-      strategy,
-      redirectUrl: '/sso-callback',
-      redirectCallbackUrl: callbackDestination,
-    });
-    if (ssoError) {
-      setError(ssoError.longMessage ?? ssoError.message);
+  async function handleVerifyCode(verificationCode: string): Promise<{ success: boolean; error?: string }> {
+    setIsSubmitting(true);
+    try {
+      const { error: verifyError } = await signIn.emailCode.verifyCode({ code: verificationCode });
+      if (verifyError) {
+        setIsSubmitting(false);
+        return { success: false, error: verifyError.longMessage ?? verifyError.message };
+      }
+
+      if (signIn.status === 'complete') {
+        await signIn.finalize();
+        const role = user?.publicMetadata?.role as string | undefined;
+        const destination = getAuthDestination(redirectUrl, role);
+        window.location.href = destination;
+        return { success: true };
+      }
+
+      setIsSubmitting(false);
+      return { success: false, error: 'Verification succeeded but session is incomplete.' };
+    } catch (err) {
+      setIsSubmitting(false);
+      return { success: false, error: err instanceof Error ? err.message : 'Failed to verify code.' };
     }
   }
 
-  // If already signed in, show status banner with dashboard and sign-out controls
-  if (isUserLoaded && isSignedIn) {
-    const role = user?.publicMetadata?.role as string | undefined;
-    const destination = getAuthDestination(redirectUrl, role);
+  async function handleResendCode(): Promise<{ success: boolean; error?: string }> {
+    try {
+      const { error: sendError } = await signIn.emailCode.sendCode();
+      if (sendError) {
+        return { success: false, error: sendError.longMessage ?? sendError.message };
+      }
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err instanceof Error ? err.message : 'Failed to resend code.' };
+    }
+  }
 
+  async function handleOAuth(strategy: 'oauth_google' | 'oauth_apple') {
+    setError(null);
+    setIsSessionExists(false);
+    const provider = strategy === 'oauth_google' ? 'google' : 'apple';
+    setSocialLoading(provider);
+    try {
+      const callbackDestination = getAuthDestination(redirectUrl);
+      const { error: ssoError } = await signIn.sso({
+        strategy,
+        redirectUrl: '/sso-callback',
+        redirectCallbackUrl: callbackDestination,
+      });
+      if (ssoError) {
+        setError(ssoError.longMessage ?? ssoError.message);
+        setSocialLoading(null);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to initiate social login.');
+      setSocialLoading(null);
+    }
+  }
+
+  // If already signed in, show a clean, minimal spinner while redirecting to avoid layout flash
+  if (isUserLoaded && isSignedIn) {
     return (
-      <div className="space-y-6">
-        <h2 className="text-3xl font-extrabold text-gray-900">Welcome Back</h2>
-        <div className="rounded-xl border border-orange-200 bg-orange-50/70 p-6 text-center space-y-4">
-          <p className="text-sm text-gray-600">
-            You are currently signed in as{' '}
-            <span className="font-semibold text-gray-900">
-              {user?.primaryEmailAddress?.emailAddress ?? 'Active User'}
-            </span>
-          </p>
-          <p className="text-xs text-gray-500">Redirecting to your dashboard...</p>
-          <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:justify-center">
-            <Button
-              type="button"
-              onClick={() => { window.location.href = destination; }}
-              className="bg-orange-500 hover:bg-orange-600 text-white font-semibold"
-            >
-              Go to Dashboard &rarr;
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => signOut()}
-            >
-              Sign Out & Switch Account
-            </Button>
-          </div>
-        </div>
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+        <p className="mt-4 text-sm font-medium text-gray-600">Redirecting to your dashboard...</p>
       </div>
+    );
+  }
+
+  if (step === 'verify') {
+    return (
+      <VerifyEmailForm
+        email={email}
+        loading={loading}
+        onVerify={handleVerifyCode}
+        onResend={handleResendCode}
+        onCancel={async () => {
+          try {
+            await signIn.reset?.();
+          } catch {
+            // ignore
+          }
+          setStep('form');
+        }}
+      />
     );
   }
 
@@ -210,12 +264,13 @@ function SignInForm() {
           </Link>
         </div>
 
-        <SubmitButton loading={loading}>Sign In &rarr;</SubmitButton>
+        <SubmitButton loading={loading} loadingText="Signing in...">Sign In &rarr;</SubmitButton>
 
         <Divider />
 
         <SocialButtons
-          disabled={loading}
+          disabled={loading || !!socialLoading}
+          loadingProvider={socialLoading}
           onGoogle={() => handleOAuth('oauth_google')}
           onApple={() => handleOAuth('oauth_apple')}
         />

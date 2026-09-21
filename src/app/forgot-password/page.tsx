@@ -17,46 +17,66 @@ export default function ForgotPasswordPage() {
   const [password, setPassword] = useState('');
   const [step, setStep] = useState<'email' | 'reset'>('email');
   const [error, setError] = useState<string | null>(null);
-  const loading = fetchStatus === 'fetching';
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const loading = fetchStatus === 'fetching' || isSubmitting;
 
   async function handleSendCode(e: FormEvent) {
     e.preventDefault();
     setError(null);
+    setIsSubmitting(true);
 
-    const { error: createError } = await signIn.create({ identifier: email });
-    if (createError) {
-      setError(createError.longMessage ?? createError.message);
-      return;
+    try {
+      const { error: createError } = await signIn.create({ identifier: email });
+      if (createError) {
+        setError(createError.longMessage ?? createError.message);
+        setIsSubmitting(false);
+        return;
+      }
+
+      const { error: sendError } = await signIn.resetPasswordEmailCode.sendCode();
+      if (sendError) {
+        setError(sendError.longMessage ?? sendError.message);
+        setIsSubmitting(false);
+        return;
+      }
+
+      setStep('reset');
+      setIsSubmitting(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to send reset code.');
+      setIsSubmitting(false);
     }
-
-    const { error: sendError } = await signIn.resetPasswordEmailCode.sendCode();
-    if (sendError) {
-      setError(sendError.longMessage ?? sendError.message);
-      return;
-    }
-
-    setStep('reset');
   }
 
   async function handleResetPassword(e: FormEvent) {
     e.preventDefault();
     setError(null);
+    setIsSubmitting(true);
 
-    const { error: verifyError } = await signIn.resetPasswordEmailCode.verifyCode({ code });
-    if (verifyError) {
-      setError(verifyError.longMessage ?? verifyError.message);
-      return;
-    }
+    try {
+      const { error: verifyError } = await signIn.resetPasswordEmailCode.verifyCode({ code });
+      if (verifyError) {
+        setError(verifyError.longMessage ?? verifyError.message);
+        setIsSubmitting(false);
+        return;
+      }
 
-    const { error: submitError } = await signIn.resetPasswordEmailCode.submitPassword({ password });
-    if (submitError) {
-      setError(submitError.longMessage ?? submitError.message);
-      return;
-    }
+      const { error: submitError } = await signIn.resetPasswordEmailCode.submitPassword({ password });
+      if (submitError) {
+        setError(submitError.longMessage ?? submitError.message);
+        setIsSubmitting(false);
+        return;
+      }
 
-    if (signIn.status === 'complete') {
-      await signIn.finalize();
-      router.push('/');
+      if (signIn.status === 'complete') {
+        await signIn.finalize();
+        router.push('/');
+        return;
+      }
+      setIsSubmitting(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to reset password.');
+      setIsSubmitting(false);
     }
   }
 
@@ -90,7 +110,7 @@ export default function ForgotPasswordPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                 />
-                <SubmitButton loading={loading}>Send Reset Link</SubmitButton>
+                <SubmitButton loading={loading} loadingText="Sending link...">Send Reset Link</SubmitButton>
               </form>
             </>
           ) : (
@@ -124,7 +144,7 @@ export default function ForgotPasswordPage() {
                   required
                   minLength={8}
                 />
-                <SubmitButton loading={loading}>Reset Password</SubmitButton>
+                <SubmitButton loading={loading} loadingText="Resetting password...">Reset Password</SubmitButton>
               </form>
             </>
           )}

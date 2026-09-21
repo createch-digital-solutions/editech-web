@@ -2,7 +2,7 @@
 
 import { cn } from '@/lib/utils';
 
-export type SignUpRole = 'learner' | 'instructor';
+export type SignUpRole = 'LEARNER' | 'INSTRUCTOR';
 
 interface RoleToggleProps {
   value: SignUpRole;
@@ -14,8 +14,8 @@ export function RoleToggle({ value, onChange }: RoleToggleProps) {
     <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-label="I am signing up as a">
       {(
         [
-          { value: 'learner', label: 'I am a Learner' },
-          { value: 'instructor', label: 'I am an Instructor' },
+          { value: 'LEARNER', label: 'I am a Learner' },
+          { value: 'INSTRUCTOR', label: 'I am an Instructor' },
         ] as const
       ).map((option) => (
         <button
