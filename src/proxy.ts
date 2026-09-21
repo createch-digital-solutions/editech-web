@@ -19,7 +19,6 @@ const isAuthRoute = createRouteMatcher([
   '/sign-up(.*)',
 ]);
 
-const isAuthPendingRoute = createRouteMatcher(['/auth/pending(.*)']);
 const isLearnerRoute = createRouteMatcher(['/dashboard(.*)']);
 const isInstructorRoute = createRouteMatcher(['/instructor(.*)', '/portal(.*)']);
 const isAdminRoute = createRouteMatcher(['/admin(.*)']);
@@ -29,7 +28,7 @@ const isAdminRoute = createRouteMatcher(['/admin(.*)']);
 /**
  * Extract role from Clerk session claims (publicMetadata) — and ONLY
  * publicMetadata. publicMetadata is the sole claim guaranteed to be
- * backend-written (via PATCH /auth/role); it is embedded in the JWT and
+ * backend-written (via JIT provision or PATCH /auth/role); it is embedded in the JWT and
  * available here at the Edge without a DB call.
  */
 function getRoleFromClaims(
@@ -74,9 +73,9 @@ export default clerkMiddleware(async (auth, req) => {
     const role = getRoleFromClaims(sessionClaims as Record<string, unknown>);
     const status = getStatusFromClaims(sessionClaims as Record<string, unknown>);
 
-    // If account provisioning is still pending, route to /auth/pending
+    // Strict status check: only ACTIVE users are allowed into application dashboards
     if (status !== 'ACTIVE') {
-      return NextResponse.redirect(new URL('/auth/pending', req.url));
+      return NextResponse.redirect(new URL('/unauthorized', req.url));
     }
 
     const redirectUrl = req.nextUrl.searchParams.get('redirect_url');
@@ -96,29 +95,13 @@ export default clerkMiddleware(async (auth, req) => {
     return NextResponse.redirect(signInUrl);
   }
 
-  // Authenticated pending route: accessible to any authenticated user
-  if (isAuthPendingRoute(req)) {
-    return;
-  }
-
   const role = getRoleFromClaims(sessionClaims as Record<string, unknown>);
   const status = getStatusFromClaims(sessionClaims as Record<string, unknown>);
   const unauthorizedUrl = new URL('/unauthorized', req.url);
 
-  // If account is suspended or deactivated, block access to protected areas
-  if (status === 'SUSPENDED' || status === 'DEACTIVATED') {
-    return NextResponse.redirect(unauthorizedUrl);
-  }
-
-  // If application status is not ACTIVE (e.g. pending webhook sync),
-  // route to /auth/pending so AuthProvider can sync and refresh token
+  // STRICT STATUS CHECK: Must be explicitly ACTIVE to access any protected route
   if (status !== 'ACTIVE') {
-    const pendingUrl = new URL('/auth/pending', req.url);
-    const redirectUrl = req.nextUrl.pathname + req.nextUrl.search;
-    if (redirectUrl && redirectUrl !== '/' && !redirectUrl.startsWith('/auth/pending')) {
-      pendingUrl.searchParams.set('redirect_url', redirectUrl);
-    }
-    return NextResponse.redirect(pendingUrl);
+    return NextResponse.redirect(unauthorizedUrl);
   }
 
   // Admin-only routes
@@ -137,12 +120,10 @@ export default clerkMiddleware(async (auth, req) => {
     return;
   }
 
-  // Learner dashboard: any authenticated user with a known role
+  // Learner dashboard
   if (isLearnerRoute(req)) {
-    if (!role) {
-      // Role not yet in JWT — user is provisioned but role not synced yet.
-      // Allow through; the backend guard will enforce if needed.
-      return;
+    if (!role || !(['LEARNER', 'INSTRUCTOR', 'ADMIN'] as UserRole[]).includes(role)) {
+      return NextResponse.redirect(unauthorizedUrl);
     }
     return;
   }
