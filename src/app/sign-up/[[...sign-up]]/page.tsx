@@ -19,7 +19,7 @@ const stats = [
 export default function SignUpPage() {
   const router = useRouter();
   const { signUp, fetchStatus } = useSignUp();
-  const [role, setRole] = useState<SignUpRole>('learner');
+  const [role, setRole] = useState<SignUpRole>('LEARNER');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -112,7 +112,7 @@ export default function SignUpPage() {
             {stats.map((stat) => (
               <div key={stat.label} className="rounded-lg bg-white/10 px-4 py-3">
                 <dt className="sr-only">{stat.label}</dt>
-                <dd className="text-2xl font-bold text-orange-400">{stat.value}</dd>
+                <dd className="text-2xl font-bold text-brand-light">{stat.value}</dd>
                 <div className="text-sm text-gray-300">{stat.label}</div>
               </div>
             ))}
@@ -125,7 +125,7 @@ export default function SignUpPage() {
           <h2 className="text-3xl font-extrabold text-gray-900">Create your account</h2>
           <p className="mt-2 text-sm text-gray-500">
             Already have one?{' '}
-            <Link href="/sign-in" className="font-semibold text-orange-600 hover:text-orange-700">
+            <Link href="/sign-in" className="font-semibold text-brand hover:text-brand-light">
               Sign in
             </Link>
           </p>
@@ -200,7 +200,7 @@ export default function SignUpPage() {
         </>
       ) : (
         <div className="text-center">
-          <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-orange-100 text-orange-500">
+          <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-orange-100 text-brand">
             <Mail className="h-6 w-6" aria-hidden="true" />
           </span>
           <h2 className="mt-4 text-2xl font-extrabold text-gray-900">Check your inbox</h2>
@@ -230,7 +230,7 @@ export default function SignUpPage() {
               onClick={() => signUp.verifications.sendEmailCode()}
               className="w-full cursor-pointer text-center text-sm text-gray-500 hover:text-gray-700"
             >
-              Didn&apos;t get it? <span className="font-semibold text-orange-600">Resend code</span>
+              Didn&apos;t get it? <span className="font-semibold text-brand">Resend code</span>
             </button>
           </form>
         </div>

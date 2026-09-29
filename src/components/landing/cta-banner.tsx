@@ -13,7 +13,7 @@ export function CtaBanner() {
         </div>
         <Link
           href="/sign-up"
-          className="inline-flex shrink-0 cursor-pointer items-center gap-2 rounded-md bg-orange-500 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-orange-600"
+          className="inline-flex shrink-0 cursor-pointer items-center gap-2 rounded-md bg-brand-gradient px-6 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
         >
           Create Free Account
           <ArrowRight className="h-4 w-4" aria-hidden="true" />

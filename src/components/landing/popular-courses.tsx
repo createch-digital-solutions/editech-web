@@ -60,6 +60,7 @@ export function PopularCourses() {
                 alt={course.alt}
                 width={524}
                 height={292}
+                unoptimized
                 className="aspect-video w-full object-cover"
               />
 
@@ -68,7 +69,7 @@ export function PopularCourses() {
                 <p className="mt-1 text-sm text-gray-500">{course.instructor}</p>
 
                 <div className="mt-2 flex items-center gap-1 text-sm text-gray-600">
-                  <Star className="h-4 w-4 fill-orange-400 text-orange-400" aria-hidden="true" />
+                  <Star className="h-4 w-4 fill-brand-light text-brand-light" aria-hidden="true" />
                   <span className="font-medium">{course.rating}</span>
                   <span className="text-gray-400">&middot; {course.students} students</span>
                 </div>
@@ -84,7 +85,7 @@ export function PopularCourses() {
                   </span>
                   <button
                     type="button"
-                    className="cursor-pointer rounded-full bg-orange-500 px-4 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-orange-600"
+                    className="cursor-pointer rounded-full bg-brand-gradient px-4 py-1.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
                   >
                     Enroll
                   </button>

@@ -67,7 +67,7 @@ export default function SignInPage() {
           <ul className="mt-10 space-y-4">
             {perks.map((perk) => (
               <li key={perk.label} className="flex items-center gap-3">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/10 text-orange-400">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/10 text-brand-light">
                   <perk.icon className="h-4 w-4" aria-hidden="true" />
                 </span>
                 <span className="text-sm text-gray-200">{perk.label}</span>
@@ -80,7 +80,7 @@ export default function SignInPage() {
       <h2 className="text-3xl font-extrabold text-gray-900">Sign in to your account</h2>
       <p className="mt-2 text-sm text-gray-500">
         No account yet?{' '}
-        <Link href="/sign-up" className="font-semibold text-orange-600 hover:text-orange-700">
+        <Link href="/sign-up" className="font-semibold text-brand hover:text-brand-light">
           Sign up free &rarr;
         </Link>
       </p>
@@ -114,13 +114,13 @@ export default function SignInPage() {
               type="checkbox"
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
-              className="h-4 w-4 cursor-pointer rounded border-gray-300 text-orange-500 focus:ring-orange-400"
+              className="h-4 w-4 cursor-pointer rounded border-gray-300 text-brand focus:ring-brand"
             />
             Remember me
           </label>
           <Link
             href="/forgot-password"
-            className="text-sm font-semibold text-orange-600 hover:text-orange-700"
+            className="text-sm font-semibold text-brand hover:text-brand-light"
           >
             Forgot password?
           </Link>

@@ -66,7 +66,7 @@ export default function ForgotPasswordPage() {
 
       <div className="flex flex-1 items-center justify-center px-6 py-16">
         <div className="w-full max-w-sm rounded-2xl border border-orange-100 bg-white p-8 shadow-sm">
-          <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-orange-100 text-orange-500">
+          <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-orange-100 text-brand">
             <KeyRound className="h-6 w-6" aria-hidden="true" />
           </span>
 
@@ -131,7 +131,7 @@ export default function ForgotPasswordPage() {
 
           <Link
             href="/sign-in"
-            className="mt-6 flex items-center justify-center gap-1.5 text-sm font-semibold text-orange-600 hover:text-orange-700"
+            className="mt-6 flex items-center justify-center gap-1.5 text-sm font-semibold text-brand hover:text-brand-light"
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             Back to sign in

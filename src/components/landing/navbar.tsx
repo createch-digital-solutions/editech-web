@@ -21,7 +21,7 @@ export function Navbar() {
             cE
           </span>
           <span className="text-lg font-bold text-gray-900">
-            Createch<span className="text-orange-500">Elevate</span>
+            Createch<span className="text-brand">Elevate</span>
           </span>
         </Link>
 
@@ -47,18 +47,18 @@ export function Navbar() {
             <input
               type="search"
               placeholder="Search"
-              className="w-full rounded-full border border-gray-300 py-2 pl-9 pr-4 text-sm text-gray-700 placeholder:text-gray-400 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
+              className="w-full rounded-full border border-gray-300 py-2 pl-9 pr-4 text-sm text-gray-700 placeholder:text-gray-400 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
             />
           </label>
           <Link
             href="/sign-in"
-            className="cursor-pointer whitespace-nowrap rounded-md border border-orange-300 px-4 py-2 text-sm font-semibold text-orange-600 transition-colors hover:bg-orange-50"
+            className="cursor-pointer whitespace-nowrap rounded-md border border-brand px-4 py-2 text-sm font-semibold text-brand transition-colors hover:bg-orange-50"
           >
             Log In
           </Link>
           <Link
             href="/sign-up"
-            className="cursor-pointer whitespace-nowrap rounded-md bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-orange-600"
+            className="cursor-pointer whitespace-nowrap rounded-md bg-brand-gradient px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
           >
             Get Started Free →
           </Link>
@@ -99,7 +99,7 @@ export function Navbar() {
             <input
               type="search"
               placeholder="Search"
-              className="w-full rounded-full border border-gray-300 py-2 pl-9 pr-4 text-sm text-gray-700 placeholder:text-gray-400 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
+              className="w-full rounded-full border border-gray-300 py-2 pl-9 pr-4 text-sm text-gray-700 placeholder:text-gray-400 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
             />
           </label>
 
@@ -107,14 +107,14 @@ export function Navbar() {
             <Link
               href="/sign-in"
               onClick={() => setMenuOpen(false)}
-              className="cursor-pointer rounded-md border border-orange-300 px-4 py-2.5 text-center text-sm font-semibold text-orange-600 hover:bg-orange-50"
+              className="cursor-pointer rounded-md border border-brand px-4 py-2.5 text-center text-sm font-semibold text-brand hover:bg-orange-50"
             >
               Log In
             </Link>
             <Link
               href="/sign-up"
               onClick={() => setMenuOpen(false)}
-              className="cursor-pointer rounded-md bg-orange-500 px-4 py-2.5 text-center text-sm font-semibold text-white hover:bg-orange-600"
+              className="cursor-pointer rounded-md bg-brand-gradient px-4 py-2.5 text-center text-sm font-semibold text-white hover:opacity-90"
             >
               Get Started Free →
             </Link>

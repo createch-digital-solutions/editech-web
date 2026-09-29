@@ -32,7 +32,8 @@ export function ShowcaseGrid() {
               alt={item.alt}
               width={480}
               height={360}
-              className="aspect-[4/3] w-full object-cover transition-transform duration-300 group-hover:scale-105"
+              unoptimized
+              className="aspect-[7/4] w-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 p-5">

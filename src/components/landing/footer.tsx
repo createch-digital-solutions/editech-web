@@ -48,11 +48,11 @@ export function Footer() {
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500 text-sm font-bold text-white">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-gradient text-sm font-bold text-white">
                 cE
               </span>
               <span className="text-lg font-bold text-white">
-                Createch<span className="text-orange-500">Elevate</span>
+                Createch<span className="text-brand-light">Elevate</span>
               </span>
             </div>
             <p className="mt-4 max-w-xs text-sm leading-relaxed">

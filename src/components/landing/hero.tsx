@@ -41,6 +41,7 @@ export function Hero() {
               width={876}
               height={678}
               priority
+              unoptimized
               className="h-auto w-full"
             />
           </div>
@@ -53,7 +54,7 @@ export function Hero() {
           <div className="mt-8 flex flex-wrap items-center gap-4">
             <Link
               href="/sign-up"
-              className="inline-flex cursor-pointer items-center gap-2 rounded-md bg-orange-500 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-orange-600"
+              className="inline-flex cursor-pointer items-center gap-2 rounded-md bg-brand-gradient px-6 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
             >
               Start Learning Free
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -85,6 +86,7 @@ export function Hero() {
             width={876}
             height={678}
             priority
+            unoptimized
             className="h-auto w-full"
           />
         </div>

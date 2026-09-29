@@ -11,7 +11,7 @@ const features = [
   },
   {
     icon: Bot,
-    iconBg: 'bg-orange-50 text-orange-500',
+    iconBg: 'bg-orange-50 text-brand',
     title: 'Aria AI Coach',
     description:
       'Your personal AI tutor knows where you are and guides the next step in Yoruba, Igbo, or English.',

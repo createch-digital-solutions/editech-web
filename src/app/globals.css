@@ -12,6 +12,16 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Brand oranges: burnt (#C1440E) → light (#D4920A). Buttons use the gradient. */
+@theme {
+  --color-brand: #c1440e;
+  --color-brand-light: #d4920a;
+}
+
+@utility bg-brand-gradient {
+  background-image: linear-gradient(135deg, #c1440e 0%, #d4920a 100%);
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
