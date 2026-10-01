@@ -1,22 +1,26 @@
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import { DiamondMotif } from './diamond-motif';
 
 export function CtaBanner() {
   return (
-    <section className="bg-gradient-to-br from-[#241a12] via-[#1e2740] to-[#1a2a52] py-16">
-      <div className="mx-auto flex max-w-7xl flex-col items-start gap-6 px-6 sm:flex-row sm:items-center sm:justify-between lg:px-8">
+    <section className="relative overflow-hidden bg-brand-night">
+      <DiamondMotif className="left-[5px] top-[8px] h-10 w-10" />
+      <div className="relative mx-auto flex max-w-[1400px] flex-col items-start gap-6 px-6 py-14 sm:flex-row sm:items-center sm:justify-between lg:min-h-[207px] lg:px-[66px] lg:py-0">
         <div>
-          <h2 className="text-3xl font-extrabold text-white sm:text-4xl">
+          <h2 className="font-display text-[28px] font-extrabold leading-10 tracking-[-0.01em] text-white sm:text-[36px]">
             Ready to build your future?
           </h2>
-          <p className="mt-2 text-gray-300">Join 50,000 learners growing with Createch Elevate.</p>
+          <p className="mt-[13px] font-body text-sm text-[#e8a33d]">
+            Join 50,000 learners growing with Createch Elevate.
+          </p>
         </div>
         <Link
           href="/sign-up"
-          className="inline-flex shrink-0 cursor-pointer items-center gap-2 rounded-md bg-orange-500 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-orange-600"
+          className="inline-flex h-11 w-[211px] shrink-0 cursor-pointer items-center justify-center gap-1 rounded-md bg-brand-gradient font-body text-[13px] font-semibold text-white shadow-lg shadow-brand/30 transition-opacity hover:opacity-90"
         >
           Create Free Account
-          <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          <ArrowRight className="h-3 w-3" strokeWidth={2.5} aria-hidden="true" />
         </Link>
       </div>
     </section>

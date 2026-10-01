@@ -4,9 +4,9 @@ import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useSignIn } from '@clerk/nextjs';
-import { ArrowLeft, KeyRound } from 'lucide-react';
-import { Navbar } from '@/components/landing/navbar';
-import { StripeDivider } from '@/components/landing/stripe-divider';
+import { ArrowLeft, Lock, Mail } from 'lucide-react';
+import { SimpleNavbar } from '@/components/landing/simple-navbar';
+import { CenteredCardPage, IconCircle } from '@/components/auth/centered-card-page';
 import { TextField, SubmitButton, FormError } from '@/components/auth/form-controls';
 
 export default function ForgotPasswordPage() {
@@ -81,85 +81,100 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col bg-[#fdf6ec]">
-      <Navbar />
+    <CenteredCardPage header={<SimpleNavbar />}>
+      <div className="w-full max-w-[418px] rounded-2xl border border-[#efe2d0] bg-[#fffdf9] px-5 pb-[21px] pt-5">
+        <IconCircle icon={step === 'email' ? Lock : Mail} className="h-16 w-16" iconClassName="h-6 w-6" />
 
-      <div className="flex flex-1 items-center justify-center px-6 py-16">
-        <div className="w-full max-w-sm rounded-2xl border border-orange-100 bg-white p-8 shadow-sm">
-          <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-orange-100 text-orange-500">
-            <KeyRound className="h-6 w-6" aria-hidden="true" />
-          </span>
+        {step === 'email' ? (
+          <>
+            <h1 className="mt-[22px] text-center font-display text-2xl font-extrabold leading-7 text-[#1c0e04]">
+              Forgot your password?
+            </h1>
+            <p className="mt-[10px] text-center text-sm leading-[23px] text-[#7a6655]">
+              Enter the email on your account — we will send a reset link.
+            </p>
 
-          {step === 'email' ? (
-            <>
-              <h1 className="mt-4 text-center text-2xl font-extrabold text-gray-900">
-                Forgot your password?
-              </h1>
-              <p className="mt-2 text-center text-sm text-gray-500">
-                Enter the email on your account — we will send a reset link.
-              </p>
+            <form onSubmit={handleSendCode} className="mt-[28px]">
+              {error && (
+                <div className="mb-4">
+                  <FormError message={error} />
+                </div>
+              )}
+              <TextField
+                label="Email address"
+                type="email"
+                size="md"
+                autoComplete="email"
+                placeholder="adaeze@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="mt-2"
+              />
+              <SubmitButton
+                loading={loading}
+                loadingText="Sending link..."
+                className="mt-[15px] h-[38px] text-[13px]"
+              >
+                Send Reset Link
+              </SubmitButton>
+            </form>
+          </>
+        ) : (
+          <>
+            <h1 className="mt-[22px] text-center font-display text-2xl font-extrabold leading-7 text-[#1c0e04]">
+              Check your inbox
+            </h1>
+            <p className="mt-[10px] text-center text-sm leading-[23px] text-[#7a6655]">
+              Enter the code we sent to{' '}
+              <span className="break-all font-semibold text-[#1c0e04]">{email}</span> and choose a new
+              password.
+            </p>
 
-              <form onSubmit={handleSendCode} className="mt-6 space-y-4">
-                {error && <FormError message={error} />}
-                <TextField
-                  label="Email address"
-                  type="email"
-                  autoComplete="email"
-                  placeholder="adaeze@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-                <SubmitButton loading={loading} loadingText="Sending link...">Send Reset Link</SubmitButton>
-              </form>
-            </>
-          ) : (
-            <>
-              <h1 className="mt-4 text-center text-2xl font-extrabold text-gray-900">
-                Check your inbox
-              </h1>
-              <p className="mt-2 text-center text-sm text-gray-500">
-                Enter the code we sent to <span className="font-semibold text-gray-900">{email}</span>{' '}
-                and choose a new password.
-              </p>
+            <form onSubmit={handleResetPassword} className="mt-[28px] space-y-4">
+              {error && <FormError message={error} />}
+              <TextField
+                label="Verification code"
+                size="md"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                placeholder="123456"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                required
+                className="mt-2"
+              />
+              <TextField
+                label="New password"
+                type="password"
+                size="md"
+                autoComplete="new-password"
+                placeholder="Min. 8 characters"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={8}
+                className="mt-2"
+              />
+              <SubmitButton
+                loading={loading}
+                loadingText="Resetting password..."
+                className="h-[38px] text-[13px]"
+              >
+                Reset Password
+              </SubmitButton>
+            </form>
+          </>
+        )}
 
-              <form onSubmit={handleResetPassword} className="mt-6 space-y-4">
-                {error && <FormError message={error} />}
-                <TextField
-                  label="Verification code"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  placeholder="123456"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  required
-                />
-                <TextField
-                  label="New password"
-                  type="password"
-                  autoComplete="new-password"
-                  placeholder="Min. 8 characters"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={8}
-                />
-                <SubmitButton loading={loading} loadingText="Resetting password...">Reset Password</SubmitButton>
-              </form>
-            </>
-          )}
-
-          <Link
-            href="/sign-in"
-            className="mt-6 flex items-center justify-center gap-1.5 text-sm font-semibold text-orange-600 hover:text-orange-700"
-          >
-            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            Back to sign in
-          </Link>
-        </div>
+        <Link
+          href="/sign-in"
+          className="mt-[13px] flex items-center justify-center gap-1 text-[13px] font-semibold leading-5 text-brand hover:text-brand-light"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" strokeWidth={2.5} aria-hidden="true" />
+          Back to sign in
+        </Link>
       </div>
-
-      <StripeDivider />
-    </main>
+    </CenteredCardPage>
   );
 }

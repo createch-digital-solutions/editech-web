@@ -7,16 +7,20 @@ const stats = [
 
 export function StatsBar() {
   return (
-    <section className="bg-gradient-to-br from-[#241a12] via-[#1e2740] to-[#1a2a52] py-14">
-      <dl className="mx-auto grid max-w-7xl grid-cols-2 gap-8 px-6 text-center sm:grid-cols-4 lg:px-8">
-        {stats.map((stat) => (
-          <div key={stat.label}>
-            <dt className="sr-only">{stat.label}</dt>
-            <dd className="text-4xl font-extrabold text-white">{stat.value}</dd>
-            <div className="mt-1 text-sm text-gray-300">{stat.label}</div>
-          </div>
-        ))}
-      </dl>
+    <section className="bg-[#fdf6ec] px-0 lg:px-[31px]">
+      <div className="mx-auto max-w-[1338px] bg-brand-night">
+        <dl className="grid max-w-[1220px] grid-cols-2 gap-y-6 py-6 text-center sm:grid-cols-4 lg:px-[18px]">
+          {stats.map((stat) => (
+            <div key={stat.label}>
+              <dt className="sr-only">{stat.label}</dt>
+              <dd className="font-body text-[34px] font-bold leading-[48px] text-white sm:text-[44px]">
+                {stat.value}
+              </dd>
+              <div className="mt-[11px] font-body text-lg leading-6 text-white/85">{stat.label}</div>
+            </div>
+          ))}
+        </dl>
+      </div>
     </section>
   );
 }

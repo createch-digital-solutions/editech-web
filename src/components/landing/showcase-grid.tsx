@@ -5,39 +5,45 @@ const showcases = [
     src: '/showcase-learning-on-the-go.png',
     alt: 'A young man looking out the window of a bus',
     title: 'Learning on the go',
-    description: 'Offline-first, so Lagos traffic is never wasted time',
+    description: 'Offline-first, so Lagos traffic is\nnever wasted time',
   },
   {
     src: '/showcase-build-creative-career.png',
     alt: 'A designer working on a laptop at her desk',
-    title: 'Build your creative career',
-    description: 'Design systems, UI/UX and brand strategy courses',
+    title: 'Build your creative\ncareer',
+    description: 'Design systems, UI/UX and\nbrand strategy courses',
   },
   {
     src: '/showcase-community-powered-learning.png',
     alt: 'Learners collaborating together in a study group',
-    title: 'Community-powered learning',
-    description: 'Study groups, forums and peer reviews that actually work',
+    title: 'Community-powered\nlearning',
+    description: 'Study groups, forums and\npeer reviews that actually\nwork',
   },
 ];
 
 export function ShowcaseGrid() {
   return (
-    <section className="bg-[#fdf6ec] py-16">
-      <div className="mx-auto grid max-w-7xl gap-6 px-6 sm:grid-cols-3 lg:px-8">
+    <section className="bg-[#fdf6ec] px-6 pt-[72px]">
+      <div className="mx-auto grid max-w-[1090px] gap-5 sm:grid-cols-3">
         {showcases.map((item) => (
-          <div key={item.title} className="group relative overflow-hidden rounded-2xl">
+          <div key={item.title} className="group relative overflow-hidden rounded-xl">
             <Image
               src={item.src}
               alt={item.alt}
-              width={480}
-              height={360}
-              className="aspect-[4/3] w-full object-cover transition-transform duration-300 group-hover:scale-105"
+              width={350}
+              height={200}
+              unoptimized
+              className="aspect-[7/4] w-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-            <div className="absolute inset-x-0 bottom-0 p-5">
-              <h3 className="font-bold text-white">{item.title}</h3>
-              <p className="mt-1 text-sm text-gray-200">{item.description}</p>
+            {/* Warm dark panel over the left 61% only — its hard right edge is part of the design. */}
+            <div className="absolute inset-y-0 left-0 w-[61%] bg-gradient-to-t from-[#1c1008]/[0.72] to-transparent to-50%" />
+            <div className="absolute bottom-0 left-0 px-5 pb-[18px]">
+              <h3 className="whitespace-pre-line font-display text-[15px] font-bold leading-[22px] text-white">
+                {item.title}
+              </h3>
+              <p className="whitespace-pre-line font-body text-xs leading-[18px] text-white/70">
+                {item.description}
+              </p>
             </div>
           </div>
         ))}

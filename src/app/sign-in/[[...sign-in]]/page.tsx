@@ -4,21 +4,58 @@ import { FormEvent, useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useSignIn, useUser } from '@clerk/nextjs';
-import { Award, Sparkles, Trophy, Loader2 } from 'lucide-react';
+import { ArrowRight, Award, Sparkles, Trophy } from 'lucide-react';
 import { AuthShell } from '@/components/auth/auth-shell';
-import { TextField, Divider, SocialButtons, SubmitButton, FormError } from '@/components/auth/form-controls';
+import {
+  Checkbox,
+  TextField,
+  Divider,
+  SocialButtons,
+  SubmitButton,
+  FormError,
+} from '@/components/auth/form-controls';
 import { VerifyEmailForm } from '@/components/auth/verify-email-form';
+import { Logo } from '@/components/landing/logo';
 import { useSignOut } from '@/hooks/auth';
 import { getAuthDestination } from '@/lib/auth-redirect';
-import { Button } from '@/components/ui/button';
 
 const perks = [
   { icon: Sparkles, label: 'AI-personalised learning paths' },
-  { icon: Trophy, label: 'Track your XP and achievements' },
+  { icon: Trophy, label: 'Track your XP and\nachievements' },
   { icon: Award, label: 'Earn verifiable certificates' },
 ];
 
-function SignInForm() {
+function SignInLeftPanel() {
+  return (
+    <div className="lg:pl-[48px] lg:pt-[126px]">
+      <Logo tone="light" size="lg" className="lg:ml-[2px]" />
+
+      <h1 className="mt-10 font-display text-[36px] font-extrabold leading-[44px] text-white sm:text-[46px] sm:leading-[53px] lg:mt-[75px]">
+        Welcome back,
+        <br />
+        keep elevating.
+      </h1>
+      <p className="mt-[10px] text-[17px] leading-[30px] text-white/85">
+        Your AI coach Aria has been
+        <br />
+        keeping your path warm.
+      </p>
+
+      <ul className="mt-[49px] hidden space-y-[21px] lg:block">
+        {perks.map((perk) => (
+          <li key={perk.label} className="flex items-center gap-4">
+            <span className="flex h-[37px] w-[37px] shrink-0 items-center justify-center rounded-lg bg-white/10 text-brand-light">
+              <perk.icon className="h-[18px] w-[18px]" strokeWidth={1.8} aria-hidden="true" />
+            </span>
+            <span className="whitespace-pre-line text-[16.5px] leading-[25px] text-white/90">{perk.label}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function SignInContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get('redirect_url');
@@ -169,139 +206,124 @@ function SignInForm() {
         loading={loading}
         onVerify={handleVerifyCode}
         onResend={handleResendCode}
-        onCancel={async () => {
-          try {
-            await signIn.reset?.();
-          } catch {
-            // ignore
-          }
-          setStep('form');
-        }}
       />
     );
   }
 
   return (
-    <>
-      <h2 className="text-3xl font-extrabold text-gray-900">Sign in to your account</h2>
-      <p className="mt-2 text-sm text-gray-500">
-        No account yet?{' '}
-        <Link href="/sign-up" className="font-semibold text-orange-600 hover:text-orange-700">
-          Sign up free &rarr;
-        </Link>
-      </p>
-
-      <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-        {error && <FormError message={error} />}
-
-        {isSessionExists && (
-          <div className="rounded-lg border border-orange-200 bg-orange-50 p-4 text-center space-y-3">
-            <p className="text-xs text-gray-600">
-              Would you like to proceed to your dashboard or sign out of your current session?
-            </p>
-            <div className="flex justify-center gap-2">
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => { window.location.href = getAuthDestination(redirectUrl); }}
-                className="bg-orange-500 hover:bg-orange-600 text-white text-xs"
-              >
-                Go to Dashboard
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => signOut()}
-                className="text-xs"
-              >
-                Sign Out & Clear Session
-              </Button>
-            </div>
-          </div>
-        )}
-
-        <TextField
-          label="Email address"
-          type="email"
-          autoComplete="email"
-          placeholder="kofi@example.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-
-        <TextField
-          label="Password"
-          type="password"
-          autoComplete="current-password"
-          placeholder="Enter your password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-
-        <div className="flex items-center justify-between">
-          <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-600">
-            <input
-              type="checkbox"
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
-              className="h-4 w-4 cursor-pointer rounded border-gray-300 text-orange-500 focus:ring-orange-400"
-            />
-            Remember me
-          </label>
+    <AuthShell leftContent={<SignInLeftPanel />}>
+      <div className="w-full max-w-[404px]">
+        <h2 className="font-display text-[30px] font-extrabold leading-10 tracking-[-0.01em] text-[#1c0e04] sm:text-[34px]">
+          Sign in to your account
+        </h2>
+        <p className="mt-[10px] text-[17px] leading-6 text-[#7a6655]">
+          No account yet?{' '}
           <Link
-            href="/forgot-password"
-            className="text-sm font-semibold text-orange-600 hover:text-orange-700"
+            href="/sign-up"
+            className="inline-flex items-center gap-1 font-semibold text-brand hover:text-brand-light"
           >
-            Forgot password?
+            Sign up free
+            <ArrowRight className="h-4 w-4" strokeWidth={2.5} aria-hidden="true" />
           </Link>
-        </div>
+        </p>
 
-        <SubmitButton loading={loading} loadingText="Signing in...">Sign In &rarr;</SubmitButton>
+        <form onSubmit={handleSubmit} className="mt-10">
+          {error && (
+            <div className="mb-5">
+              <FormError message={error} />
+            </div>
+          )}
 
-        <Divider />
+          {isSessionExists && (
+            <div className="mb-5 space-y-3 rounded-xl border border-[#e8d5bb] bg-[#fdeee4] p-4 text-center">
+              <p className="text-sm text-[#7a6655]">
+                Would you like to proceed to your dashboard or sign out of your current session?
+              </p>
+              <div className="flex justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    window.location.href = getAuthDestination(redirectUrl);
+                  }}
+                  className="cursor-pointer rounded-lg bg-brand-gradient px-3 py-2 text-xs font-semibold text-white hover:opacity-90"
+                >
+                  Go to Dashboard
+                </button>
+                <button
+                  type="button"
+                  onClick={() => signOut()}
+                  className="cursor-pointer rounded-lg border border-[#e8d5bb] bg-[#fffdf9] px-3 py-2 text-xs font-semibold text-[#3d2b1f] hover:bg-white"
+                >
+                  Sign Out & Clear Session
+                </button>
+              </div>
+            </div>
+          )}
 
-        <SocialButtons
-          disabled={loading || !!socialLoading}
-          loadingProvider={socialLoading}
-          onGoogle={() => handleOAuth('oauth_google')}
-          onApple={() => handleOAuth('oauth_apple')}
-        />
-      </form>
-    </>
+          <div className="space-y-5">
+            <TextField
+              label="Email address"
+              type="email"
+              autoComplete="email"
+              placeholder="kofi@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+
+            <TextField
+              label="Password"
+              type="password"
+              autoComplete="current-password"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="mt-[19px] flex items-center justify-between gap-3">
+            <Checkbox label="Remember me" checked={rememberMe} onChange={setRememberMe} />
+            <Link
+              href="/forgot-password"
+              className="text-base font-semibold text-brand hover:text-brand-light"
+            >
+              Forgot password?
+            </Link>
+          </div>
+
+          <SubmitButton loading={loading} loadingText="Signing in..." arrow className="mt-[19px]">
+            Sign In
+          </SubmitButton>
+
+          <div className="mt-5">
+            <Divider />
+          </div>
+
+          <div className="mt-5">
+            <SocialButtons
+              disabled={loading || !!socialLoading}
+              loadingProvider={socialLoading}
+              onGoogle={() => handleOAuth('oauth_google')}
+              onApple={() => handleOAuth('oauth_apple')}
+            />
+          </div>
+        </form>
+      </div>
+    </AuthShell>
   );
 }
 
 export default function SignInPage() {
   return (
-    <AuthShell
-      leftContent={
-        <div>
-          <h1 className="text-4xl font-extrabold leading-tight text-white">
-            Welcome back, keep elevating.
-          </h1>
-          <p className="mt-4 max-w-sm text-gray-300">
-            Your AI coach Aria has been keeping your path warm.
-          </p>
-
-          <ul className="mt-10 space-y-4">
-            {perks.map((perk) => (
-              <li key={perk.label} className="flex items-center gap-3">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/10 text-orange-400">
-                  <perk.icon className="h-4 w-4" aria-hidden="true" />
-                </span>
-                <span className="text-sm text-gray-200">{perk.label}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+    <Suspense
+      fallback={
+        <AuthShell leftContent={<SignInLeftPanel />}>
+          <p className="text-sm text-[#7a6655]">Loading sign in...</p>
+        </AuthShell>
       }
     >
-      <Suspense fallback={<div className="py-12 text-center text-sm text-gray-500">Loading sign in...</div>}>
-        <SignInForm />
-      </Suspense>
-    </AuthShell>
+      <SignInContent />
+    </Suspense>
   );
 }
