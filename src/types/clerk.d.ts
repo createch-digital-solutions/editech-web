@@ -17,17 +17,15 @@ declare global {
   }
 
   /**
-   * Augment Clerk's global CustomJwtSessionClaims to match Createch's JWT structure.
-   * Supports both direct root claim (`claims.role`) and nested metadata (`claims.publicMetadata.role`).
+   * Augment Clerk's global CustomJwtSessionClaims to match the Editech session template.
    */
   interface CustomJwtSessionClaims {
-    role?: UserRole;
-    publicMetadata?: {
-      role?: UserRole;
-    };
-    metadata?: {
-      role?: UserRole;
-    };
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    role?: UserRole | string;
+    status?: string | null;
   }
 }
 

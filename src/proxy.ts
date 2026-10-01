@@ -14,6 +14,11 @@ const isPublicRoute = createRouteMatcher([
   '/courses(.*)',
 ]);
 
+const isAuthRoute = createRouteMatcher([
+  '/sign-in(.*)',
+  '/sign-up(.*)',
+]);
+
 const isLearnerRoute = createRouteMatcher(['/dashboard(.*)']);
 const isInstructorRoute = createRouteMatcher(['/instructor(.*)', '/portal(.*)']);
 const isAdminRoute = createRouteMatcher(['/admin(.*)']);
@@ -23,41 +28,81 @@ const isAdminRoute = createRouteMatcher(['/admin(.*)']);
 /**
  * Extract role from Clerk session claims (publicMetadata) — and ONLY
  * publicMetadata. publicMetadata is the sole claim guaranteed to be
- * backend-written (via PATCH /auth/role); it is embedded in the JWT and
+ * backend-written (via JIT provision or PATCH /auth/role); it is embedded in the JWT and
  * available here at the Edge without a DB call.
- *
- * Deliberately does NOT fall back to a bare `claims.role` or `claims.metadata`
- * key: those aren't populated by Clerk by default, and would only exist if a
- * custom session token template maps something into them — possibly
- * unsafeMetadata, which is client-writable. Trusting them here would let a
- * user grant themselves a role by editing their own unsafeMetadata.
  */
 function getRoleFromClaims(
   sessionClaims: CustomJwtSessionClaims | Record<string, unknown> | null | undefined
 ): UserRole | null {
   if (!sessionClaims) return null;
   const claims = sessionClaims as Record<string, unknown>;
-  const publicMeta = claims.publicMetadata as { role?: UserRole } | undefined;
-  return publicMeta?.role ?? null;
+  const rawRole = claims.role as string | undefined;
+
+  if (!rawRole) return null;
+  const upper = rawRole.toUpperCase();
+  if (upper === 'ADMIN' || upper === 'INSTRUCTOR' || upper === 'LEARNER') {
+    return upper as UserRole;
+  }
+  return null;
+}
+
+function getStatusFromClaims(
+  sessionClaims: CustomJwtSessionClaims | Record<string, unknown> | null | undefined
+): string | null {
+  if (!sessionClaims) return null;
+  const claims = sessionClaims as Record<string, unknown>;
+  const rawStatus = claims.status as string | undefined;
+
+  if (!rawStatus) return null;
+  return rawStatus.toUpperCase();
+}
+
+function getRoleDashboard(role?: UserRole | null): string {
+  if (role === 'ADMIN') return '/admin';
+  if (role === 'INSTRUCTOR') return '/portal';
+  return '/dashboard';
 }
 
 // --- Middleware ---------------------------------------------------------------
 
 export default clerkMiddleware(async (auth, req) => {
-  // Public routes: always allow
+  const { userId, sessionClaims } = await auth();
+
+  // If already authenticated and visiting sign-in / sign-up:
+  if (userId && isAuthRoute(req)) {
+    const role = getRoleFromClaims(sessionClaims as Record<string, unknown>);
+    const status = getStatusFromClaims(sessionClaims as Record<string, unknown>);
+
+    // Strict status check: only ACTIVE users are allowed into application dashboards
+    if (status !== 'ACTIVE') {
+      return NextResponse.redirect(new URL('/unauthorized', req.url));
+    }
+
+    const redirectUrl = req.nextUrl.searchParams.get('redirect_url');
+    if (redirectUrl && redirectUrl.startsWith('/') && !redirectUrl.startsWith('//')) {
+      return NextResponse.redirect(new URL(redirectUrl, req.url));
+    }
+    return NextResponse.redirect(new URL(getRoleDashboard(role), req.url));
+  }
+
+  // Public routes: allow access
   if (isPublicRoute(req)) return;
 
   // All non-public routes require authentication
-  const { userId, sessionClaims } = await auth();
-
   if (!userId) {
-    // Redirect unauthenticated users to sign-in
-    await auth.protect();
-    return;
+    const signInUrl = new URL('/sign-in', req.url);
+    signInUrl.searchParams.set('redirect_url', req.nextUrl.pathname + req.nextUrl.search);
+    return NextResponse.redirect(signInUrl);
   }
 
   const role = getRoleFromClaims(sessionClaims as Record<string, unknown>);
+  const status = getStatusFromClaims(sessionClaims as Record<string, unknown>);
   const unauthorizedUrl = new URL('/unauthorized', req.url);
+
+  // STRICT STATUS CHECK: Must be explicitly ACTIVE to access any protected route
+  if (status !== 'ACTIVE') {
+    return NextResponse.redirect(unauthorizedUrl);
+  }
 
   // Admin-only routes
   if (isAdminRoute(req)) {
@@ -75,12 +120,10 @@ export default clerkMiddleware(async (auth, req) => {
     return;
   }
 
-  // Learner dashboard: any authenticated user with a known role
+  // Learner dashboard
   if (isLearnerRoute(req)) {
-    if (!role) {
-      // Role not yet in JWT — user is provisioned but role not synced yet.
-      // Allow through; the backend guard will enforce if needed.
-      return;
+    if (!role || !(['LEARNER', 'INSTRUCTOR', 'ADMIN'] as UserRole[]).includes(role)) {
+      return NextResponse.redirect(unauthorizedUrl);
     }
     return;
   }
