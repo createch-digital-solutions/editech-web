@@ -4,14 +4,14 @@ import { FormEvent, useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useSignUp, useUser } from '@clerk/nextjs';
-import { Mail, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { AuthShell } from '@/components/auth/auth-shell';
 import { RoleToggle, SignUpRole } from '@/components/auth/role-toggle';
-import { TextField, Divider, SocialButtons, SubmitButton, FormError } from '@/components/auth/form-controls';
+import { TextField, SubmitButton, FormError } from '@/components/auth/form-controls';
 import { VerifyEmailForm } from '@/components/auth/verify-email-form';
+import { BadgeLogo } from '@/components/landing/logo';
 import { useSignOut } from '@/hooks/auth';
 import { getAuthDestination } from '@/lib/auth-redirect';
-import { Button } from '@/components/ui/button';
 import { apiClient } from '@/lib/api-client';
 
 const stats = [
@@ -21,7 +21,42 @@ const stats = [
   { value: '4.9★', label: 'Rating' },
 ];
 
-function SignUpForm() {
+// Sign-up fields sit 8px under their labels and 18px apart (tighter than sign-in).
+const fieldClass = 'mt-2 h-[52px]';
+
+function SignUpLeftPanel() {
+  return (
+    <div className="lg:pl-[30px] lg:pt-[81px]">
+      <BadgeLogo tone="light" />
+
+      <span className="mt-[22px] flex h-8 w-full max-w-[346px] items-center rounded-full border border-brand-light/30 bg-brand-light/10 px-4 text-[13px] font-bold tracking-[0.02em] text-[#e8a33d]">
+        JOIN 50,000+ LEARNERS
+      </span>
+
+      <h1 className="mt-[23px] font-body text-[36px] font-extrabold leading-[44px] tracking-[-0.02em] text-white sm:text-[43px] sm:leading-[52px]">
+        Join
+        <br />
+        thousands
+        <br />
+        learning skills
+        <br />
+        that pay.
+      </h1>
+
+      <dl className="mt-[43px] hidden grid-cols-[147px_147px] gap-x-3 gap-y-[13px] lg:grid">
+        {stats.map((stat) => (
+          <div key={stat.label} className="flex h-[88px] flex-col justify-center rounded-[10px] bg-white/[0.08] pl-[17px]">
+            <dt className="sr-only">{stat.label}</dt>
+            <dd className="font-mono text-2xl font-bold leading-7 text-[#e8a33d]">{stat.value}</dd>
+            <div className="mt-[3px] text-[13px] leading-5 text-white/85">{stat.label}</div>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
+}
+
+function SignUpContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get('redirect_url');
@@ -36,12 +71,10 @@ function SignUpForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [code, setCode] = useState('');
   const [step, setStep] = useState<'form' | 'verify'>('form');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [verifyLoadingText, setVerifyLoadingText] = useState('Verifying code...');
-  const [socialLoading, setSocialLoading] = useState<'google' | 'apple' | null>(null);
   const [isSessionExists, setIsSessionExists] = useState(false);
 
   const loading = fetchStatus === 'fetching' || isSubmitting;
@@ -128,7 +161,11 @@ function SignUpForm() {
         }
 
         await signUp.finalize();
-        const destination = getAuthDestination(redirectUrl, role.toUpperCase());
+        // New learners pick goals/topics/level first; everyone else goes straight to their dashboard.
+        const destination =
+          !redirectUrl && role === 'LEARNER'
+            ? '/onboarding'
+            : getAuthDestination(redirectUrl, role.toUpperCase());
         window.location.href = destination;
         return { success: true };
       }
@@ -153,86 +190,82 @@ function SignUpForm() {
     }
   }
 
-  async function handleOAuth(strategy: 'oauth_google' | 'oauth_apple') {
-    setError(null);
-    setIsSessionExists(false);
-    const provider = strategy === 'oauth_google' ? 'google' : 'apple';
-    setSocialLoading(provider);
-    try {
-      const callbackDestination = getAuthDestination(redirectUrl, role.toUpperCase());
-      const { error: ssoError } = await signUp.sso({
-        strategy,
-        redirectUrl: '/sso-callback',
-        redirectCallbackUrl: callbackDestination,
-        unsafeMetadata: { role },
-      });
-      if (ssoError) {
-        setError(ssoError.longMessage ?? ssoError.message);
-        setSocialLoading(null);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to initiate social sign up.');
-      setSocialLoading(null);
-    }
-  }
-
   // If already signed in or completing sign-up, show setting up your account state
   if (isUserLoaded && isSignedIn) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
-        <p className="mt-4 text-sm font-medium text-gray-700">Setting up your account...</p>
-      </div>
+      <AuthShell leftContent={<SignUpLeftPanel />}>
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-brand" />
+          <p className="mt-4 text-sm font-medium text-[#3d2b1f]">Setting up your account...</p>
+        </div>
+      </AuthShell>
+    );
+  }
+
+  if (step === 'verify') {
+    return (
+      <VerifyEmailForm
+        email={email}
+        loading={loading}
+        loadingText={verifyLoadingText}
+        onVerify={handleVerifyCode}
+        onResend={handleResendCode}
+      />
     );
   }
 
   return (
-    <>
-      {step === 'form' ? (
-        <>
-          <h2 className="text-3xl font-extrabold text-gray-900">Create your account</h2>
-          <p className="mt-2 text-sm text-gray-500">
-            Already have one?{' '}
-            <Link href="/sign-in" className="font-semibold text-orange-600 hover:text-orange-700">
-              Sign in
-            </Link>
-          </p>
+    <AuthShell leftContent={<SignUpLeftPanel />}>
+      <div className="w-full max-w-[426px]">
+        <h2 className="font-display text-[28px] font-extrabold leading-10 tracking-[-0.01em] text-[#1c0e04] sm:text-[33px]">
+          Create your account
+        </h2>
+        <p className="mt-2 text-[17px] leading-6 text-[#7a6655]">
+          Already have one?{' '}
+          <Link href="/sign-in" className="font-semibold text-brand hover:text-brand-light">
+            Sign in
+          </Link>
+        </p>
 
-          <div className="mt-6">
-            <RoleToggle value={role} onChange={setRole} />
-          </div>
+        <div className="mt-[29px]">
+          <RoleToggle value={role} onChange={setRole} />
+        </div>
 
-          <form onSubmit={handleCreate} className="mt-6 space-y-4">
-            {error && <FormError message={error} />}
+        <form onSubmit={handleCreate} className="mt-[25px]">
+          {error && (
+            <div className="mb-[18px]">
+              <FormError message={error} />
+            </div>
+          )}
 
-            {isSessionExists && (
-              <div className="rounded-lg border border-orange-200 bg-orange-50 p-4 text-center space-y-3">
-                <p className="text-xs text-gray-600">
-                  Would you like to proceed to your dashboard or sign out of your current session to create a new account?
-                </p>
-                <div className="flex justify-center gap-2">
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={() => { window.location.href = getAuthDestination(redirectUrl); }}
-                    className="bg-orange-500 hover:bg-orange-600 text-white text-xs"
-                  >
-                    Go to Dashboard
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    onClick={() => signOut()}
-                    className="text-xs"
-                  >
-                    Sign Out & Clear Session
-                  </Button>
-                </div>
+          {isSessionExists && (
+            <div className="mb-[18px] space-y-3 rounded-xl border border-[#e8d5bb] bg-[#fdeee4] p-4 text-center">
+              <p className="text-sm text-[#7a6655]">
+                Would you like to proceed to your dashboard or sign out of your current session to create a new account?
+              </p>
+              <div className="flex justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    window.location.href = getAuthDestination(redirectUrl);
+                  }}
+                  className="cursor-pointer rounded-lg bg-brand-gradient px-3 py-2 text-xs font-semibold text-white hover:opacity-90"
+                >
+                  Go to Dashboard
+                </button>
+                <button
+                  type="button"
+                  onClick={() => signOut()}
+                  className="cursor-pointer rounded-lg border border-[#e8d5bb] bg-[#fffdf9] px-3 py-2 text-xs font-semibold text-[#3d2b1f] hover:bg-white"
+                >
+                  Sign Out & Clear Session
+                </button>
               </div>
-            )}
+            </div>
+          )}
 
-            <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-[18px]">
+            <div className="grid grid-cols-2 gap-[15px]">
               <TextField
                 label="First name"
                 autoComplete="given-name"
@@ -240,6 +273,7 @@ function SignUpForm() {
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 required
+                className={fieldClass}
               />
               <TextField
                 label="Last name"
@@ -248,6 +282,7 @@ function SignUpForm() {
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 required
+                className={fieldClass}
               />
             </div>
 
@@ -259,6 +294,7 @@ function SignUpForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              className={fieldClass}
             />
 
             <TextField
@@ -270,6 +306,7 @@ function SignUpForm() {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={8}
+              className={fieldClass}
             />
 
             <TextField
@@ -280,69 +317,34 @@ function SignUpForm() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
+              className={fieldClass}
             />
+          </div>
 
-            <SubmitButton loading={loading} loadingText="Creating account...">Create Account &rarr;</SubmitButton>
-
-            <Divider />
-
-            <SocialButtons
-              disabled={loading || !!socialLoading}
-              loadingProvider={socialLoading}
-              onGoogle={() => handleOAuth('oauth_google')}
-              onApple={() => handleOAuth('oauth_apple')}
-            />
-          </form>
-        </>
-      ) : (
-        <VerifyEmailForm
-          email={email}
-          loading={loading}
-          loadingText={verifyLoadingText}
-          onVerify={handleVerifyCode}
-          onResend={handleResendCode}
-          onCancel={async () => {
-            try {
-              await signUp.reset?.();
-            } catch {
-              // ignore
-            }
-            setStep('form');
-          }}
-        />
-      )}
-    </>
+          <SubmitButton
+            loading={loading}
+            loadingText="Creating account..."
+            arrow
+            className="mt-[17px] h-[47px] text-[17px]"
+          >
+            Create Account
+          </SubmitButton>
+        </form>
+      </div>
+    </AuthShell>
   );
 }
 
 export default function SignUpPage() {
   return (
-    <AuthShell
-      leftContent={
-        <div>
-          <span className="inline-block rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-semibold tracking-wide text-orange-200">
-            JOIN 50,000+ LEARNERS
-          </span>
-
-          <h1 className="mt-6 text-4xl font-extrabold leading-tight text-white">
-            Join thousands learning skills that pay.
-          </h1>
-
-          <dl className="mt-10 grid grid-cols-2 gap-4">
-            {stats.map((stat) => (
-              <div key={stat.label} className="rounded-lg bg-white/10 px-4 py-3">
-                <dt className="sr-only">{stat.label}</dt>
-                <dd className="text-2xl font-bold text-orange-400">{stat.value}</dd>
-                <div className="text-sm text-gray-300">{stat.label}</div>
-              </div>
-            ))}
-          </dl>
-        </div>
+    <Suspense
+      fallback={
+        <AuthShell leftContent={<SignUpLeftPanel />}>
+          <p className="text-sm text-[#7a6655]">Loading sign up...</p>
+        </AuthShell>
       }
     >
-      <Suspense fallback={<div className="py-12 text-center text-sm text-gray-500">Loading sign up...</div>}>
-        <SignUpForm />
-      </Suspense>
-    </AuthShell>
+      <SignUpContent />
+    </Suspense>
   );
 }
