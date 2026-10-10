@@ -7,10 +7,10 @@ import { useSignUp, useUser } from '@clerk/nextjs';
 import { Loader2 } from 'lucide-react';
 import { AuthShell } from '@/components/auth/auth-shell';
 import { RoleToggle, SignUpRole } from '@/components/auth/role-toggle';
-import { TextField, SubmitButton, FormError } from '@/components/auth/form-controls';
+import { TextField, Divider, SocialButtons, SubmitButton, FormError } from '@/components/auth/form-controls';
 import { VerifyEmailForm } from '@/components/auth/verify-email-form';
 import { BadgeLogo } from '@/components/landing/logo';
-import { useSignOut } from '@/hooks/auth';
+import { POST_AUTH_REDIRECT_KEY, useSignOut } from '@/hooks/auth';
 import { getAuthDestination } from '@/lib/auth-redirect';
 import { apiClient } from '@/lib/api-client';
 
@@ -33,7 +33,7 @@ function SignUpLeftPanel() {
         JOIN 50,000+ LEARNERS
       </span>
 
-      <h1 className="mt-[23px] font-body text-[36px] font-extrabold leading-[44px] tracking-[-0.02em] text-white sm:text-[43px] sm:leading-[52px]">
+      <h1 className="mt-[23px] font-sora text-[36px] font-extrabold leading-[44px] tracking-[-0.02em] text-white sm:text-[47px] sm:leading-[52px]">
         Join
         <br />
         thousands
@@ -76,6 +76,7 @@ function SignUpContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [verifyLoadingText, setVerifyLoadingText] = useState('Verifying code...');
   const [isSessionExists, setIsSessionExists] = useState(false);
+  const [socialLoading, setSocialLoading] = useState<'google' | 'apple' | null>(null);
 
   const loading = fetchStatus === 'fetching' || isSubmitting;
 
@@ -175,6 +176,37 @@ function SignUpContent() {
     } catch (err) {
       setIsSubmitting(false);
       return { success: false, error: err instanceof Error ? err.message : 'Failed to verify code.' };
+    }
+  }
+
+  /**
+   * Google / Apple sign-up. The chosen role goes with it (as for email sign-up); the round-trip ends on
+   * /sso-callback/complete, which provisions the account (social sign-up skips the email-code step that
+   * does it here) before continuing — new learners then land on onboarding.
+   */
+  async function handleOAuth(strategy: 'oauth_google' | 'oauth_apple') {
+    setError(null);
+    setIsSessionExists(false);
+    setSocialLoading(strategy === 'oauth_google' ? 'google' : 'apple');
+    try {
+      try {
+        sessionStorage.setItem(POST_AUTH_REDIRECT_KEY, redirectUrl ?? '');
+      } catch {
+        // Private mode: they land on their dashboard (or onboarding) instead.
+      }
+      const { error: ssoError } = await signUp.sso({
+        strategy,
+        redirectUrl: '/sso-callback',
+        redirectCallbackUrl: '/sso-callback/complete',
+        unsafeMetadata: { role },
+      });
+      if (ssoError) {
+        setError(ssoError.longMessage ?? ssoError.message);
+        setSocialLoading(null);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to start sign-up with that provider.');
+      setSocialLoading(null);
     }
   }
 
@@ -329,6 +361,19 @@ function SignUpContent() {
           >
             Create Account
           </SubmitButton>
+
+          <div className="mt-5">
+            <Divider />
+          </div>
+
+          <div className="mt-5">
+            <SocialButtons
+              disabled={loading || !!socialLoading}
+              loadingProvider={socialLoading}
+              onGoogle={() => handleOAuth('oauth_google')}
+              onApple={() => handleOAuth('oauth_apple')}
+            />
+          </div>
         </form>
       </div>
     </AuthShell>

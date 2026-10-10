@@ -16,7 +16,7 @@ import {
 } from '@/components/auth/form-controls';
 import { VerifyEmailForm } from '@/components/auth/verify-email-form';
 import { Logo } from '@/components/landing/logo';
-import { useSignOut } from '@/hooks/auth';
+import { POST_AUTH_REDIRECT_KEY, usePostAuthDestination, useSignOut } from '@/hooks/auth';
 import { getAuthDestination } from '@/lib/auth-redirect';
 
 const perks = [
@@ -62,12 +62,15 @@ function SignInContent() {
 
   const { signIn, fetchStatus } = useSignIn();
   const { user, isLoaded: isUserLoaded, isSignedIn } = useUser();
+  const postAuthDestination = usePostAuthDestination();
   const { signOut } = useSignOut();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
   const [step, setStep] = useState<'form' | 'verify'>('form');
+  // 'mfa' = Clerk Device Trust / second-factor email code (new device); 'first' = first-factor email code.
+  const [codeKind, setCodeKind] = useState<'first' | 'mfa'>('first');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [socialLoading, setSocialLoading] = useState<'google' | 'apple' | null>(null);
@@ -83,6 +86,9 @@ function SignInContent() {
       router.replace(destination);
     }
   }, [isUserLoaded, isSignedIn, user, redirectUrl, router]);
+
+  /** Once the session is finalized: provisions the account if needed (JIT) and says where to go next. */
+  const destinationAfterSignIn = () => postAuthDestination(redirectUrl);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -108,9 +114,7 @@ function SignInContent() {
 
       if (signIn.status === 'complete') {
         await signIn.finalize();
-        const role = user?.publicMetadata?.role as string | undefined;
-        const destination = getAuthDestination(redirectUrl, role);
-        window.location.href = destination;
+        window.location.href = await destinationAfterSignIn();
         return;
       }
 
@@ -122,6 +126,21 @@ function SignInContent() {
           setIsSubmitting(false);
           return;
         }
+        setCodeKind('first');
+        setStep('verify');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // New device (Device Trust) or second factor: Clerk wants an emailed code before completing.
+      if (signIn.status === 'needs_client_trust' || signIn.status === 'needs_second_factor') {
+        const { error: sendError } = await signIn.mfa.sendEmailCode();
+        if (sendError) {
+          setError(sendError.longMessage ?? sendError.message);
+          setIsSubmitting(false);
+          return;
+        }
+        setCodeKind('mfa');
         setStep('verify');
         setIsSubmitting(false);
         return;
@@ -138,7 +157,10 @@ function SignInContent() {
   async function handleVerifyCode(verificationCode: string): Promise<{ success: boolean; error?: string }> {
     setIsSubmitting(true);
     try {
-      const { error: verifyError } = await signIn.emailCode.verifyCode({ code: verificationCode });
+      const { error: verifyError } =
+        codeKind === 'mfa'
+          ? await signIn.mfa.verifyEmailCode({ code: verificationCode })
+          : await signIn.emailCode.verifyCode({ code: verificationCode });
       if (verifyError) {
         setIsSubmitting(false);
         return { success: false, error: verifyError.longMessage ?? verifyError.message };
@@ -146,9 +168,7 @@ function SignInContent() {
 
       if (signIn.status === 'complete') {
         await signIn.finalize();
-        const role = user?.publicMetadata?.role as string | undefined;
-        const destination = getAuthDestination(redirectUrl, role);
-        window.location.href = destination;
+        window.location.href = await destinationAfterSignIn();
         return { success: true };
       }
 
@@ -162,7 +182,8 @@ function SignInContent() {
 
   async function handleResendCode(): Promise<{ success: boolean; error?: string }> {
     try {
-      const { error: sendError } = await signIn.emailCode.sendCode();
+      const { error: sendError } =
+        codeKind === 'mfa' ? await signIn.mfa.sendEmailCode() : await signIn.emailCode.sendCode();
       if (sendError) {
         return { success: false, error: sendError.longMessage ?? sendError.message };
       }
@@ -178,11 +199,17 @@ function SignInContent() {
     const provider = strategy === 'oauth_google' ? 'google' : 'apple';
     setSocialLoading(provider);
     try {
-      const callbackDestination = getAuthDestination(redirectUrl);
+      // The provider round-trip ends on /sso-callback/complete, which provisions if needed and then
+      // continues to the page the user came for.
+      try {
+        sessionStorage.setItem(POST_AUTH_REDIRECT_KEY, redirectUrl ?? '');
+      } catch {
+        // Private mode: they land on their dashboard instead.
+      }
       const { error: ssoError } = await signIn.sso({
         strategy,
         redirectUrl: '/sso-callback',
-        redirectCallbackUrl: callbackDestination,
+        redirectCallbackUrl: '/sso-callback/complete',
       });
       if (ssoError) {
         setError(ssoError.longMessage ?? ssoError.message);

@@ -9,11 +9,11 @@ interface InstructorLayoutProps {
 }
 
 /**
- * Universal layout gate for the entire (instructor) route group.
- * Gating logic:
- * - If the user's instructorProfile is missing or status is PENDING (not yet APPROVED),
- *   redirect them to `/portal/onboarding` so they can complete their bio and verification.
- * - Exempts `/portal/onboarding` itself to prevent redirect loops.
+ * Layout gate for the (instructor) route group, driven by the backend-derived `profileStatus`:
+ * - PENDING_ONBOARDING (no bio yet) → `/portal/onboarding`
+ * - PENDING_APPROVAL (application sent, not yet reviewed) → `/portal/pending-approval`
+ * - ACTIVE (approved) on either of those routes → `/portal`
+ * Each target route is exempt from its own redirect, so there are no loops.
  */
 export default function InstructorLayout({ children }: InstructorLayoutProps) {
   const router = useRouter();
@@ -21,20 +21,20 @@ export default function InstructorLayout({ children }: InstructorLayoutProps) {
   const { user, isLoading, isSignedIn } = useCurrentUser();
 
   const isOnboardingRoute = pathname.startsWith('/portal/onboarding');
+  const isPendingApprovalRoute = pathname.startsWith('/portal/pending-approval');
 
   useEffect(() => {
     if (isLoading || !isSignedIn || !user) return;
 
-    // Check instructorProfile status
-    const instructorStatus = user.instructorProfile?.status;
-    const isProfilePending = !instructorStatus || instructorStatus === 'PENDING';
-
-    if (isProfilePending && !isOnboardingRoute) {
+    const { profileStatus } = user;
+    if (profileStatus === 'PENDING_ONBOARDING' && !isOnboardingRoute) {
       router.replace('/portal/onboarding');
-    } else if (!isProfilePending && isOnboardingRoute) {
+    } else if (profileStatus === 'PENDING_APPROVAL' && !isPendingApprovalRoute) {
+      router.replace('/portal/pending-approval');
+    } else if (profileStatus === 'ACTIVE' && (isOnboardingRoute || isPendingApprovalRoute)) {
       router.replace('/portal');
     }
-  }, [user, isLoading, isSignedIn, isOnboardingRoute, router]);
+  }, [user, isLoading, isSignedIn, isOnboardingRoute, isPendingApprovalRoute, router]);
 
   if (isLoading) {
     return (
