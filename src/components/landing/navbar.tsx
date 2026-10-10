@@ -69,26 +69,26 @@ export function Navbar() {
 
           {isLoaded && isSignedIn ? (
             <>
-              <Link href={dashboardHref} className={cn(gradientButton, 'ml-6 xl:ml-10')}>
+              <Link href={dashboardHref} className={cn(gradientButton, 'ml-6 h-10 gap-1 rounded-lg px-5 text-sm xl:ml-10')}>
                 {dashboardLabel}
-                <ArrowRight className="h-2.5 w-2.5" strokeWidth={2.5} aria-hidden="true" />
+                <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} aria-hidden="true" />
               </Link>
               <button
                 type="button"
                 onClick={() => signOut()}
-                className={cn(outlineButton, 'ml-[30px]')}
+                className={cn(outlineButton, 'ml-4 h-10 rounded-lg px-5 text-sm font-semibold xl:ml-[30px]')}
               >
                 Sign Out
               </button>
             </>
           ) : (
             <>
-              <Link href="/sign-in" className={cn(outlineButton, 'ml-6 w-[63px] px-0 xl:ml-10')}>
+              <Link href="/sign-in" className={cn(outlineButton, 'ml-6 h-10 rounded-lg px-5 text-sm font-semibold xl:ml-10')}>
                 Log In
               </Link>
-              <Link href="/sign-up" className={cn(gradientButton, 'ml-[30px] w-[128px] px-0')}>
+              <Link href="/sign-up" className={cn(gradientButton, 'ml-4 h-10 gap-1 rounded-lg px-5 text-sm xl:ml-[30px]')}>
                 Get Started Free
-                <ArrowRight className="h-2.5 w-2.5" strokeWidth={2.5} aria-hidden="true" />
+                <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} aria-hidden="true" />
               </Link>
             </>
           )}

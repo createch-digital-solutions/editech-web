@@ -12,6 +12,7 @@
   --font-mono: var(--font-geist-mono);
   --font-display: var(--font-outfit);
   --font-body: var(--font-inter);
+  --font-sora: var(--font-sora-heading);
 }
 
 /* Brand oranges: burnt (#C1440E) → light (#D4920A). Buttons use the gradient. */
@@ -40,4 +41,41 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/*
+ * Browsers paint saved names, emails and passwords (autofill) on a light-blue background. Keep the
+ * fields' own cream background and dark text instead: the inset shadow covers the browser's colour.
+ */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #fffdf9 inset;
+  box-shadow: 0 0 0 1000px #fffdf9 inset;
+  -webkit-text-fill-color: #1c0e04;
+  caret-color: #1c0e04;
+  transition: background-color 9999s ease-in-out 0s;
+}
+/* Course player seek bar: a white dot on the orange track. */
+.player-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: #fff;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.4);
+}
+.player-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border: 0;
+  border-radius: 9999px;
+  background: #fff;
+}
+
+/* Kept apart: a browser that does not know one selector in a list drops the whole rule. */
+input:autofill {
+  box-shadow: 0 0 0 1000px #fffdf9 inset;
+  -webkit-text-fill-color: #1c0e04;
 }

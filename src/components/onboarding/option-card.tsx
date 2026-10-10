@@ -22,7 +22,7 @@ export function OptionCard({ selected, onToggle, icon, iconTint, label, descript
       aria-checked={selected}
       onClick={onToggle}
       className={cn(
-        'flex min-h-[67px] w-full cursor-pointer items-center rounded-xl border-2 px-[16px] py-2 text-left font-body transition-colors',
+        'flex min-h-[67px] w-full cursor-pointer items-center rounded-xl border-2 px-[16px] py-[7.5px] text-left font-body transition-colors',
         selected ? 'border-brand bg-[#fdf3ee]' : 'border-[#e8d5bb] bg-[#fffdf9] hover:bg-white'
       )}
     >
