@@ -12,3 +12,4 @@ export { useCurrentUser } from './use-current-user';
 export { useRole } from './use-role';
 export { useSignOut } from './use-sign-out';
 export { useAuthQuery } from './use-auth-query';
+export { usePostAuthDestination, POST_AUTH_REDIRECT_KEY } from './use-post-auth-destination';

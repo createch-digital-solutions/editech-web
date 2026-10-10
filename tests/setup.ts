@@ -52,6 +52,8 @@ vi.mock('@clerk/nextjs', () => ({
 }));
 
 vi.mock('@/hooks/auth', () => ({
+  POST_AUTH_REDIRECT_KEY: 'createch:post-auth-redirect',
+  usePostAuthDestination: () => vi.fn().mockResolvedValue('/dashboard'),
   useSignOut: () => ({
     signOut: vi.fn(),
     isSigningOut: false,

@@ -20,6 +20,21 @@ export const UserStatus = {
 
 export type UserStatus = (typeof UserStatus)[keyof typeof UserStatus];
 
+/**
+ * Role-specific onboarding / review state, derived by the backend from the profile records
+ * (GET /auth/me, GET /onboarding/status). `status` above stays the global account gate.
+ */
+export const ProfileStatus = {
+  PENDING_ONBOARDING: 'PENDING_ONBOARDING',
+  PENDING_APPROVAL: 'PENDING_APPROVAL',
+  ACTIVE: 'ACTIVE',
+  SUSPENDED: 'SUSPENDED',
+} as const;
+
+export type ProfileStatus = (typeof ProfileStatus)[keyof typeof ProfileStatus];
+
+export type SkillLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+
 // --- Profiles ----------------------------------------------------------------
 
 export interface LearnerProfile {
@@ -28,6 +43,10 @@ export interface LearnerProfile {
   bio: string | null;
   xpTotal: number;
   streakDays: number;
+  /** Set by learner onboarding; empty until the learner has completed it. */
+  careerGoal?: string | null;
+  skillLevel?: SkillLevel | null;
+  interests?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -57,6 +76,7 @@ export interface User {
   avatarUrl: string | null;
   role: UserRole;
   status: UserStatus;
+  profileStatus: ProfileStatus;
   createdAt: string;
   updatedAt: string;
   learnerProfile?: LearnerProfile | null;

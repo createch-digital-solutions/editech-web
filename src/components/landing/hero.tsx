@@ -29,14 +29,14 @@ export function Hero() {
       />
 
       <div className="relative mx-auto max-w-[1400px] px-6 pb-16 pt-12 lg:grid lg:grid-cols-[470px_1fr] lg:pb-0 lg:pl-[51px] lg:pr-0 lg:pt-[65px]">
-        <div className="lg:pb-[88px] lg:pt-[3px]">
-          <div className="relative inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-[18px] py-2 font-mono text-[11px] text-brand-light sm:whitespace-nowrap sm:text-[13px]">
+        <div className="lg:pb-[88px] lg:pt-[5px]">
+          <div className="relative inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-[18px] py-[6.5px] font-mono text-[11px] text-brand-light sm:whitespace-nowrap sm:text-[13px]">
             <Sparkles className="h-3 w-3" aria-hidden="true" />
             AI-Powered Learning &middot; 50,000+ Learners across Africa
             <DiamondMotif className="-right-[106px] -top-2 hidden h-10 w-10 lg:block" />
           </div>
 
-          <h1 className="mt-[34px] font-display text-[52px] font-extrabold leading-[1.05] tracking-[-0.01em] text-white sm:text-[59px]">
+          <h1 className="mt-[34px] font-display lg:mt-[43px] text-[52px] font-extrabold leading-[1.05] tracking-[-0.01em] text-white sm:text-[59px]">
             Learn.
             <br />
             <span className="bg-[linear-gradient(90deg,#c1440e_0%,#d4920a_130%)] bg-clip-text text-transparent">

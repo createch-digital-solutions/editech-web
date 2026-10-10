@@ -2,7 +2,9 @@
 
 import { ReactNode, SVGProps, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft,
   ArrowRight,
@@ -24,6 +26,10 @@ import { BadgeLogo } from '@/components/landing/logo';
 import { StripeDivider } from '@/components/landing/stripe-divider';
 import { OnboardingStepper } from '@/components/onboarding/stepper';
 import { OptionCard } from '@/components/onboarding/option-card';
+import { FormError } from '@/components/auth/form-controls';
+import { useApiClient } from '@/hooks/use-api-client';
+import { queryKeys } from '@/lib/query-keys';
+import type { SkillLevel } from '@/types/user';
 
 /** Money bag (no lucide equivalent) drawn in lucide's 24px stroke style. */
 function MoneyBagIcon(props: SVGProps<SVGSVGElement>) {
@@ -99,10 +105,15 @@ function labelsFor(choices: Choice[], ids: string[]) {
 
 export default function OnboardingPage() {
   const { user } = useUser();
+  const router = useRouter();
+  const api = useApiClient();
+  const queryClient = useQueryClient();
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
-  const [level, setLevel] = useState<string | null>(null);
+  const [level, setLevel] = useState<SkillLevel | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const canContinue =
     (step === 1 && selectedGoals.length > 0) ||
@@ -111,8 +122,28 @@ export default function OnboardingPage() {
 
   function handleContinue() {
     if (!canContinue) return;
-    // TODO: Persist goals/topics/level to the backend once the learner-preferences endpoint exists.
     setStep((s) => (s < 4 ? ((s + 1) as 2 | 3 | 4) : s));
+  }
+
+  /** Saves the answers (POST /onboarding/learner), after which the learner's profileStatus is ACTIVE. */
+  async function handleFinish() {
+    if (!level) return;
+    setIsSaving(true);
+    setSaveError(null);
+    try {
+      await api.post('/onboarding/learner', {
+        careerGoal: labelsFor(goals, selectedGoals),
+        skillLevel: level,
+        interests: topics.filter((t) => selectedTopics.includes(t.id)).map((t) => t.label),
+      });
+      // GET /auth/me now reports profileStatus ACTIVE, so the learner layout lets them into the dashboard.
+      await queryClient.invalidateQueries({ queryKey: queryKeys.auth.me() });
+      router.replace('/dashboard');
+    } catch (err) {
+      console.error('Failed to save onboarding preferences', err);
+      setSaveError('We could not save your choices. Please check your connection and try again.');
+      setIsSaving(false);
+    }
   }
 
   const copy = step !== 4 ? stepCopy[step] : null;
@@ -127,7 +158,7 @@ export default function OnboardingPage() {
 
   return (
     <main className="flex min-h-screen flex-col bg-[#fdf6ec] font-body">
-      <div className="flex flex-1 flex-col items-center px-4 pb-12 pt-[71px] sm:px-6">
+      <div className="flex flex-1 flex-col items-center px-4 pb-10 pt-[71px] sm:px-6">
         <Link href="/" aria-label="Createch Elevate home">
           <BadgeLogo size="sm" />
         </Link>
@@ -185,7 +216,7 @@ export default function OnboardingPage() {
                         label={l.label}
                         description={l.description}
                         selected={level === l.id}
-                        onToggle={() => setLevel(l.id)}
+                        onToggle={() => setLevel(l.id as SkillLevel)}
                       />
                     ))}
                 </div>
@@ -247,13 +278,20 @@ export default function OnboardingPage() {
                   ))}
                 </dl>
 
-                <Link
-                  href="/dashboard"
-                  className="mx-auto mt-6 flex h-[46px] w-full max-w-[352px] items-center justify-center gap-1 rounded-lg bg-brand-gradient text-sm font-semibold text-white shadow-lg shadow-brand/30 transition-opacity hover:opacity-90"
+                {saveError && (
+                  <div className="mt-6 text-left">
+                    <FormError message={saveError} />
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={handleFinish}
+                  disabled={isSaving}
+                  className="mx-auto mt-6 flex h-[46px] w-full max-w-[352px] cursor-pointer items-center justify-center gap-1 rounded-lg bg-brand-gradient text-sm font-semibold text-white shadow-lg shadow-brand/30 transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Go to my dashboard
-                  <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} aria-hidden="true" />
-                </Link>
+                  {isSaving ? 'Personalising your dashboard…' : 'Go to my dashboard'}
+                  {!isSaving && <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} aria-hidden="true" />}
+                </button>
               </div>
             )}
           </section>

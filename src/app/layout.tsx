@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono, Inter, Outfit } from 'next/font/google';
+import { Geist, Geist_Mono, Inter, Outfit, Sora } from 'next/font/google';
 import { ClerkProvider } from '@clerk/nextjs';
 import { ThemeProvider } from '@/components/providers/theme-provider';
 import { QueryProvider } from '@/components/providers/query-provider';
@@ -27,6 +27,13 @@ const inter = Inter({
   subsets: ['latin'],
 });
 
+// The sign-up panel heading ("Join thousands learning skills that pay.") is set in Sora in the design.
+const sora = Sora({
+  variable: '--font-sora-heading',
+  subsets: ['latin'],
+  weight: '800',
+});
+
 export const metadata: Metadata = {
   title: 'Createch — AI-Powered Learning Marketplace',
   description: 'Next-generation AI-powered learning marketplace for skills and mastery.',
@@ -42,7 +49,7 @@ export default function RootLayout({
       <html
         lang="en"
         suppressHydrationWarning
-        className={`${geistSans.variable} ${geistMono.variable} ${outfit.variable} ${inter.variable} h-full antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${outfit.variable} ${inter.variable} ${sora.variable} h-full antialiased`}
       >
         <body className="min-h-full flex flex-col bg-background text-foreground transition-colors">
           <ThemeProvider

@@ -33,16 +33,16 @@ export function SimpleNavbar() {
         <div className="hidden items-center md:flex">
           <Link
             href="/sign-in"
-            className="ml-8 flex h-[29px] w-[62px] items-center justify-center rounded-lg border border-brand bg-white text-xs font-semibold text-brand transition-colors hover:bg-orange-50"
+            className="ml-8 flex h-10 items-center justify-center whitespace-nowrap rounded-lg border border-brand bg-white px-5 text-sm font-semibold text-brand transition-colors hover:bg-orange-50"
           >
             Log In
           </Link>
           <Link
             href="/sign-up"
-            className="ml-[33px] flex h-[29px] w-[128px] items-center justify-center gap-0.5 rounded-lg bg-brand-gradient text-xs font-semibold text-white shadow-md shadow-brand/30 transition-opacity hover:opacity-90"
+            className="ml-4 flex h-10 items-center justify-center gap-1 whitespace-nowrap rounded-lg bg-brand-gradient px-5 text-sm font-semibold text-white shadow-md shadow-brand/30 transition-opacity hover:opacity-90 lg:ml-[33px]"
           >
             Get Started Free
-            <ArrowRight className="h-2.5 w-2.5" strokeWidth={2.5} aria-hidden="true" />
+            <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} aria-hidden="true" />
           </Link>
         </div>
 
