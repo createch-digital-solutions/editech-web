@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useCurrentUser } from '@/hooks/auth/use-current-user';
+import { AccountLoading } from '@/components/auth/account-loading';
 
 interface InstructorLayoutProps {
   children: React.ReactNode;
@@ -13,7 +14,8 @@ interface InstructorLayoutProps {
  * - PENDING_ONBOARDING (no bio yet) → `/portal/onboarding`
  * - PENDING_APPROVAL (application sent, not yet reviewed) → `/portal/pending-approval`
  * - ACTIVE (approved) on either of those routes → `/portal`
- * Each target route is exempt from its own redirect, so there are no loops.
+ * Each target route is exempt from its own redirect, so there are no loops. A loader shows until
+ * GET /auth/me answers and while a redirect is under way.
  */
 export default function InstructorLayout({ children }: InstructorLayoutProps) {
   const router = useRouter();
@@ -23,26 +25,19 @@ export default function InstructorLayout({ children }: InstructorLayoutProps) {
   const isOnboardingRoute = pathname.startsWith('/portal/onboarding');
   const isPendingApprovalRoute = pathname.startsWith('/portal/pending-approval');
 
-  useEffect(() => {
-    if (isLoading || !isSignedIn || !user) return;
-
+  let target: string | null = null;
+  if (isSignedIn && user) {
     const { profileStatus } = user;
-    if (profileStatus === 'PENDING_ONBOARDING' && !isOnboardingRoute) {
-      router.replace('/portal/onboarding');
-    } else if (profileStatus === 'PENDING_APPROVAL' && !isPendingApprovalRoute) {
-      router.replace('/portal/pending-approval');
-    } else if (profileStatus === 'ACTIVE' && (isOnboardingRoute || isPendingApprovalRoute)) {
-      router.replace('/portal');
-    }
-  }, [user, isLoading, isSignedIn, isOnboardingRoute, isPendingApprovalRoute, router]);
-
-  if (isLoading) {
-    return (
-      <div className="flex h-[50vh] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
-    );
+    if (profileStatus === 'PENDING_ONBOARDING' && !isOnboardingRoute) target = '/portal/onboarding';
+    else if (profileStatus === 'PENDING_APPROVAL' && !isPendingApprovalRoute) target = '/portal/pending-approval';
+    else if (profileStatus === 'ACTIVE' && (isOnboardingRoute || isPendingApprovalRoute)) target = '/portal';
   }
+
+  useEffect(() => {
+    if (target) router.replace(target);
+  }, [target, router]);
+
+  if (isLoading || target) return <AccountLoading />;
 
   return <>{children}</>;
 }

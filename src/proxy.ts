@@ -12,6 +12,8 @@ const isPublicRoute = createRouteMatcher([
   '/sso-callback(.*)',
   '/unauthorized(.*)',
   '/courses(.*)',
+  // Local-development API forwarding (next.config.ts); the API does its own auth.
+  '/backend(.*)',
 ]);
 
 const isAuthRoute = createRouteMatcher([
