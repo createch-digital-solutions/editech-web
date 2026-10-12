@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Logo } from './logo';
 import { FacebookIcon, LinkedinIcon, TwitterIcon, YoutubeIcon } from './social-icons';
 
 const columns = [
@@ -47,14 +48,7 @@ export function Footer() {
       <div className="mx-auto max-w-[1400px]">
         <div className="grid gap-10 px-6 pb-[45px] pt-12 sm:grid-cols-2 lg:grid-cols-4 lg:gap-x-0 lg:pl-[107px] lg:pr-[89px]">
           <div>
-            <div className="flex items-center gap-[15px]">
-              <span className="flex h-[43px] w-[43px] items-center justify-center rounded-lg bg-brand-gradient text-sm font-bold text-white">
-                cE
-              </span>
-              <span className="font-display text-base font-bold text-white">
-                Createch<span className="text-[#cf7d0b]">Elevate</span>
-              </span>
-            </div>
+            <Logo tone="light" size="footer" />
             <p className="mt-[24px] max-w-[245px] text-[15px] leading-7">
               AI-powered learning for the next generation of African innovators
             </p>
