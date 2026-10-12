@@ -31,7 +31,7 @@ export default function ProfilePage() {
   const recent = SAMPLE_BADGES.filter((b) => b.earned).slice(0, 6);
 
   return (
-    <main className="flex-1">
+    <main className="learner-compact flex-1">
       <section className="relative overflow-hidden bg-brand-night" aria-label="Profile">
         <DiamondMotif className="left-[6px] top-[6px] h-[74px] w-[74px]" />
         <div className="relative mx-auto flex max-w-[1234px] flex-col gap-6 px-4 py-10 sm:px-6 md:flex-row md:items-start lg:h-[278px] lg:pb-0 lg:pl-[74px] lg:pr-[73px] lg:pt-[59px]">

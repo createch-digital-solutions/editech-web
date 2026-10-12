@@ -31,7 +31,7 @@ export default async function CoursePage({ params }: Params) {
   const discount = course.originalPrice && course.originalPrice > course.price ? Math.round((1 - course.price / course.originalPrice) * 100) : 0;
 
   return (
-    <main className="flex-1">
+    <main className="learner-compact flex-1">
       <section className="relative overflow-hidden bg-brand-night">
         <DiamondMotif className="left-[6px] top-[8px] h-[76px] w-[76px]" />
         <div className="relative mx-auto grid max-w-[1238px] gap-10 px-4 py-10 sm:px-6 lg:grid-cols-[minmax(0,1fr)_359px] lg:gap-[60px] lg:pb-[44px] lg:pl-[153px] lg:pr-[77px] lg:pt-[46px]">

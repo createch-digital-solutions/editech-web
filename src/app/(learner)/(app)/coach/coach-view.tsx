@@ -89,7 +89,7 @@ export function CoachView() {
   }
 
   return (
-    <div className="flex flex-1 flex-col lg:flex-row">
+    <div className="learner-compact flex flex-1 flex-col lg:flex-row">
       <section className="flex min-w-0 flex-1 flex-col" aria-label="Chat with Aria">
         <div className="relative flex flex-col gap-5 bg-brand-night px-4 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-[31px] lg:h-[133px] lg:py-0">
           <div className="flex items-center gap-[21px]">

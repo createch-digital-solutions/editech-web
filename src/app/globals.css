@@ -74,6 +74,17 @@ input:-webkit-autofill:active {
   background: #fff;
 }
 
+/*
+ * Learner screens whose designs were drawn larger than the rest of the app (20px body text, 66px
+ * inputs): shown at 80% on laptop and desktop screens so they match the dashboard and auth pages.
+ * Phones keep the full size, where the layouts already step down.
+ */
+@media (min-width: 1024px) {
+  .learner-compact {
+    zoom: 0.8;
+  }
+}
+
 /* Kept apart: a browser that does not know one selector in a list drops the whole rule. */
 input:autofill {
   box-shadow: 0 0 0 1000px #fffdf9 inset;

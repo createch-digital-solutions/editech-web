@@ -88,7 +88,7 @@ export function CourseTabs({ course, reviews }: { course: CourseDetail; reviews:
 
   return (
     <div className="mx-auto w-full max-w-[1238px] px-4 pb-[60px] pt-[46px] sm:px-6 lg:px-[64px]">
-      <div className="flex gap-1 overflow-x-auto border-b-2 border-[#efe2d0]" role="tablist" aria-label="Course details">
+      <div className="flex gap-1 overflow-x-auto overflow-y-hidden border-b-2 border-[#efe2d0]" role="tablist" aria-label="Course details">
         {TABS.map((t) => (
           <button
             key={t}
