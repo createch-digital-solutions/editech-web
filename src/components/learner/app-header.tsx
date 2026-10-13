@@ -4,9 +4,9 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
-import { Bell, Menu, X } from 'lucide-react';
+import { Bell, Menu, UserRound, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { SAMPLE_LEARNER } from '@/lib/learner-data';
+import { Logo } from '@/components/landing/logo';
 
 const NAV = [
   { href: '/dashboard', label: 'Dashboard' },
@@ -24,24 +24,37 @@ function activeLabel(pathname: string) {
   return 'Dashboard';
 }
 
-/** "cE" tile + CreatechElevate, at the learner header size (40px tile). */
+/** The logo at the learner header size. */
 export function AppLogo({ tone = 'dark' }: { tone?: 'dark' | 'light' }) {
-  return (
-    <span className="flex items-center gap-3">
-      <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-brand-gradient font-display text-[15px] font-bold text-white">
-        cE
-      </span>
-      <span className={cn('font-display text-lg font-bold tracking-[-0.01em]', tone === 'light' ? 'text-white' : 'text-[#1c0e04]')}>
-        Createch<span className="text-[#cf7d0b]">Elevate</span>
-      </span>
-    </span>
-  );
+  return <Logo tone={tone} size="md" />;
 }
 
-/** Round avatar: the signed-in learner's photo (Clerk), else the sample learner. */
+/** "Sassera Angel" → "SA"; falls back to the first letter of the email. */
+function initialsOf(firstName?: string | null, lastName?: string | null, email?: string | null) {
+  const fromName = [firstName, lastName].map((n) => n?.trim().charAt(0) ?? '').join('');
+  return (fromName || email?.trim().charAt(0) || '').toUpperCase();
+}
+
+/**
+ * Round avatar: the photo the learner uploaded (Clerk), else their initials until they add one in
+ * Settings (a person icon while the account is still loading).
+ */
 export function LearnerAvatar({ className, src }: { className?: string; src?: string }) {
   const { user } = useUser();
-  const url = src ?? (user?.hasImage ? user.imageUrl : SAMPLE_LEARNER.avatar);
+  const url = src ?? (user?.hasImage ? user.imageUrl : null);
+  if (!url) {
+    const initials = initialsOf(user?.firstName, user?.lastName, user?.primaryEmailAddress?.emailAddress);
+    return (
+      // Container units (cqw) size the letters to the circle, from the top bar to the profile header.
+      <span className={cn('@container flex items-center justify-center rounded-full bg-[#fbece4] text-brand', className)} aria-hidden="true">
+        {initials ? (
+          <span className="font-display text-[38cqw] font-bold leading-none">{initials}</span>
+        ) : (
+          <UserRound className="h-[55%] w-[55%]" strokeWidth={1.8} />
+        )}
+      </span>
+    );
+  }
   return (
     // eslint-disable-next-line @next/next/no-img-element -- Clerk avatars come from any CDN host.
     <img src={url} alt="" className={cn('rounded-full object-cover', className)} />
@@ -61,19 +74,19 @@ export function AppHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-[#e8d5bb] bg-[#fffdf9]">
-      <div className="flex h-[72px] items-center px-4 sm:px-6 lg:h-[91px] lg:pl-[37px] lg:pr-9">
+      <div className="flex h-16 items-center px-4 sm:px-6 lg:px-8">
         <Link href={isSignedIn ? '/dashboard' : '/'} aria-label="Createch Elevate home" className="shrink-0">
           <AppLogo />
         </Link>
 
-        <nav className="ml-[37px] hidden items-center lg:flex" aria-label="Learner">
+        <nav className="ml-8 hidden items-center gap-1 lg:flex" aria-label="Learner">
           {NAV.map((item) => (
             <Link
               key={item.label}
               href={item.href}
               aria-current={item.label === active ? 'page' : undefined}
               className={cn(
-                'flex h-12 items-center whitespace-nowrap rounded-xl px-[22px] font-body text-[20px] transition-colors',
+                'flex h-10 items-center whitespace-nowrap rounded-lg px-4 font-body text-[15px] transition-colors',
                 item.label === active ? 'bg-[#fbece4] font-semibold text-brand' : 'font-medium text-[#7a6655] hover:text-brand'
               )}
             >
@@ -82,7 +95,7 @@ export function AppHeader() {
           ))}
         </nav>
 
-        <div className="ml-auto flex items-center gap-3 lg:gap-[21px]">
+        <div className="ml-auto flex items-center gap-3 lg:gap-5">
           {isLoaded && !isSignedIn ? (
             <>
               <Link
@@ -101,11 +114,11 @@ export function AppHeader() {
           ) : (
             <>
               <Link href="/settings?section=notifications" aria-label="Notifications (1 new)" className="relative text-[#7a6655] hover:text-brand">
-                <Bell className="h-[26px] w-[26px]" strokeWidth={1.8} aria-hidden="true" />
+                <Bell className="h-[22px] w-[22px]" strokeWidth={1.8} aria-hidden="true" />
                 <span className="absolute -right-0.5 -top-0.5 h-[10px] w-[10px] rounded-full border-2 border-[#fffdf9] bg-brand" />
               </Link>
               <Link href="/profile" aria-label="Your profile">
-                <LearnerAvatar className="h-10 w-10 ring-1 ring-[#e8d5bb] lg:h-[52px] lg:w-[52px]" />
+                <LearnerAvatar className="h-9 w-9 ring-1 ring-[#e8d5bb] lg:h-10 lg:w-10" />
               </Link>
             </>
           )}

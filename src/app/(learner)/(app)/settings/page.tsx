@@ -183,7 +183,7 @@ function SettingsContent() {
   const current = SECTIONS.find((s) => s.id === active)!;
 
   return (
-    <div className="flex flex-1 flex-col lg:flex-row">
+    <div className="learner-compact flex flex-1 flex-col lg:flex-row">
       <aside className="shrink-0 border-b border-[#e8d5bb] bg-[#fffdf9] px-4 py-6 sm:px-6 lg:w-[336px] lg:border-b-0 lg:border-r lg:px-[18px] lg:pt-[37px]">
         <h1 className="font-display text-[23px] font-bold leading-8 text-[#1c0e04] lg:pl-[13px]">Settings</h1>
         <nav className="mt-6 flex gap-1 overflow-x-auto lg:mt-[33px] lg:block lg:space-y-1" aria-label="Settings">

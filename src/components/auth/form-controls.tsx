@@ -1,7 +1,7 @@
 'use client';
 
-import { InputHTMLAttributes, ReactNode, forwardRef, useId } from 'react';
-import { ArrowRight, Check, Loader2 } from 'lucide-react';
+import { InputHTMLAttributes, ReactNode, forwardRef, useId, useState } from 'react';
+import { ArrowRight, Check, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> {
@@ -12,9 +12,12 @@ interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'si
 }
 
 export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
-  ({ label, error, id, className, size = 'lg', ...props }, ref) => {
+  ({ label, error, id, className, size = 'lg', type, ...props }, ref) => {
     const generatedId = useId();
     const fieldId = id ?? generatedId;
+    const isPassword = type === 'password';
+    const [showPassword, setShowPassword] = useState(false);
+    const EyeIcon = showPassword ? EyeOff : Eye;
 
     return (
       <div>
@@ -27,20 +30,39 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
         >
           {label}
         </label>
-        <input
-          ref={ref}
-          id={fieldId}
-          aria-invalid={!!error}
-          className={cn(
-            'w-full border bg-[#fffdf9] font-body text-[#1c0e04] placeholder:text-[#a89282] focus:outline-none',
-            size === 'lg'
-              ? 'mt-[11px] h-[53px] rounded-xl border-[#e8d5bb] px-4 text-base focus:border-2 focus:border-brand focus:px-[15px]'
-              : 'mt-[10px] h-[43px] rounded-lg border-2 border-[#e8d5bb] px-[14px] text-[13px] focus:border-brand',
-            error && 'border-red-400',
-            className
+        <div className={cn('relative', size === 'lg' ? 'mt-[11px]' : 'mt-[10px]')}>
+          <input
+            ref={ref}
+            id={fieldId}
+            type={isPassword && showPassword ? 'text' : type}
+            aria-invalid={!!error}
+            className={cn(
+              'w-full border bg-[#fffdf9] font-body text-[#1c0e04] placeholder:text-[#a89282] focus:outline-none',
+              size === 'lg'
+                ? 'h-[53px] rounded-xl border-[#e8d5bb] px-4 text-base focus:border-2 focus:border-brand focus:px-[15px]'
+                : 'h-[43px] rounded-lg border-2 border-[#e8d5bb] px-[14px] text-[13px] focus:border-brand',
+              // Room for the show / hide button (the focus padding above would otherwise override it).
+              isPassword && (size === 'lg' ? 'pr-12 focus:pr-12' : 'pr-10'),
+              error && 'border-red-400',
+              className
+            )}
+            {...props}
+          />
+          {isPassword && (
+            <button
+              type="button"
+              onClick={() => setShowPassword((s) => !s)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              aria-pressed={showPassword}
+              className={cn(
+                'absolute inset-y-0 right-0 flex cursor-pointer items-center justify-center text-[#a89282] transition-colors hover:text-brand',
+                size === 'lg' ? 'w-12' : 'w-10'
+              )}
+            >
+              <EyeIcon className={size === 'lg' ? 'h-5 w-5' : 'h-4 w-4'} strokeWidth={1.8} aria-hidden="true" />
+            </button>
           )}
-          {...props}
-        />
+        </div>
         {error && <p className="mt-1.5 font-body text-sm text-red-600">{error}</p>}
       </div>
     );

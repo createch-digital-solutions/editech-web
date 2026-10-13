@@ -21,8 +21,8 @@ const ITEMS = [
 export function LearnerSidebar() {
   const pathname = usePathname();
   return (
-    <aside className="hidden w-[367px] shrink-0 border-r border-[#e8d5bb] bg-[#fffdf9] px-[24px] pt-[71px] lg:block">
-      <nav aria-label="Dashboard" className="space-y-[3px]">
+    <aside className="hidden w-[248px] shrink-0 border-r border-[#e8d5bb] bg-[#fffdf9] px-4 pt-8 lg:block">
+      <nav aria-label="Dashboard" className="space-y-1">
         {ITEMS.map((item) => {
           const active = item.match(pathname);
           return (
@@ -31,7 +31,7 @@ export function LearnerSidebar() {
               href={item.href}
               aria-current={active ? 'page' : undefined}
               className={cn(
-                'flex h-14 items-center rounded-xl px-[19px] font-body text-[20px] transition-colors',
+                'flex h-11 items-center rounded-lg px-4 font-body text-[15px] transition-colors',
                 active ? 'bg-[#fbece4] font-bold text-brand' : 'text-[#5a4636] hover:bg-[#fdf6ec] hover:text-brand'
               )}
             >

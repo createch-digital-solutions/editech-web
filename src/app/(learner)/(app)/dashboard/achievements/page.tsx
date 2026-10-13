@@ -40,7 +40,7 @@ function StatCard({ emoji, value, valueClass, label, note, href }: { emoji: stri
 export default function AchievementsPage() {
   const l = SAMPLE_LEARNER;
   return (
-    <main className="mx-auto w-full max-w-[1234px] flex-1 px-4 pb-[44px] pt-8 sm:px-6 lg:px-[49px] lg:pt-[43px]">
+    <main className="learner-compact mx-auto w-full max-w-[1234px] flex-1 px-4 pb-[44px] pt-8 sm:px-6 lg:px-[49px] lg:pt-[43px]">
       <section className="grid gap-[33px] min-[768px]:grid-cols-2 min-[1100px]:grid-cols-[401px_repeat(3,minmax(0,1fr))]" aria-label="Your progress">
         <div className="relative overflow-hidden rounded-[28px] bg-brand-night px-[43px] pb-[34px] pt-[41px] text-white shadow-md min-[768px]:col-span-2 min-[1100px]:col-span-1">
           <DiamondMotif className="left-[10px] top-[10px] h-[80px] w-[80px]" />

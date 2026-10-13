@@ -30,7 +30,7 @@ export function CatalogueView({ catalogue }: { catalogue: Catalogue }) {
   const available = filtered || !catalogue.isSample ? courses.length : catalogue.total;
 
   return (
-    <div className="flex flex-1 flex-col lg:flex-row">
+    <div className="learner-compact flex flex-1 flex-col lg:flex-row">
       <aside className="shrink-0 border-b border-[#e8d5bb] bg-[#fffdf9] lg:w-[367px] lg:border-b-0 lg:border-r">
         <div className="border-b border-[#e8d5bb] px-4 py-6 sm:px-6 lg:px-[25px] lg:pb-[25px] lg:pt-[31px]">
           <label className="relative block">

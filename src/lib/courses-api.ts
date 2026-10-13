@@ -1,4 +1,9 @@
 import { API_BASE_URL } from '@/lib/api-client';
+
+/** On the server, call the API directly rather than through the local /backend forwarding. */
+const SERVER_API_BASE_URL = process.env.API_PROXY_TARGET
+  ? `${process.env.API_PROXY_TARGET.replace(/\/$/, '')}/api/v1`
+  : API_BASE_URL;
 import {
   CATEGORIES,
   SAMPLE_COURSES,
@@ -54,7 +59,7 @@ function toSummary(c: ApiRecord): CourseSummary | null {
 }
 
 async function getJson(path: string): Promise<unknown> {
-  const res = await fetch(`${API_BASE_URL}${path}`, { next: { revalidate: 60 }, signal: AbortSignal.timeout(8000) });
+  const res = await fetch(`${SERVER_API_BASE_URL}${path}`, { next: { revalidate: 60 }, signal: AbortSignal.timeout(8000) });
   if (!res.ok) throw Object.assign(new Error(`GET ${path} → ${res.status}`), { status: res.status });
   const body = (await res.json()) as { data?: unknown };
   return body?.data ?? body;

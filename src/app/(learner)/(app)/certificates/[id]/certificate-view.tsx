@@ -29,7 +29,7 @@ export function CertificateView({ certificate: c }: { certificate: Certificate }
   ];
 
   return (
-    <main className="mx-auto w-full max-w-[1231px] flex-1 px-4 pb-[60px] pt-10 text-center sm:px-6 lg:px-[75px] lg:pt-[73px]">
+    <main className="learner-compact mx-auto w-full max-w-[1231px] flex-1 px-4 pb-[60px] pt-10 text-center sm:px-6 lg:px-[75px] lg:pt-[73px]">
       <span className="text-[56px] leading-[60px]" aria-hidden="true">
         🎓
       </span>
