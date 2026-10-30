@@ -21,8 +21,9 @@ const ITEMS = [
 export function LearnerSidebar() {
   const pathname = usePathname();
   return (
-    <aside className="hidden w-[248px] shrink-0 border-r border-[#e8d5bb] bg-[#fffdf9] px-4 pt-8 lg:block">
-      <nav aria-label="Dashboard" className="space-y-1">
+    <aside className="hidden w-[248px] shrink-0 border-r border-[#e8d5bb] bg-[#fffdf9] px-4 lg:block">
+      {/* Stays in view under the top bar while the page scrolls. */}
+      <nav aria-label="Dashboard" className="sticky top-16 space-y-1 pt-8">
         {ITEMS.map((item) => {
           const active = item.match(pathname);
           return (

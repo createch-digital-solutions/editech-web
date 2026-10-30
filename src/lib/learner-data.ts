@@ -39,6 +39,20 @@ export interface CourseSummary {
   imageAlt: string;
   badge?: CourseBadge;
   category: string;
+  level?: CourseLevel;
+  /** Short description: catalogue search and list view. */
+  description?: string;
+  /** ISO date; sorts "Newest". */
+  createdAt?: string;
+  lessons?: number;
+  durationMinutes?: number;
+}
+
+/** 150 → "2h 30m", 45 → "45m". */
+export function formatDuration(minutes: number) {
+  const h = Math.floor(minutes / 60);
+  const m = Math.round(minutes % 60);
+  return h ? (m ? `${h}h ${m}m` : `${h}h`) : `${m}m`;
 }
 
 export interface CourseDetail extends CourseSummary {
@@ -61,16 +75,22 @@ export interface CourseDetail extends CourseSummary {
 /** "₦15,000", or "Free". */
 export const formatPrice = (naira: number) => (naira === 0 ? 'Free' : `₦${naira.toLocaleString('en-NG')}`);
 
+export const LEVEL_LABELS: Record<CourseLevel, string> = {
+  BEGINNER: 'Beginner',
+  INTERMEDIATE: 'Intermediate',
+  ADVANCED: 'Advanced',
+};
+
+/** Catalogue categories (the sample catalogue counts its courses in each). */
 export const CATEGORIES = [
-  { slug: 'web-development', label: 'Web Development', count: 142 },
-  { slug: 'ai-machine-learning', label: 'AI & Machine Learning', count: 68 },
-  { slug: 'data-science', label: 'Data Science', count: 54 },
-  { slug: 'ui-ux-design', label: 'UI/UX Design', count: 47 },
-  { slug: 'mobile-development', label: 'Mobile Development', count: 38 },
-  { slug: 'devops-cloud', label: 'DevOps & Cloud', count: 29 },
-  { slug: 'business-finance', label: 'Business & Finance', count: 56 },
+  { slug: 'web-development', label: 'Web Development' },
+  { slug: 'ai-machine-learning', label: 'AI & Machine Learning' },
+  { slug: 'data-science', label: 'Data Science' },
+  { slug: 'ui-ux-design', label: 'UI/UX Design' },
+  { slug: 'mobile-development', label: 'Mobile Development' },
+  { slug: 'devops-cloud', label: 'DevOps & Cloud' },
+  { slug: 'business-finance', label: 'Business & Finance' },
 ];
-export const SAMPLE_COURSE_TOTAL = 487;
 
 const img = {
   react: '/learner/course-react.jpg',
@@ -80,21 +100,27 @@ const img = {
   dataScience: '/learner/course-data-science.jpg',
 };
 
+/** "A hands-on introduction to node.js, taught by Bola James with real projects from African tech teams." */
+const intro = (topic: string, instructor: string) =>
+  `A hands-on introduction to ${topic}, taught by ${instructor} with real projects from African tech teams.`;
+
 export const SAMPLE_COURSES: CourseSummary[] = [
-  { id: 'c-react', slug: 'react-for-beginners', title: 'React for Beginners', instructor: 'Kofi Mensah', rating: 4.7, students: '2.3k', price: 15000, image: img.react, imageAlt: 'Kofi Mensah reacting with delight at his computer', badge: 'Bestseller', category: 'web-development' },
-  { id: 'c-ai', slug: 'ai-engineering-with-python', title: 'AI Engineering with Python', instructor: 'Amara Osei', rating: 4.7, students: '2.3k', price: 25000, image: img.ai, imageAlt: 'Amara Osei smiling at her desk', badge: 'New', category: 'ai-machine-learning' },
-  { id: 'c-node', slug: 'nodejs-fundamentals', title: 'Node.js Fundamentals', instructor: 'Bola James', rating: 4.7, students: '2.3k', price: 18000, image: img.node, imageAlt: 'Bola James helping a student at a laptop', category: 'web-development' },
-  { id: 'c-uiux', slug: 'ui-ux-design-systems', title: 'UI/UX Design Systems', instructor: 'Chidi Eze', rating: 4.7, students: '2.3k', price: 0, image: img.uiux, imageAlt: 'A designer working on a laptop in a bright office', badge: 'Free', category: 'ui-ux-design' },
-  { id: 'c-ds', slug: 'data-science-101', title: 'Data Science 101', instructor: 'Kofi M.', rating: 4.7, students: '2.3k', price: 20000, image: img.dataScience, imageAlt: 'An instructor explaining a concept to a group', category: 'data-science' },
-  { id: 'c-devops', slug: 'devops-with-docker', title: 'DevOps with Docker', instructor: 'Amara O.', rating: 4.7, students: '2.3k', price: 22000, image: img.react, imageAlt: 'A developer reacting to a successful deploy', category: 'devops-cloud' },
+  { id: 'c-react', slug: 'react-for-beginners', title: 'React for Beginners', instructor: 'Kofi Mensah', rating: 4.7, students: '2.3k', price: 15000, image: img.react, imageAlt: 'Kofi Mensah reacting with delight at his computer', badge: 'Bestseller', category: 'web-development', level: 'INTERMEDIATE', createdAt: '2026-03-02', lessons: 24, durationMinutes: 330, description: 'Master React hooks, components, and state management. Build 5 real projects — including a fintech dashboard and a job board.' },
+  { id: 'c-ai', slug: 'ai-engineering-with-python', title: 'AI Engineering with Python', instructor: 'Amara Osei', rating: 4.7, students: '2.3k', price: 25000, image: img.ai, imageAlt: 'Amara Osei smiling at her desk', badge: 'New', category: 'ai-machine-learning', level: 'INTERMEDIATE', createdAt: '2026-09-20', lessons: 18, durationMinutes: 270, description: intro('AI engineering with Python: LLMs, embeddings and production AI pipelines', 'Amara Osei') },
+  { id: 'c-node', slug: 'nodejs-fundamentals', title: 'Node.js Fundamentals', instructor: 'Bola James', rating: 4.7, students: '2.3k', price: 18000, image: img.node, imageAlt: 'Bola James helping a student at a laptop', category: 'web-development', level: 'BEGINNER', createdAt: '2026-04-11', lessons: 12, durationMinutes: 150, description: intro('Node.js, Express and REST API design', 'Bola James') },
+  { id: 'c-uiux', slug: 'ui-ux-design-systems', title: 'UI/UX Design Systems', instructor: 'Chidi Eze', rating: 4.7, students: '2.3k', price: 0, image: img.uiux, imageAlt: 'A designer working on a laptop in a bright office', badge: 'Free', category: 'ui-ux-design', level: 'ADVANCED', createdAt: '2026-05-08', lessons: 9, durationMinutes: 131, description: intro('design systems: tokens, components and documentation in Figma', 'Chidi Eze') },
+  { id: 'c-ds', slug: 'data-science-101', title: 'Data Science 101', instructor: 'Kofi M.', rating: 4.7, students: '2.3k', price: 20000, image: img.dataScience, imageAlt: 'An instructor explaining a concept to a group', category: 'data-science', level: 'BEGINNER', createdAt: '2026-02-14', lessons: 16, durationMinutes: 240, description: intro('data science with Python, pandas and visualisation', 'Kofi Mensah') },
+  { id: 'c-devops', slug: 'devops-with-docker', title: 'DevOps with Docker', instructor: 'Amara O.', rating: 4.7, students: '2.3k', price: 22000, image: img.react, imageAlt: 'A developer reacting to a successful deploy', category: 'devops-cloud', level: 'INTERMEDIATE', createdAt: '2026-06-30', lessons: 14, durationMinutes: 200, description: intro('containers, Docker Compose and deploying to the cloud', 'Amara Osei') },
+  { id: 'c-python', slug: 'python-mastery', title: 'Python Mastery', instructor: 'Kofi M.', rating: 4.7, students: '2.3k', price: 18000, image: img.react, imageAlt: 'Kofi Mensah at his computer', badge: 'Bestseller', category: 'ai-machine-learning', level: 'INTERMEDIATE', createdAt: '2026-01-19', lessons: 30, durationMinutes: 480, description: intro('Python, from the basics to automation and APIs', 'Kofi Mensah') },
+  { id: 'c-figma', slug: 'ui-ux-with-figma', title: 'UI/UX with Figma', instructor: 'Chidi E.', rating: 4.7, students: '2.3k', price: 15000, image: img.uiux, imageAlt: 'A designer working on a laptop', category: 'ui-ux-design', level: 'BEGINNER', createdAt: '2026-08-05', lessons: 10, durationMinutes: 165, description: intro('UI/UX design in Figma: wireframes, prototypes and user testing', 'Chidi Eze') },
 ];
 
 /** Dashboard "Recommended for You". */
 export const SAMPLE_RECOMMENDED: CourseSummary[] = [
   { ...SAMPLE_COURSES[1], title: 'AI Engineering' },
-  { id: 'c-python', slug: 'python-mastery', title: 'Python Mastery', instructor: 'Kofi M.', rating: 4.7, students: '2.3k', price: 18000, image: img.react, imageAlt: 'Kofi Mensah at his computer', badge: 'Bestseller', category: 'ai-machine-learning' },
+  SAMPLE_COURSES[6],
   { ...SAMPLE_COURSES[4], instructor: 'Bola J.', price: 0, badge: 'Free' },
-  { id: 'c-figma', slug: 'ui-ux-with-figma', title: 'UI/UX with Figma', instructor: 'Chidi E.', rating: 4.7, students: '2.3k', price: 15000, image: img.uiux, imageAlt: 'A designer working on a laptop', category: 'ui-ux-design' },
+  SAMPLE_COURSES[7],
 ];
 
 const reactCurriculum: CurriculumSection[] = [
@@ -138,10 +164,8 @@ export function sampleCourseDetail(slug: string): CourseDetail | null {
   return {
     ...summary,
     fullTitle: isReact ? 'React for Beginners: Build Real Apps' : summary.title,
-    description: isReact
-      ? 'Master React hooks, components, and state management. Build 5 real projects — including a fintech dashboard and a job board.'
-      : `A hands-on introduction to ${summary.title.toLowerCase()}, taught by ${summary.instructor} with real projects from African tech teams.`,
-    level: 'INTERMEDIATE',
+    description: summary.description ?? intro(summary.title.toLowerCase(), summary.instructor),
+    level: summary.level ?? 'INTERMEDIATE',
     originalPrice: summary.price ? Math.round(summary.price / 0.6 / 1000) * 1000 : undefined,
     rating: isReact ? 4.8 : summary.rating,
     ratingsCount: '2,341',
