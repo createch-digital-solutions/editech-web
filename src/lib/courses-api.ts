@@ -1,19 +1,20 @@
 import { API_BASE_URL } from '@/lib/api-client';
-
-/** On the server, call the API directly rather than through the local /backend forwarding. */
-const SERVER_API_BASE_URL = process.env.API_PROXY_TARGET
-  ? `${process.env.API_PROXY_TARGET.replace(/\/$/, '')}/api/v1`
-  : API_BASE_URL;
 import {
   CATEGORIES,
   SAMPLE_COURSES,
-  SAMPLE_COURSE_TOTAL,
   sampleCourseDetail,
   type CourseBadge,
   type CourseDetail,
   type CourseLevel,
   type CourseSummary,
 } from '@/lib/learner-data';
+
+/** On the server, call the API directly rather than through the local /backend forwarding. */
+const SERVER_API_BASE_URL = process.env.API_PROXY_TARGET
+  ? `${process.env.API_PROXY_TARGET.replace(/\/$/, '')}/api/v1`
+  : API_BASE_URL;
+
+const LEVELS: CourseLevel[] = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'];
 
 /**
  * Published courses for the catalogue and course pages, read on the server (public endpoints, so no
@@ -26,6 +27,15 @@ type ApiRecord = Record<string, unknown>;
 const str = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim() : undefined);
 const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : typeof v === 'string' && v.trim() && Number.isFinite(Number(v)) ? Number(v) : undefined);
 
+/**
+ * Full links, or paths to images this site ships in public/learner/. Other seed paths such as
+ * "/courses/x-thumb.jpg" exist on neither this site nor the API, so those fall back.
+ */
+const imageUrl = (v: unknown) => {
+  const s = str(v);
+  return s && /^(https?:\/\/|\/learner\/)/.test(s) ? s : undefined;
+};
+
 /** "2.3k" from 2300. */
 const compact = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, '')}k` : String(n));
 
@@ -33,7 +43,7 @@ function instructorName(c: ApiRecord) {
   const i = (c.instructor ?? (c.instructorProfile as ApiRecord | undefined)?.user) as ApiRecord | undefined;
   const user = (i?.user as ApiRecord | undefined) ?? i;
   const full = [str(user?.firstName), str(user?.lastName)].filter(Boolean).join(' ');
-  return full || str(c.instructorName) || 'Createch instructor';
+  return full || str(user?.name) || str(c.instructorName) || 'Createch instructor';
 }
 
 function toSummary(c: ApiRecord): CourseSummary | null {
@@ -43,6 +53,7 @@ function toSummary(c: ApiRecord): CourseSummary | null {
   const price = num(c.price) ?? 0;
   const enrolments = num(c.enrolmentCount) ?? num(c.enrollmentCount) ?? num(c.studentsCount) ?? num((c._count as ApiRecord | undefined)?.enrolments) ?? 0;
   const badge = (str(c.badge) as CourseBadge | undefined) ?? (price === 0 ? 'Free' : c.isBestseller ? 'Bestseller' : undefined);
+  const level = str(c.level)?.toUpperCase() as CourseLevel | undefined;
   return {
     id: str(c.id) ?? slug,
     slug,
@@ -51,10 +62,15 @@ function toSummary(c: ApiRecord): CourseSummary | null {
     rating: num(c.averageRating) ?? num(c.rating) ?? 0,
     students: compact(enrolments),
     price,
-    image: str(c.thumbnailUrl) ?? '/learner/course-react.jpg',
+    image: imageUrl(c.thumbnailUrl) ?? '/learner/course-react.jpg',
     imageAlt: `Cover image for ${title}`,
     badge,
     category: (str(c.category) ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+    level: level && LEVELS.includes(level) ? level : undefined,
+    description: str(c.shortDescription) ?? str(c.subtitle) ?? str(c.description),
+    createdAt: str(c.publishedAt) ?? str(c.createdAt),
+    lessons: num(c.totalLessons),
+    durationMinutes: num(c.totalDuration),
   };
 }
 
@@ -89,7 +105,8 @@ export async function getCatalogue(): Promise<Catalogue> {
   } catch {
     // Unreachable or not deployed yet: fall through to the sample catalogue.
   }
-  return { courses: SAMPLE_COURSES, categories: CATEGORIES, total: SAMPLE_COURSE_TOTAL, isSample: true };
+  const categories = CATEGORIES.map((c) => ({ ...c, count: SAMPLE_COURSES.filter((s) => s.category === c.slug).length }));
+  return { courses: SAMPLE_COURSES, categories, total: SAMPLE_COURSES.length, isSample: true };
 }
 
 function toDetail(c: ApiRecord): CourseDetail | null {
