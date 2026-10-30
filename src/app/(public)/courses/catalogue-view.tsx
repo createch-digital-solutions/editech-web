@@ -141,88 +141,79 @@ export function CatalogueView({ catalogue }: { catalogue: Catalogue }) {
     <div className="learner-compact flex flex-1 flex-col lg:flex-row">
       {/* Desktop sidebar; phones and tablets get the same controls as dropdowns above the results. */}
       <aside className="hidden w-[367px] shrink-0 border-r border-[#e8d5bb] bg-[#fffdf9] lg:block">
-        <div className="border-b border-[#e8d5bb] px-[25px] pb-[25px] pt-[31px]">
-          <label className="relative block">
-            <span className="sr-only">Search courses</span>
-            <Search className="pointer-events-none absolute left-[21px] top-1/2 h-5 w-5 -translate-y-1/2 text-[#7a6655]" strokeWidth={1.8} aria-hidden="true" />
-            <input
-              type="search"
-              value={query}
-              onChange={(e) => update(setQuery, 'query')(e.target.value)}
-              placeholder="Search courses..."
-              className="h-[60px] w-full rounded-xl border-2 border-[#efe2d0] bg-[#fffdf9] pl-[53px] pr-4 font-body text-[20px] text-[#1c0e04] placeholder:text-[#a89282] focus:border-brand focus:outline-none"
-            />
-          </label>
-        </div>
-
-        <div className="px-[25px] pb-6 pt-[29px]">
-          <h2 className="font-body text-[15px] font-semibold uppercase tracking-[0.1em] text-[#a08a78]">Categories</h2>
-          <ul className="mt-[18px] space-y-[4px]">
-            {[{ slug: null, label: 'All Courses', count: catalogue.total }, ...catalogue.categories].map((c) => {
-              const active = category === c.slug;
-              return (
-                <li key={c.label}>
+        {/* Stays in view under the top bar while the courses scroll. Lengths here are before the 0.8 zoom, so 80px lands at the bar's 64px. */}
+        <div className="sticky top-[80px] max-h-[calc(125vh-80px)] overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="border-b border-[#e8d5bb] px-[25px] pb-[25px] pt-[31px]">
+            <label className="relative block">
+              <span className="sr-only">Search courses</span>
+              <Search className="pointer-events-none absolute left-[21px] top-1/2 h-5 w-5 -translate-y-1/2 text-[#7a6655]" strokeWidth={1.8} aria-hidden="true" />
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => update(setQuery, 'query')(e.target.value)}
+                placeholder="Search courses..."
+                className="h-[60px] w-full rounded-xl border-2 border-[#efe2d0] bg-[#fffdf9] pl-[53px] pr-4 font-body text-[20px] text-[#1c0e04] placeholder:text-[#a89282] focus:border-brand focus:outline-none"
+              />
+            </label>
+          </div>
+  
+          <div className="px-[25px] pb-6 pt-[29px]">
+            <h2 className="font-body text-[15px] font-semibold uppercase tracking-[0.1em] text-[#a08a78]">Categories</h2>
+            <ul className="mt-[18px] space-y-[4px]">
+              {[{ slug: null, label: 'All Courses', count: catalogue.total }, ...catalogue.categories].map((c) => {
+                const active = category === c.slug;
+                return (
+                  <li key={c.label}>
+                    <button
+                      type="button"
+                      onClick={() => update(setCategory, 'category')(c.slug)}
+                      aria-pressed={active}
+                      className={cn(
+                        'flex h-[53px] w-full cursor-pointer items-center justify-between gap-4 rounded-xl px-[19px] text-left font-body text-[20px] transition-colors',
+                        active ? 'bg-[#fdeee4] font-bold text-brand' : 'text-[#3d2b1f] hover:bg-[#fdf6ec]'
+                      )}
+                    >
+                      <span className="whitespace-nowrap">{c.label}</span>
+                      <span className={cn('text-[17px]', active ? 'font-bold text-brand' : 'text-[#a89282]')}>{c.count}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+  
+          <div className="border-t border-[#e8d5bb] px-[25px] pb-[35px] pt-[23px]">
+            <h2 className="font-body text-[15px] font-semibold uppercase tracking-[0.1em] text-[#a08a78]">Level</h2>
+            <div role="group" aria-label="Level" className="mt-[15px] space-y-[4px]">
+              {LEVELS.map((l) => {
+                const active = level === l;
+                return (
                   <button
+                    key={l ?? 'all'}
                     type="button"
-                    onClick={() => update(setCategory, 'category')(c.slug)}
+                    onClick={() => update(setLevel, 'level')(l)}
                     aria-pressed={active}
                     className={cn(
-                      'flex h-[53px] w-full cursor-pointer items-center justify-between gap-4 rounded-xl px-[19px] text-left font-body text-[20px] transition-colors',
+                      'flex h-[50px] w-full cursor-pointer items-center gap-[15px] whitespace-nowrap rounded-xl px-[19px] text-left font-body text-[20px] transition-colors',
                       active ? 'bg-[#fdeee4] font-bold text-brand' : 'text-[#3d2b1f] hover:bg-[#fdf6ec]'
                     )}
                   >
-                    <span className="whitespace-nowrap">{c.label}</span>
-                    <span className={cn('text-[17px]', active ? 'font-bold text-brand' : 'text-[#a89282]')}>{c.count}</span>
+                    <span
+                      aria-hidden="true"
+                      className={cn('flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2', active ? 'border-brand' : 'border-[#c9b8a5]')}
+                    >
+                      {active && <span className="h-2.5 w-2.5 rounded-full bg-brand" />}
+                    </span>
+                    {l ? LEVEL_LABELS[l] : 'All levels'}
                   </button>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-
-        <div className="border-t border-[#e8d5bb] px-[25px] pb-[35px] pt-[23px]">
-          <h2 className="font-body text-[15px] font-semibold uppercase tracking-[0.1em] text-[#a08a78]">Level</h2>
-          <div role="group" aria-label="Level" className="mt-[15px] space-y-[4px]">
-            {LEVELS.map((l) => {
-              const active = level === l;
-              return (
-                <button
-                  key={l ?? 'all'}
-                  type="button"
-                  onClick={() => update(setLevel, 'level')(l)}
-                  aria-pressed={active}
-                  className={cn(
-                    'flex h-[50px] w-full cursor-pointer items-center gap-[15px] whitespace-nowrap rounded-xl px-[19px] text-left font-body text-[20px] transition-colors',
-                    active ? 'bg-[#fdeee4] font-bold text-brand' : 'text-[#3d2b1f] hover:bg-[#fdf6ec]'
-                  )}
-                >
-                  <span
-                    aria-hidden="true"
-                    className={cn('flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2', active ? 'border-brand' : 'border-[#c9b8a5]')}
-                  >
-                    {active && <span className="h-2.5 w-2.5 rounded-full bg-brand" />}
-                  </span>
-                  {l ? LEVEL_LABELS[l] : 'All levels'}
-                </button>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
       </aside>
 
-      <main className="min-w-0 flex-1 px-4 pb-12 pt-5 sm:px-6 lg:pb-[37px] lg:pl-[45px] lg:pr-[47px] lg:pt-[42px]">
-        <label className="relative mb-6 block lg:hidden">
-          <span className="sr-only">Search courses</span>
-          <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#7a6655]" strokeWidth={1.8} aria-hidden="true" />
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => update(setQuery, 'query')(e.target.value)}
-            placeholder="Search courses..."
-            className="h-12 w-full rounded-xl border-2 border-[#efe2d0] bg-[#fffdf9] pl-12 pr-4 font-body text-base text-[#1c0e04] placeholder:text-[#a89282] focus:border-brand focus:outline-none"
-          />
-        </label>
-
+      <main className="min-w-0 flex-1 px-4 pb-12 pt-6 sm:px-6 lg:pb-[37px] lg:pl-[45px] lg:pr-[47px] lg:pt-[42px]">
         <div className="flex flex-col gap-4 lg:flex-row lg:flex-wrap lg:items-start lg:justify-between">
           <div>
             <h1 className="font-display text-[30px] font-extrabold leading-9 text-[#1c0e04] lg:text-[33px] lg:leading-10">All Courses</h1>
@@ -230,6 +221,18 @@ export function CatalogueView({ catalogue }: { catalogue: Catalogue }) {
               {available.toLocaleString('en-NG')} {available === 1 ? 'course' : 'courses'} available
             </p>
           </div>
+          {/* Phones and tablets: search sits under the heading; desktop has it in the sidebar. */}
+          <label className="relative block lg:hidden">
+            <span className="sr-only">Search courses</span>
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#7a6655]" strokeWidth={1.8} aria-hidden="true" />
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => update(setQuery, 'query')(e.target.value)}
+              placeholder="Search courses..."
+              className="h-12 w-full rounded-xl border-2 border-[#efe2d0] bg-[#fffdf9] pl-12 pr-4 font-body text-base text-[#1c0e04] placeholder:text-[#a89282] focus:border-brand focus:outline-none"
+            />
+          </label>
           <div
             className="-mx-4 flex gap-1.5 overflow-x-auto px-4 [scrollbar-width:none] sm:-mx-6 sm:px-6 lg:mx-0 lg:flex-wrap lg:gap-[10px] lg:overflow-visible lg:px-0 lg:pt-[11px]"
             role="group"
