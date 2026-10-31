@@ -1,11 +1,10 @@
 'use client';
 
-import { FormEvent, Fragment, useEffect, useRef, useState } from 'react';
+import { FormEvent, Fragment, useState } from 'react';
 import Link from 'next/link';
 import { useUser } from '@clerk/nextjs';
 import { SendHorizontal, WandSparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { SAMPLE_COACH, SAMPLE_LEARNER, SAMPLE_PLAYER } from '@/lib/learner-data';
 
 type Message = { id: number; from: 'aria' | 'learner'; text: string };
 const PERSONAS = [
@@ -45,47 +44,18 @@ function AriaAvatar({ size = 'sm' }: { size?: 'sm' | 'lg' }) {
 }
 
 /**
- * Chat with Aria about the current lesson.
- * TODO: Send messages to the AI module (with the lesson context and persona) once it has a chat endpoint.
+ * Chat with Aria about the current lesson. The AI module has no chat endpoint yet, so Aria says so and
+ * the message box stays disabled rather than answering with made-up replies.
+ * TODO: Send messages (with the lesson context and persona) to the AI module once it has a chat endpoint.
  */
 export function CoachView() {
   const { user } = useUser();
-  const firstName = user?.firstName || SAMPLE_LEARNER.firstName;
   const [persona, setPersona] = useState<(typeof PERSONAS)[number]['id']>('friendly');
-  const [draft, setDraft] = useState('');
-  const [typing, setTyping] = useState(false);
-  const [conversation, setConversation] = useState<Message[]>(() => SAMPLE_COACH.conversation.map((m, i) => ({ id: i + 1, ...m })));
-  // The greeting uses the signed-in learner's name, so it is worked out on each render.
-  const messages: Message[] = [{ id: 0, from: 'aria', text: SAMPLE_COACH.greeting(firstName) }, ...conversation];
-  const endRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (conversation.length > SAMPLE_COACH.conversation.length) endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  }, [conversation, typing]);
-
-  function send(text: string) {
-    const trimmed = text.trim();
-    if (!trimmed || typing) return;
-    setConversation((m) => [...m, { id: m.length + 1, from: 'learner', text: trimmed }]);
-    setDraft('');
-    setTyping(true);
-    setTimeout(() => {
-      setConversation((m) => [
-        ...m,
-        {
-          id: m.length + 1,
-          from: 'aria',
-          text: "I'm not connected yet, so I can't answer that one for real. Once the AI coach goes live I'll answer questions about this lesson in your chosen style. Until then, the lesson notes and the **quiz** are a great way to check your understanding.",
-        },
-      ]);
-      setTyping(false);
-    }, 900);
-  }
+  const greeting = `Hi${user?.firstName ? ` ${user.firstName}` : ''}! 👋 I'm Aria, your AI learning coach.\n\nI'm **not switched on yet**. Once I am, you'll be able to ask me about any lesson you're watching, in the style you pick above.`;
+  const messages: Message[] = [{ id: 0, from: 'aria', text: greeting }];
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    send(draft);
   }
 
   return (
@@ -93,15 +63,12 @@ export function CoachView() {
       <section className="flex min-w-0 flex-1 flex-col" aria-label="Chat with Aria">
         <div className="relative flex flex-col gap-5 bg-brand-night px-4 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-[31px] lg:h-[133px] lg:py-0">
           <div className="flex items-center gap-[21px]">
-            <span className="relative">
-              <AriaAvatar size="lg" />
-              <span className="absolute bottom-[2px] right-[2px] h-[15px] w-[15px] rounded-full border-[3px] border-[#1a0e05] bg-[#0d8a4f]" aria-label="Online" />
-            </span>
+            <AriaAvatar size="lg" />
             <div>
               <h1 className="font-display text-[23px] font-bold leading-7 text-white">Aria</h1>
-              <p className="mt-[2px] max-w-[300px] text-[16px] leading-6 text-[#0d8a4f]">
-                <span className="mr-1.5 inline-block h-2 w-2 rounded-sm bg-[#0d8a4f]" aria-hidden="true" />
-                AI Learning Coach · Context-aware · {SAMPLE_COACH.lessonTitle} lesson
+              <p className="mt-[2px] max-w-[300px] text-[16px] leading-6 text-[#a08a78]">
+                <span className="mr-1.5 inline-block h-2 w-2 rounded-sm bg-[#a08a78]" aria-hidden="true" />
+                AI Learning Coach · Coming soon
               </p>
             </div>
           </div>
@@ -144,15 +111,6 @@ export function CoachView() {
               </div>
             )
           )}
-          {typing && (
-            <div className="flex items-center gap-[16px]">
-              <AriaAvatar />
-              <p className="rounded-3xl border-2 border-[#efe2d0] bg-[#fffdf9] px-6 py-4 text-[19px] text-[#a89282]">
-                Aria is typing<span className="animate-pulse">…</span>
-              </p>
-            </div>
-          )}
-          <div ref={endRef} />
         </div>
 
         <form onSubmit={handleSubmit} className="sticky bottom-0 flex gap-[18px] border-t border-[#efe2d0] bg-[#fdf6ec] px-4 py-[22px] sm:px-[31px]">
@@ -160,17 +118,15 @@ export function CoachView() {
             Ask Aria
           </label>
           <input
-            ref={inputRef}
             id="ask-aria"
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            placeholder="Ask Aria anything about this lesson..."
+            disabled
+            placeholder="Aria isn't available yet"
             autoComplete="off"
-            className="h-[66px] min-w-0 flex-1 rounded-2xl border-2 border-[#efe2d0] bg-[#fdf6ec] px-[25px] text-[19px] text-[#1c0e04] placeholder:text-[#a89282] focus:border-brand focus:outline-none"
+            className="h-[66px] min-w-0 flex-1 cursor-not-allowed rounded-2xl border-2 border-[#efe2d0] bg-[#fdf6ec] px-[25px] text-[19px] text-[#1c0e04] placeholder:text-[#a89282] focus:border-brand focus:outline-none"
           />
           <button
             type="submit"
-            disabled={!draft.trim() || typing}
+            disabled
             aria-label="Send"
             className="flex h-[68px] w-[68px] shrink-0 cursor-pointer items-center justify-center rounded-2xl bg-brand-gradient text-white shadow-lg shadow-brand/30 transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
           >
@@ -181,33 +137,12 @@ export function CoachView() {
 
       <aside className="shrink-0 border-t border-[#e8d5bb] bg-[#fffdf9] px-4 py-8 sm:px-[30px] lg:w-[371px] lg:border-l lg:border-t-0 lg:pt-[33px]">
         <h2 className="text-[16px] font-bold uppercase tracking-[0.12em] text-[#a08a78]">Lesson context</h2>
-        <Link
-          href={`/learn/${SAMPLE_PLAYER.courseSlug}`}
-          className="mt-[18px] block rounded-2xl border-2 border-[#f5d3bd] bg-[#fdeee4] px-[19px] pb-[19px] pt-[22px] transition-colors hover:border-brand/40"
-        >
-          <p className="text-[19px] font-bold leading-6 text-brand">{SAMPLE_COACH.lessonTitle}</p>
-          <p className="mt-[6px] text-[16px] text-[#7a6655]">{SAMPLE_COACH.lessonMeta}</p>
-          <div className="mt-[16px] h-[6px] rounded-full bg-[#f3dccb]" role="progressbar" aria-valuenow={SAMPLE_COACH.watched} aria-valuemin={0} aria-valuemax={100} aria-label="Watched">
-            <div className="h-full rounded-full bg-[linear-gradient(90deg,#c1440e,#d4920a)]" style={{ width: `${SAMPLE_COACH.watched}%` }} />
-          </div>
-          <p className="mt-[10px] text-[14px] text-brand">{SAMPLE_COACH.watched}% watched</p>
-        </Link>
-
-        <h2 className="mt-[38px] text-[16px] font-bold uppercase tracking-[0.12em] text-[#a08a78]">Ask Aria</h2>
-        <ul className="mt-[18px] space-y-[11px]">
-          {SAMPLE_COACH.suggestions.map((s) => (
-            <li key={s}>
-              <button
-                type="button"
-                onClick={() => send(s)}
-                disabled={typing}
-                className="flex h-14 w-full cursor-pointer items-center rounded-xl border-2 border-[#efe2d0] bg-[#fffdf9] px-[18px] text-left text-[17px] text-[#3d2b1f] transition-colors hover:border-brand/40 hover:text-brand disabled:cursor-not-allowed"
-              >
-                {s}
-              </button>
-            </li>
-          ))}
-        </ul>
+        <div className="mt-[18px] rounded-2xl border-2 border-dashed border-[#efe2d0] px-[19px] py-[22px]">
+          <p className="text-[17px] text-[#7a6655]">When Aria is live, the lesson you&apos;re watching will show here so she can help with it.</p>
+          <Link href="/courses" className="mt-3 inline-block text-[16px] font-semibold text-brand hover:text-brand-light">
+            Find a course →
+          </Link>
+        </div>
       </aside>
     </div>
   );

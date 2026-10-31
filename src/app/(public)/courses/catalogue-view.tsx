@@ -343,7 +343,16 @@ export function CatalogueView({ catalogue }: { catalogue: Catalogue }) {
           </div>
         )}
 
-        {sorted.length === 0 && !query.trim() ? (
+        {catalogue.courses.length === 0 ? (
+          <section aria-labelledby="no-results-title" className="mt-[35px] flex flex-col items-center px-6 py-10 text-center">
+            <h2 id="no-results-title" className="font-display text-[24px] font-extrabold text-[#1c0e04]">
+              {catalogue.unavailable ? 'We couldn’t load the courses' : 'No courses yet'}
+            </h2>
+            <p className="mt-2 max-w-[520px] font-body text-[19px] text-[#7a6655]">
+              {catalogue.unavailable ? 'Please refresh the page in a moment.' : 'Courses will appear here as soon as instructors publish them.'}
+            </p>
+          </section>
+        ) : sorted.length === 0 && !query.trim() ? (
           <section aria-labelledby="no-results-title" className="mt-[35px] flex flex-col items-center px-6 py-10 text-center">
             <h2 id="no-results-title" className="font-display text-[24px] font-extrabold text-[#1c0e04]">
               No courses match these filters yet

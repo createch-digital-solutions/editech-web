@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: 'Browse courses in web development, AI, data science, design, DevOps and business, taught by African instructors.',
 };
 
-/** /courses — the public course catalogue (GET /courses, or the sample courses until some are published). */
+/** /courses — the public course catalogue (GET /courses and GET /courses/categories). */
 export default async function CataloguePage() {
   const catalogue = await getCatalogue();
   return <CatalogueView catalogue={catalogue} />;

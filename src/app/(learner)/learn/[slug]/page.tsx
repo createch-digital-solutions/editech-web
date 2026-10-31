@@ -1,31 +1,25 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getCourse } from '@/lib/courses-api';
-import { SAMPLE_IN_PROGRESS, SAMPLE_PLAYER, sampleCourseDetail } from '@/lib/learner-data';
+import { getCourse, getPreviewVideos } from '@/lib/courses-api';
+import { viewerToken } from '@/lib/viewer-token';
 import { PlayerView } from './player-view';
 
 export const metadata: Metadata = { title: 'Course Player — Createch Elevate' };
 
-/** /learn/[slug] — watch a course's lessons. */
+/**
+ * /learn/[slug] — watch a course's lessons. The free preview lessons play their videos
+ * (GET /courses/{slug}/preview); the rest unlock with an enrolment.
+ * TODO: Play every lesson for enrolled learners once the API serves their video links.
+ */
 export default async function CoursePlayerPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  let course = (await getCourse(slug))?.course ?? null;
+  const [course, videos] = await Promise.all([viewerToken().then((token) => getCourse(slug, token)), getPreviewVideos(slug)]);
+  if (!course) notFound();
 
-  // Courses in progress on the dashboard that are not in the sample catalogue play the sample lessons.
-  if (!course) {
-    const inProgress = SAMPLE_IN_PROGRESS.find((c) => c.slug === slug);
-    const base = sampleCourseDetail(SAMPLE_PLAYER.courseSlug);
-    if (!inProgress || !base) notFound();
-    course = { ...base, slug, title: inProgress.title, fullTitle: inProgress.title, image: inProgress.image };
-  }
-  if (course.curriculum.length === 0) course = { ...course, curriculum: sampleCourseDetail(SAMPLE_PLAYER.courseSlug)!.curriculum };
-
-  const isSampleStart = slug === SAMPLE_PLAYER.courseSlug;
-  return (
-    <PlayerView
-      course={course}
-      startLessonId={isSampleStart ? SAMPLE_PLAYER.currentLessonId : (course.curriculum.flatMap((s) => s.lessons).find((l) => !l.done)?.id ?? '')}
-      startPosition={isSampleStart ? SAMPLE_PLAYER.position : 0}
-    />
-  );
+  const withVideos = {
+    ...course,
+    curriculum: course.curriculum.map((s) => ({ ...s, lessons: s.lessons.map((l) => ({ ...l, videoUrl: videos[l.id] })) })),
+  };
+  const lessons = withVideos.curriculum.flatMap((s) => s.lessons);
+  return <PlayerView course={withVideos} startLessonId={(lessons.find((l) => l.videoUrl) ?? lessons[0])?.id ?? ''} />;
 }

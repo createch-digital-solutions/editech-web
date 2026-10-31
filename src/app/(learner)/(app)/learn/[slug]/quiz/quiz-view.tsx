@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { SAMPLE_QUIZ, type QuizQuestion } from '@/lib/learner-data';
+import type { Quiz, QuizQuestion } from '@/lib/learner-data';
 
 type Result = 'correct' | 'wrong' | 'skipped';
 
@@ -24,8 +24,7 @@ function Prompt({ q }: { q: QuizQuestion }) {
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
 /** One quiz, a question at a time: answer, see if it was right, move on; a score at the end. */
-export function QuizView({ courseSlug }: { courseSlug: string }) {
-  const quiz = SAMPLE_QUIZ;
+export function QuizView({ courseSlug, quiz }: { courseSlug: string; quiz: Quiz }) {
   const total = quiz.questions.length;
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);

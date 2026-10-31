@@ -1,52 +1,62 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowLeft, ArrowRight, Bot, Check, ChevronRight, Maximize, Pause, Play, SkipBack, SkipForward, Volume2, VolumeX } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Bot, Check, ChevronRight, Lock, Maximize, Pause, Play, SkipBack, SkipForward, VideoOff, Volume2, VolumeX } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AppLogo } from '@/components/learner/app-header';
-import type { CourseDetail, Lesson } from '@/lib/learner-data';
+import { clock, type CourseDetail, type Lesson } from '@/lib/learner-data';
 
 const SPEEDS = [1, 1.25, 1.5, 2];
 
-/** "14:10" → 850 seconds. */
-const toSeconds = (d: string) => d.split(':').reduce((t, part) => t * 60 + Number(part), 0);
-const clock = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
-
 /**
- * The course player: the lesson (with play, seek, speed, volume and full screen), Prev / Mark Complete /
- * Next, and the course content list.
- * TODO: Play the lesson's videoUrl and save progress to the learner module once enrolments exist; the
- * sample course has no video, so playback is simulated over its cover image.
+ * The course player: the lesson video (with play, seek, speed, volume and full screen), Prev / Mark
+ * Complete / Next, and the course content list. Lessons without a video link show why: locked until
+ * the learner enrols, or not uploaded yet.
+ * TODO: Save completed lessons to the learner module once it has a progress endpoint; until then
+ * Mark Complete only lasts for this visit.
  */
-export function PlayerView({ course, startLessonId, startPosition }: { course: CourseDetail; startLessonId: string; startPosition: number }) {
+export function PlayerView({ course, startLessonId }: { course: CourseDetail; startLessonId: string }) {
   const lessons = useMemo(() => course.curriculum.flatMap((s, si) => s.lessons.map((l, li) => ({ ...l, section: s.title, sectionIndex: si, indexInSection: li, sectionSize: s.lessons.length }))), [course]);
   const [currentId, setCurrentId] = useState(lessons.some((l) => l.id === startLessonId) ? startLessonId : lessons[0]?.id);
   const [done, setDone] = useState<Set<string>>(() => new Set(lessons.filter((l) => l.done).map((l) => l.id)));
-  const [position, setPosition] = useState(startPosition);
-  const [playing, setPlaying] = useState(true);
-  const [speed, setSpeed] = useState(1.25);
+  const [position, setPosition] = useState(0);
+  const [length, setLength] = useState(0);
+  const [playing, setPlaying] = useState(false);
+  // Once the learner has pressed play, the next lesson starts on its own.
+  const [started, setStarted] = useState(false);
+  const [speed, setSpeed] = useState(1);
   const [muted, setMuted] = useState(false);
+  // Lessons whose video link failed to load (a dead or blocked link).
+  const [failed, setFailed] = useState<Set<string>>(() => new Set());
   const playerRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const index = Math.max(0, lessons.findIndex((l) => l.id === currentId));
   const lesson = lessons[index];
-  const length = lesson ? toSeconds(lesson.duration) : 0;
-  // Playback stops by itself at the end of the lesson.
-  const isPlaying = playing && position < length;
 
-  useEffect(() => {
-    if (!isPlaying) return;
-    const t = setInterval(() => setPosition((p) => Math.min(length, p + speed)), 1000);
-    return () => clearInterval(t);
-  }, [isPlaying, speed, length]);
+  if (!lesson) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#140b05] px-6 text-center font-body text-white">
+        <h1 className="font-display text-2xl font-bold">No lessons yet</h1>
+        <p className="max-w-md text-[#a08a78]">The instructor hasn&apos;t published any lessons for {course.title} yet.</p>
+        <Link href={`/courses/${course.slug}`} className="font-semibold text-[#e8a33d] hover:text-[#f2bd61]">
+          Back to the course
+        </Link>
+      </div>
+    );
+  }
 
-  if (!lesson) return null;
+  const canPlay = !!lesson.videoUrl && !failed.has(lesson.id);
+  const total = length || lesson.seconds;
 
   function togglePlay() {
-    if (!isPlaying && position >= length) setPosition(0);
-    setPlaying(!isPlaying);
+    const v = videoRef.current;
+    if (!v) return;
+    setStarted(true);
+    if (v.paused) void v.play();
+    else v.pause();
   }
 
   function go(to: number) {
@@ -54,7 +64,24 @@ export function PlayerView({ course, startLessonId, startPosition }: { course: C
     if (!next) return;
     setCurrentId(next.id);
     setPosition(0);
-    setPlaying(true);
+    setLength(0);
+    setPlaying(false);
+  }
+
+  function seek(seconds: number) {
+    if (videoRef.current) videoRef.current.currentTime = seconds;
+    setPosition(seconds);
+  }
+
+  function changeSpeed() {
+    const next = SPEEDS[(SPEEDS.indexOf(speed) + 1) % SPEEDS.length];
+    setSpeed(next);
+    if (videoRef.current) videoRef.current.playbackRate = next;
+  }
+
+  function toggleMute() {
+    setMuted(!muted);
+    if (videoRef.current) videoRef.current.muted = !muted;
   }
 
   function markComplete() {
@@ -67,7 +94,6 @@ export function PlayerView({ course, startLessonId, startPosition }: { course: C
     else void playerRef.current?.requestFullscreen?.();
   }
 
-  const sectionTitle = lesson.section;
   const isDone = (l: Lesson) => done.has(l.id);
 
   return (
@@ -84,7 +110,7 @@ export function PlayerView({ course, startLessonId, startPosition }: { course: C
             </Link>
             <ChevronRight className="h-4 w-4 shrink-0 text-[#5d4a3a]" aria-hidden="true" />
             <span className="truncate font-semibold text-[#e8a33d]" aria-current="page">
-              {sectionTitle}
+              {lesson.section}
             </span>
           </nav>
           <Link href="/coach" className="ml-auto flex shrink-0 items-center gap-2 text-[19px] font-semibold text-[#e8a33d] hover:text-[#f2bd61]">
@@ -96,62 +122,107 @@ export function PlayerView({ course, startLessonId, startPosition }: { course: C
         <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
           <section className="flex min-w-0 flex-1 flex-col" aria-label="Lesson">
             <div ref={playerRef} className="relative min-h-[260px] flex-1 overflow-hidden bg-black">
-              <Image src={course.image} alt="" fill unoptimized priority className="object-cover opacity-90" />
-              <div className="absolute inset-x-0 bottom-0 h-[45%] bg-gradient-to-t from-black/70 to-transparent" aria-hidden="true" />
-
-              <button
-                type="button"
-                onClick={togglePlay}
-                aria-label={isPlaying ? 'Pause' : 'Play'}
-                className="absolute left-1/2 top-1/2 flex h-24 w-24 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border-2 border-white/40 bg-white/15 backdrop-blur-sm transition-colors hover:bg-white/25"
-              >
-                {isPlaying ? <Pause className="h-10 w-10" strokeWidth={1.6} /> : <Play className="ml-1 h-10 w-10" strokeWidth={1.6} />}
-              </button>
-
-              <div className="absolute inset-x-0 bottom-0 px-4 pb-[24px] sm:px-[32px]">
-                <input
-                  type="range"
-                  min={0}
-                  max={length}
-                  step={1}
-                  value={position}
-                  onChange={(e) => setPosition(Number(e.target.value))}
-                  aria-label="Seek"
-                  aria-valuetext={`${clock(position)} of ${lesson.duration}`}
-                  className="player-range h-1 w-full cursor-pointer appearance-none rounded-full"
-                  style={{ background: `linear-gradient(90deg,#c1440e 0%,#d4920a ${(position / Math.max(1, length)) * 100}%,rgba(255,255,255,0.25) ${(position / Math.max(1, length)) * 100}%)` }}
+              {canPlay ? (
+                <video
+                  key={lesson.id}
+                  ref={videoRef}
+                  src={lesson.videoUrl}
+                  autoPlay={started}
+                  playsInline
+                  preload="metadata"
+                  onClick={togglePlay}
+                  onPlay={() => setPlaying(true)}
+                  onPause={() => setPlaying(false)}
+                  onError={() => {
+                    setFailed((f) => new Set(f).add(lesson.id));
+                    setPlaying(false);
+                  }}
+                  onTimeUpdate={(e) => setPosition(e.currentTarget.currentTime)}
+                  onLoadedMetadata={(e) => {
+                    setLength(e.currentTarget.duration || lesson.seconds);
+                    e.currentTarget.playbackRate = speed;
+                    e.currentTarget.muted = muted;
+                  }}
+                  className="absolute inset-0 h-full w-full bg-black object-contain"
                 />
-                <div className="mt-[22px] flex items-center gap-3 sm:gap-[24px]">
-                  <button type="button" onClick={() => go(index - 1)} disabled={index === 0} aria-label="Previous lesson" className="cursor-pointer disabled:cursor-not-allowed disabled:opacity-40">
-                    <SkipBack className="h-[22px] w-[22px]" strokeWidth={1.8} />
-                  </button>
-                  <button type="button" onClick={togglePlay} aria-label={isPlaying ? 'Pause' : 'Play'} className="cursor-pointer">
-                    {isPlaying ? <Pause className="h-[26px] w-[26px]" strokeWidth={1.8} /> : <Play className="h-[26px] w-[26px]" strokeWidth={1.8} />}
-                  </button>
-                  <button type="button" onClick={() => go(index + 1)} disabled={index === lessons.length - 1} aria-label="Next lesson" className="cursor-pointer disabled:cursor-not-allowed disabled:opacity-40">
-                    <SkipForward className="h-[22px] w-[22px]" strokeWidth={1.8} />
-                  </button>
-                  <span className="whitespace-nowrap font-mono text-[14px] text-white/80 sm:text-[18px]">
-                    {clock(position)} / {lesson.duration}
-                  </span>
-                  <span className="ml-auto flex items-center gap-3 sm:gap-[24px]">
-                    <button type="button" onClick={() => setMuted((m) => !m)} aria-label={muted ? 'Unmute' : 'Mute'} className="cursor-pointer">
-                      {muted ? <VolumeX className="h-[22px] w-[22px]" strokeWidth={1.8} /> : <Volume2 className="h-[22px] w-[22px]" strokeWidth={1.8} />}
+              ) : (
+                <>
+                  <Image src={course.image} alt="" fill unoptimized priority className="object-cover opacity-30" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-6 text-center">
+                    <span className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-white/30 bg-white/10" aria-hidden="true">
+                      {lesson.locked ? <Lock className="h-8 w-8" strokeWidth={1.6} /> : <VideoOff className="h-8 w-8" strokeWidth={1.6} />}
+                    </span>
+                    {lesson.locked ? (
+                      <>
+                        <p className="max-w-md text-[20px] font-semibold">This lesson unlocks when you enrol</p>
+                        <Link
+                          href={`/checkout/${course.slug}`}
+                          className="flex h-12 items-center rounded-xl bg-brand-gradient px-6 text-[17px] font-bold text-white shadow-lg shadow-brand/30 transition-opacity hover:opacity-90"
+                        >
+                          Enroll in this course
+                        </Link>
+                      </>
+                    ) : failed.has(lesson.id) ? (
+                      <p className="max-w-md text-[20px] font-semibold">This video couldn&apos;t be loaded. Please try again later.</p>
+                    ) : (
+                      <p className="max-w-md text-[20px] font-semibold">This lesson&apos;s video isn&apos;t available yet</p>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {canPlay && !playing && (
+                <button
+                  type="button"
+                  onClick={togglePlay}
+                  aria-label="Play"
+                  className="absolute left-1/2 top-1/2 flex h-24 w-24 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border-2 border-white/40 bg-white/15 backdrop-blur-sm transition-colors hover:bg-white/25"
+                >
+                  <Play className="ml-1 h-10 w-10" strokeWidth={1.6} />
+                </button>
+              )}
+
+              {canPlay && (
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-4 pb-[24px] pt-12 sm:px-[32px]">
+                  <input
+                    type="range"
+                    min={0}
+                    max={Math.max(1, Math.floor(total))}
+                    step={1}
+                    value={Math.floor(position)}
+                    onChange={(e) => seek(Number(e.target.value))}
+                    aria-label="Seek"
+                    aria-valuetext={`${clock(position)} of ${clock(total)}`}
+                    className="player-range h-1 w-full cursor-pointer appearance-none rounded-full"
+                    style={{ background: `linear-gradient(90deg,#c1440e 0%,#d4920a ${(position / Math.max(1, total)) * 100}%,rgba(255,255,255,0.25) ${(position / Math.max(1, total)) * 100}%)` }}
+                  />
+                  <div className="mt-[22px] flex items-center gap-3 sm:gap-[24px]">
+                    <button type="button" onClick={() => go(index - 1)} disabled={index === 0} aria-label="Previous lesson" className="cursor-pointer disabled:cursor-not-allowed disabled:opacity-40">
+                      <SkipBack className="h-[22px] w-[22px]" strokeWidth={1.8} />
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => setSpeed((s) => SPEEDS[(SPEEDS.indexOf(s) + 1) % SPEEDS.length])}
-                      aria-label={`Playback speed ${speed}x`}
-                      className="min-w-[44px] cursor-pointer font-mono text-[17px] text-white/80"
-                    >
-                      {speed}x
+                    <button type="button" onClick={togglePlay} aria-label={playing ? 'Pause' : 'Play'} className="cursor-pointer">
+                      {playing ? <Pause className="h-[26px] w-[26px]" strokeWidth={1.8} /> : <Play className="h-[26px] w-[26px]" strokeWidth={1.8} />}
                     </button>
-                    <button type="button" onClick={fullscreen} aria-label="Full screen" className="cursor-pointer">
-                      <Maximize className="h-[22px] w-[22px]" strokeWidth={1.8} />
+                    <button type="button" onClick={() => go(index + 1)} disabled={index === lessons.length - 1} aria-label="Next lesson" className="cursor-pointer disabled:cursor-not-allowed disabled:opacity-40">
+                      <SkipForward className="h-[22px] w-[22px]" strokeWidth={1.8} />
                     </button>
-                  </span>
+                    <span className="whitespace-nowrap font-mono text-[14px] text-white/80 sm:text-[18px]">
+                      {clock(position)} / {clock(total)}
+                    </span>
+                    <span className="ml-auto flex items-center gap-3 sm:gap-[24px]">
+                      <button type="button" onClick={toggleMute} aria-label={muted ? 'Unmute' : 'Mute'} className="cursor-pointer">
+                        {muted ? <VolumeX className="h-[22px] w-[22px]" strokeWidth={1.8} /> : <Volume2 className="h-[22px] w-[22px]" strokeWidth={1.8} />}
+                      </button>
+                      <button type="button" onClick={changeSpeed} aria-label={`Playback speed ${speed}x`} className="min-w-[44px] cursor-pointer font-mono text-[17px] text-white/80">
+                        {speed}x
+                      </button>
+                      <button type="button" onClick={fullscreen} aria-label="Full screen" className="cursor-pointer">
+                        <Maximize className="h-[22px] w-[22px]" strokeWidth={1.8} />
+                      </button>
+                    </span>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             <div className="flex shrink-0 flex-col gap-5 border-t border-[#2a1a0e] bg-[#140b05] px-4 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-[37px] lg:h-[157px] lg:py-0">
@@ -174,7 +245,8 @@ export function PlayerView({ course, startLessonId, startPosition }: { course: C
                 <button
                   type="button"
                   onClick={markComplete}
-                  className="flex h-[68px] min-w-[168px] cursor-pointer flex-col items-center justify-center rounded-xl bg-brand-gradient px-4 text-[16px] font-bold text-white shadow-lg shadow-brand/30 transition-opacity hover:opacity-90"
+                  disabled={!canPlay}
+                  className="flex h-[68px] min-w-[168px] cursor-pointer flex-col items-center justify-center rounded-xl bg-brand-gradient px-4 text-[16px] font-bold text-white shadow-lg shadow-brand/30 transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isDone(lesson) ? 'Completed' : 'Mark Complete'}
                   <Check className="h-4 w-4" strokeWidth={2.5} aria-hidden="true" />
@@ -196,7 +268,8 @@ export function PlayerView({ course, startLessonId, startPosition }: { course: C
             <div className="px-[25px] pb-[17px] pt-[25px]">
               <h2 className="font-display text-[20px] font-bold leading-7 text-white">Course Content</h2>
               <p className="mt-[3px] text-[16px] text-[#5d4a3a]">
-                {lessons.length} lessons · {course.duration || `${course.curriculum.length} sections`} total
+                {lessons.length} {lessons.length === 1 ? 'lesson' : 'lessons'}
+                {course.duration && ` · ${course.duration} total`}
               </p>
             </div>
             {course.curriculum.map((section) => (
@@ -224,7 +297,7 @@ export function PlayerView({ course, startLessonId, startPosition }: { course: C
                             )}
                             aria-hidden="true"
                           >
-                            {complete ? <Check className="h-4 w-4" strokeWidth={2.5} /> : <Play className="ml-0.5 h-3.5 w-3.5 fill-current" />}
+                            {complete ? <Check className="h-4 w-4" strokeWidth={2.5} /> : l.locked ? <Lock className="h-3.5 w-3.5" /> : <Play className="ml-0.5 h-3.5 w-3.5 fill-current" />}
                           </span>
                           <span className="min-w-0">
                             <span className={cn('block truncate text-[18px] leading-6', complete ? 'text-[#5fd3b5]' : current ? 'font-semibold text-[#e8a33d]' : 'text-[#5d4a3a]')}>
@@ -232,7 +305,8 @@ export function PlayerView({ course, startLessonId, startPosition }: { course: C
                             </span>
                             <span className="block text-[14px] text-[#4a3a2c]">
                               {l.duration}
-                              <span className="sr-only">{complete ? ' — completed' : current ? ' — playing' : ''}</span>
+                              {l.preview && ' · Free preview'}
+                              <span className="sr-only">{complete ? ' — completed' : current ? ' — selected' : l.locked ? ' — locked' : ''}</span>
                             </span>
                           </span>
                         </button>
@@ -242,14 +316,6 @@ export function PlayerView({ course, startLessonId, startPosition }: { course: C
                 </ul>
               </div>
             ))}
-            <div className="px-[25px] py-6">
-              <Link
-                href={`/learn/${course.slug}/quiz`}
-                className="flex h-12 items-center justify-center rounded-xl border-2 border-[#3a2a1a] text-[16px] font-semibold text-[#e8a33d] transition-colors hover:bg-[#1c1108]"
-              >
-                Take the lesson quiz
-              </Link>
-            </div>
           </aside>
         </div>
       </div>
