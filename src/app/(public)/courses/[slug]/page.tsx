@@ -4,8 +4,10 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { CircleCheck, Clock, Play, Star, Users } from 'lucide-react';
 import { DiamondMotif } from '@/components/landing/diamond-motif';
+import { PersonAvatar } from '@/components/learner/person-avatar';
 import { getCourse, getReviews } from '@/lib/courses-api';
 import { formatPrice } from '@/lib/learner-data';
+import { viewerToken } from '@/lib/viewer-token';
 import { CourseTabs } from './course-tabs';
 
 const LEVEL_LABEL = { BEGINNER: 'Beginner', INTERMEDIATE: 'Intermediate', ADVANCED: 'Advanced' } as const;
@@ -16,19 +18,19 @@ type Params = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
-  const result = await getCourse(slug);
-  if (!result) return { title: 'Course not found — Createch Elevate' };
-  return { title: `${result.course.fullTitle} — Createch Elevate`, description: result.course.description };
+  const course = await getCourse(slug);
+  if (!course) return { title: 'Course not found — Createch Elevate' };
+  return { title: `${course.fullTitle} — Createch Elevate`, description: course.description };
 }
 
-/** /courses/[slug] — one course: what it is, price, what's included, outcomes, curriculum and instructor. */
+/** /courses/[slug] — one course: what it is, price, what's included, curriculum, instructor and reviews. */
 export default async function CoursePage({ params }: Params) {
   const { slug } = await params;
-  const result = await getCourse(slug);
-  if (!result) notFound();
-  const { course, isSample } = result;
-  const reviews = isSample ? [] : await getReviews(course.id);
+  const course = await getCourse(slug, await viewerToken());
+  if (!course) notFound();
+  const reviews = await getReviews(course.id);
   const discount = course.originalPrice && course.originalPrice > course.price ? Math.round((1 - course.price / course.originalPrice) * 100) : 0;
+  const hasPreview = course.curriculum.some((s) => s.lessons.some((l) => l.preview));
 
   return (
     <main className="learner-compact flex-1">
@@ -70,7 +72,7 @@ export default async function CoursePage({ params }: Params) {
             </ul>
 
             <p className="mt-[30px] flex items-center gap-[13px] text-[17px] text-[#8a7462]">
-              <Image src={course.instructorImage} alt="" width={44} height={44} unoptimized className="h-11 w-11 rounded-full object-cover" />
+              <PersonAvatar name={course.instructor} src={course.instructorImage} size={44} />
               <span>
                 Created by <span className="font-semibold text-[#e8a33d]">{course.instructor}</span>
               </span>
@@ -94,17 +96,19 @@ export default async function CoursePage({ params }: Params) {
                 </p>
               )}
               <Link
-                href={`/checkout/${course.slug}`}
+                href={course.enrolment ? `/learn/${course.slug}` : `/checkout/${course.slug}`}
                 className="mt-[21px] flex h-[54px] items-center justify-center rounded-xl bg-brand-gradient font-body text-[17px] font-bold text-white shadow-lg shadow-brand/30 transition-opacity hover:opacity-90"
               >
-                {course.price === 0 ? 'Enroll for Free' : 'Enroll Now'}
+                {course.enrolment ? 'Continue Learning' : course.price === 0 ? 'Enroll for Free' : 'Enroll Now'}
               </Link>
-              <Link
-                href={`/learn/${course.slug}`}
-                className="mt-[12px] flex h-[46px] items-center justify-center rounded-xl border-2 border-brand font-body text-[16px] font-semibold text-brand transition-colors hover:bg-[#fdeee4]"
-              >
-                Try Free Preview
-              </Link>
+              {hasPreview && !course.enrolment && (
+                <Link
+                  href={`/learn/${course.slug}`}
+                  className="mt-[12px] flex h-[46px] items-center justify-center rounded-xl border-2 border-brand font-body text-[16px] font-semibold text-brand transition-colors hover:bg-[#fdeee4]"
+                >
+                  Try Free Preview
+                </Link>
+              )}
               <ul className="mt-[23px] space-y-[11px]">
                 {INCLUDED.map((item) => (
                   <li key={item} className="flex items-center gap-[10px] text-base text-[#3d2b1f]">

@@ -8,7 +8,6 @@ import { Bell, BookOpen, CreditCard, Lock, Pencil, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FormError } from '@/components/auth/form-controls';
 import { LearnerAvatar } from '@/components/learner/app-header';
-import { SAMPLE_LEARNER } from '@/lib/learner-data';
 
 const SECTIONS = [
   { id: 'account', label: 'Account', icon: User },
@@ -36,7 +35,7 @@ function Field({ id, label, ...props }: { id: string; label: string } & React.In
 
 /** Account: the learner's name and photo (saved to Clerk); email and username shown read-only. */
 function AccountSection() {
-  const { user, isLoaded } = useUser();
+  const { user } = useUser();
   const fileRef = useRef<HTMLInputElement>(null);
   // Edits in progress; null = show what is saved on the account.
   const [firstNameDraft, setFirstName] = useState<string | null>(null);
@@ -44,14 +43,11 @@ function AccountSection() {
   const [status, setStatus] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const original = {
-    firstName: user?.firstName ?? (isLoaded && !user ? SAMPLE_LEARNER.firstName : ''),
-    lastName: user?.lastName ?? (isLoaded && !user ? SAMPLE_LEARNER.lastName : ''),
-  };
+  const original = { firstName: user?.firstName ?? '', lastName: user?.lastName ?? '' };
   const firstName = firstNameDraft ?? original.firstName;
   const lastName = lastNameDraft ?? original.lastName;
-  const email = user?.primaryEmailAddress?.emailAddress ?? SAMPLE_LEARNER.email;
-  const username = user?.username ?? SAMPLE_LEARNER.username;
+  const email = user?.primaryEmailAddress?.emailAddress ?? '';
+  const username = user?.username ?? '';
 
   async function handleSave(e: FormEvent) {
     e.preventDefault();
@@ -125,7 +121,7 @@ function AccountSection() {
         <Field id="first-name" label="First Name" autoComplete="given-name" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
         <Field id="last-name" label="Last Name" autoComplete="family-name" value={lastName} onChange={(e) => setLastName(e.target.value)} />
         <Field id="email" label="Email" type="email" value={email} readOnly aria-describedby="email-note" />
-        <Field id="username" label="Username" value={`@${username}`} readOnly />
+        <Field id="username" label="Username" value={username ? `@${username}` : ''} placeholder="No username set" readOnly />
       </div>
       <p id="email-note" className="sr-only">
         Your email is used to sign in and cannot be changed here yet.

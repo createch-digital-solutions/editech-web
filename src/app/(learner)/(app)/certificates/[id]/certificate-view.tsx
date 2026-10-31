@@ -4,9 +4,7 @@ import Link from 'next/link';
 import { useUser } from '@clerk/nextjs';
 import { ArrowRight, Award, CircleCheck, Download, ShieldCheck } from 'lucide-react';
 import { DiamondMotif } from '@/components/landing/diamond-motif';
-import { SAMPLE_CERTIFICATE, SAMPLE_LEARNER } from '@/lib/learner-data';
-
-type Certificate = typeof SAMPLE_CERTIFICATE;
+import type { Certificate } from '@/lib/learner-data';
 
 const secondaryButton =
   'flex h-11 cursor-pointer items-center justify-center gap-1.5 rounded-xl border-2 border-[#efe2d0] bg-[#fffdf9] px-[18px] font-body text-[17px] font-semibold text-[#3d2b1f] transition-colors hover:bg-white';
@@ -14,7 +12,7 @@ const secondaryButton =
 /** The certificate card, its actions, and the learner's results for the course. */
 export function CertificateView({ certificate: c }: { certificate: Certificate }) {
   const { user } = useUser();
-  const name = user?.fullName || `${SAMPLE_LEARNER.firstName} ${SAMPLE_LEARNER.lastName}`;
+  const name = user?.fullName ?? '';
 
   function shareToLinkedIn() {
     const url = encodeURIComponent(window.location.href);

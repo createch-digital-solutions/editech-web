@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { SAMPLE_PLAYER } from '@/lib/learner-data';
 
 const ITEMS = [
   { href: '/dashboard', label: 'Dashboard', match: (p: string) => p === '/dashboard' },
@@ -11,7 +10,8 @@ const ITEMS = [
   { href: '/courses', label: 'Explore', match: (p: string) => p.startsWith('/courses') },
   { href: '/coach', label: 'AI Learning Coach', match: (p: string) => p.startsWith('/coach') },
   { href: '/dashboard/achievements', label: 'Achievements & XP', match: (p: string) => p.startsWith('/dashboard/achievements') },
-  { href: `/learn/${SAMPLE_PLAYER.courseSlug}`, label: 'Course Player', match: (p: string) => p.startsWith('/learn') },
+  // The player needs a course; until enrolments are listed it leads to the learner's courses section.
+  { href: '/dashboard#continue-learning', label: 'Course Player', match: (p: string) => p.startsWith('/learn') },
   { href: '/settings?section=notifications', label: 'Notifications', match: () => false },
   { href: '/profile', label: 'Profile', match: (p: string) => p.startsWith('/profile') },
   { href: '/settings', label: 'Settings', match: (p: string) => p.startsWith('/settings') },

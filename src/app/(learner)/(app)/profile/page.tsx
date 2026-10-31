@@ -1,19 +1,12 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { useUser } from '@clerk/nextjs';
-import { ArrowRight, Award, BookOpen, Flame, Pencil, Trophy } from 'lucide-react';
+import { ArrowRight, Award, BookOpen, Flame, Medal, Pencil, Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DiamondMotif } from '@/components/landing/diamond-motif';
 import { LearnerAvatar } from '@/components/learner/app-header';
-import { SAMPLE_BADGES, SAMPLE_IN_PROGRESS, SAMPLE_LEARNER } from '@/lib/learner-data';
-
-const barTone = {
-  orange: 'bg-[linear-gradient(90deg,#c1440e,#d4920a)]',
-  green: 'bg-[#0d5c3a]',
-  navy: 'bg-[#1e2a78]',
-};
+import { useCurrentUser } from '@/hooks/auth/use-current-user';
 
 const stats = [
   { label: 'Courses Enrolled', icon: BookOpen, tint: 'bg-[#fbebe2] text-brand' },
@@ -22,13 +15,18 @@ const stats = [
   { label: 'Global Rank', icon: Trophy, tint: 'bg-[#ecedf3] text-[#1b2b6b]' },
 ];
 
-/** /profile — who the learner is, their level, courses in progress and latest badges. */
+/**
+ * /profile — who the learner is (Clerk and GET /auth/me), their XP and streak, courses and badges.
+ * TODO: List enrolled courses and earned badges once the learner and gamification modules have endpoints.
+ */
 export default function ProfilePage() {
   const { user } = useUser();
-  const l = SAMPLE_LEARNER;
-  const name = user?.fullName || `${l.firstName} ${l.lastName}`;
-  const joined = (user?.createdAt ?? new Date('2026-01-15')).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
-  const recent = SAMPLE_BADGES.filter((b) => b.earned).slice(0, 6);
+  const { user: dbUser } = useCurrentUser();
+  const name = user?.fullName || [dbUser?.firstName, dbUser?.lastName].filter(Boolean).join(' ') || 'Your profile';
+  const created = user?.createdAt ?? (dbUser?.createdAt ? new Date(dbUser.createdAt) : null);
+  const joined = created?.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  const xp = dbUser?.learnerProfile?.xpTotal ?? 0;
+  const streak = dbUser?.learnerProfile?.streakDays ?? 0;
 
   return (
     <main className="learner-compact flex-1">
@@ -49,17 +47,14 @@ export default function ProfilePage() {
           <div className="min-w-0 flex-1 md:ml-[4px] md:mt-[3px]">
             <h1 className="font-display text-[34px] font-extrabold leading-[44px] text-white sm:text-[43px]">{name}</h1>
             <p className="mt-[4px] text-[17px] leading-7 text-[#a08a78] sm:text-[21px]">
-              {l.tier} · Joined {joined} · {l.location} <span aria-label="Nigeria">🇳🇬</span>
+              Learner{joined && ` · Joined ${joined}`}
             </p>
             <div className="mt-[14px] flex flex-wrap gap-[12px]">
               <span className="rounded-full border border-[#c9a46b]/60 bg-[#e8a33d]/10 px-[14px] py-[4px] text-base font-bold text-[#e8a33d]">
-                Level {l.level} · {l.levelName}
-              </span>
-              <span className="rounded-full border border-[#c9a46b]/60 bg-[#e8a33d]/10 px-[14px] py-[4px] text-base font-bold text-[#e8a33d]">
-                {l.xp.toLocaleString('en-NG')} XP
+                {xp.toLocaleString('en-NG')} XP
               </span>
               <span className="rounded-full border border-brand/50 bg-brand/10 px-[14px] py-[4px] text-base font-bold text-[#e05a1b]">
-                {l.streak}-day Streak <span aria-hidden="true">🔥</span>
+                {streak}-day Streak <span aria-hidden="true">🔥</span>
               </span>
             </div>
           </div>
@@ -90,31 +85,14 @@ export default function ProfilePage() {
             <h2 id="my-courses-title" className="font-display text-[25px] font-extrabold leading-8 text-[#1c0e04]">
               My Courses
             </h2>
-            <ul className="mt-[27px] space-y-5">
-              {SAMPLE_IN_PROGRESS.map((c) => (
-                <li key={c.slug} className="relative flex h-[135px] overflow-hidden rounded-2xl border-2 border-[#efe2d0] bg-[#fffdf9]">
-                  <Image src={c.image} alt="" width={244} height={270} unoptimized className="h-full w-[122px] shrink-0 object-cover" />
-                  <div className="flex min-w-0 flex-1 flex-col justify-center pl-[22px] pr-[22px]">
-                    <h3 className="font-display text-[21px] font-bold leading-7 text-[#1c0e04]">
-                      <Link href={`/learn/${c.slug}`} className="after:absolute after:inset-0">
-                        {c.title}
-                      </Link>
-                    </h3>
-                    <div
-                      className="mt-[12px] h-2 rounded-full bg-[#f3e6d6]"
-                      role="progressbar"
-                      aria-valuenow={c.progress}
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                      aria-label={`${c.title} progress`}
-                    >
-                      <div className={cn('h-full rounded-full', barTone[c.tone])} style={{ width: `${c.progress}%` }} />
-                    </div>
-                    <p className="mt-[14px] text-[19px] text-[#7a6655]">{c.progress}% complete</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <div className="mt-[27px] flex flex-col items-center rounded-2xl border-2 border-dashed border-[#efe2d0] bg-[#fffdf9] px-6 py-12 text-center">
+              <BookOpen className="h-8 w-8 text-brand" strokeWidth={1.7} aria-hidden="true" />
+              <p className="mt-3 font-display text-[21px] font-bold text-[#1c0e04]">No courses yet</p>
+              <p className="mt-1 max-w-sm text-[17px] text-[#7a6655]">Courses you enrol in will show up here with your progress.</p>
+              <Link href="/courses" className="mt-4 text-[17px] font-semibold text-brand hover:text-brand-light">
+                Explore the catalogue →
+              </Link>
+            </div>
           </section>
 
           <section aria-labelledby="recent-badges-title">
@@ -122,20 +100,10 @@ export default function ProfilePage() {
               Recent Badges
             </h2>
             <div className="mt-[27px] rounded-2xl border-2 border-[#efe2d0] bg-[#fffdf9] px-[30px] pb-[30px] pt-[30px]">
-              <ul className="grid grid-cols-3 justify-items-start gap-x-[19px] gap-y-[20px] sm:w-fit">
-                {recent.map((b) => (
-                  <li
-                    key={b.name}
-                    title={`${b.name} — ${b.description}`}
-                    className="flex h-[73px] w-[73px] items-center justify-center rounded-full border-2 border-[#efd9bd] bg-[#fdf6ec] text-[34px]"
-                  >
-                    <span aria-hidden="true">{b.emoji}</span>
-                    <span className="sr-only">
-                      {b.name}: {b.description}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+              <div className="flex items-center gap-4 text-left">
+                <Medal className="h-9 w-9 shrink-0 text-[#d4920a]" strokeWidth={1.6} aria-hidden="true" />
+                <p className="text-[17px] text-[#7a6655]">No badges yet. Keep learning to earn your first one.</p>
+              </div>
               <Link
                 href="/dashboard/achievements"
                 className="mt-[22px] flex h-11 w-full max-w-[286px] items-center justify-center gap-1 rounded-xl bg-brand-gradient text-[17px] font-semibold text-white shadow-lg shadow-brand/30 transition-opacity hover:opacity-90"

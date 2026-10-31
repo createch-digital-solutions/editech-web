@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
-import { CircleCheck, ChevronDown, Play } from 'lucide-react';
+import { CircleCheck, ChevronDown, Lock, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { PersonAvatar } from '@/components/learner/person-avatar';
 import { Stars } from '@/components/learner/stars';
 import type { CourseDetail } from '@/lib/learner-data';
 
@@ -47,10 +47,13 @@ function Curriculum({ course, defaultOpen }: { course: CourseDetail; defaultOpen
                   <li key={l.id} className="flex items-center gap-3 py-2 text-[15px] text-[#3d2b1f]">
                     {l.done ? (
                       <CircleCheck className="h-4 w-4 shrink-0 text-[#0d5c3a]" aria-label="Watched" />
+                    ) : l.locked ? (
+                      <Lock className="h-4 w-4 shrink-0 text-[#a89282]" aria-label="Unlocks when you enrol" />
                     ) : (
                       <Play className="h-4 w-4 shrink-0 text-[#a89282]" aria-hidden="true" />
                     )}
                     <span className="flex-1">{l.title}</span>
+                    {l.preview && <span className="rounded-full bg-[#e6f0ea] px-2 py-0.5 text-[11px] font-bold text-[#0d5c3a]">Preview</span>}
                     <span className="text-[13px] text-[#a89282]">{l.duration}</span>
                   </li>
                 ))}
@@ -67,7 +70,7 @@ function InstructorCard({ course }: { course: CourseDetail }) {
   return (
     <div className="rounded-2xl border-2 border-[#efe2d0] bg-[#fffdf9] px-[23px] pb-[26px] pt-[36px]">
       <div className="flex items-start gap-[13px]">
-        <Image src={course.instructorImage} alt="" width={64} height={64} unoptimized className="h-16 w-16 shrink-0 rounded-full object-cover" />
+        <PersonAvatar name={course.instructor} src={course.instructorImage} size={64} />
         <div className="min-w-0">
           <p className="font-body text-[18px] font-bold leading-6 text-[#1c0e04]">{course.instructor}</p>
           <p className="mt-[3px] text-[14px] leading-[22px] text-[#7a6655]">{course.instructorTitle}</p>

@@ -5,10 +5,12 @@ import { FeaturesSection } from '@/components/landing/features-section';
 import { StatsBar } from '@/components/landing/stats-bar';
 import { ShowcaseGrid } from '@/components/landing/showcase-grid';
 import { PopularCourses } from '@/components/landing/popular-courses';
+import { getPopular } from '@/lib/courses-api';
 import { CtaBanner } from '@/components/landing/cta-banner';
 import { Footer } from '@/components/landing/footer';
 
-export default function HomePage() {
+export default async function HomePage() {
+  const popular = await getPopular();
   return (
     <main className="flex-1 font-body">
       <Navbar />
@@ -17,7 +19,7 @@ export default function HomePage() {
       <FeaturesSection />
       <StatsBar />
       <ShowcaseGrid />
-      <PopularCourses />
+      <PopularCourses courses={popular} />
       <CtaBanner />
       <Footer />
     </main>
