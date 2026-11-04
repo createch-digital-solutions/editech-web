@@ -4,6 +4,7 @@ import { Medal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DiamondMotif } from '@/components/landing/diamond-motif';
 import { useCurrentUser } from '@/hooks/auth/use-current-user';
+import { bestStreakOf } from '@/types/user';
 
 function StatCard({ emoji, value, valueClass, label, note }: { emoji: string; value: string; valueClass: string; label: string; note: string }) {
   return (
@@ -19,13 +20,14 @@ function StatCard({ emoji, value, valueClass, label, note }: { emoji: string; va
 }
 
 /**
- * XP and day streak from the learner profile (GET /auth/me).
+ * XP, day streak and best streak from the learner profile (GET /auth/me).
  * TODO: Show levels, badges and certificates once the gamification and certificates modules have endpoints.
  */
 export function AchievementsView() {
   const { user } = useCurrentUser();
   const xp = user?.learnerProfile?.xpTotal ?? 0;
   const streak = user?.learnerProfile?.streakDays ?? 0;
+  const best = bestStreakOf(user);
 
   return (
     <main className="learner-compact mx-auto w-full max-w-[1234px] flex-1 px-4 pb-[44px] pt-8 sm:px-6 lg:px-[49px] lg:pt-[43px]">
@@ -37,7 +39,7 @@ export function AchievementsView() {
           <p className="mt-[16px] text-[19px] text-white/50">Earn XP by finishing lessons and quizzes.</p>
         </div>
 
-        <StatCard emoji="🔥" value={String(streak)} valueClass="text-brand" label="Day Streak" note={streak ? 'Keep it going' : 'Learn today to start one'} />
+        <StatCard emoji="🔥" value={String(streak)} valueClass="text-brand" label="Day Streak" note={best !== undefined ? `Best: ${best} ${best === 1 ? 'day' : 'days'}` : streak ? 'Keep it going' : 'Learn today to start one'} />
         <StatCard emoji="🏅" value="0" valueClass="text-[#d4920a]" label="Badges Earned" note="None yet" />
         <StatCard emoji="🎓" value="0" valueClass="text-[#0d5c3a]" label="Certificates" note="Finish a course to earn one" />
       </section>

@@ -20,12 +20,12 @@ const SECTIONS = [
 type SectionId = (typeof SECTIONS)[number]['id'];
 
 const inputClass =
-  'mt-[13px] h-16 w-full rounded-xl border-2 border-[#efe2d0] bg-[#fffdf9] px-[22px] font-body text-[20px] text-[#1c0e04] placeholder:text-[#a89282] focus:border-brand focus:outline-none read-only:text-[#3d2b1f]';
+  'mt-2 h-12 w-full rounded-xl border-2 border-[#efe2d0] bg-[#fffdf9] px-4 font-body text-[16px] text-[#1c0e04] placeholder:text-[#a89282] focus:border-brand focus:outline-none read-only:text-[#3d2b1f] lg:mt-[13px] lg:h-16 lg:px-[22px] lg:text-[20px]';
 
 function Field({ id, label, ...props }: { id: string; label: string } & React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <div>
-      <label htmlFor={id} className="block font-body text-[18px] font-semibold leading-6 text-[#3d2b1f]">
+      <label htmlFor={id} className="block font-body text-[14px] font-semibold leading-5 text-[#3d2b1f] lg:text-[18px] lg:leading-6">
         {label}
       </label>
       <input id={id} className={inputClass} {...props} />
@@ -90,34 +90,34 @@ function AccountSection() {
   const changed = firstName.trim() !== original.firstName || lastName.trim() !== original.lastName;
 
   return (
-    <form onSubmit={handleSave} className="mt-[33px] rounded-3xl border-2 border-[#efe2d0] bg-[#fffdf9] px-5 pb-[36px] pt-[44px] sm:px-[37px]">
-      <h2 className="font-display text-[21px] font-bold leading-7 text-[#1c0e04]">Profile Information</h2>
+    <form onSubmit={handleSave} className="mt-5 rounded-2xl border-2 border-[#efe2d0] bg-[#fffdf9] px-4 pb-6 pt-6 sm:px-[37px] lg:mt-[33px] lg:rounded-3xl lg:pb-[36px] lg:pt-[44px]">
+      <h2 className="font-display text-[17px] font-bold leading-6 text-[#1c0e04] lg:text-[21px] lg:leading-7">Profile Information</h2>
 
-      <div className="mt-[33px] flex items-center gap-6">
-        <div className="relative h-[98px] w-[98px] shrink-0">
+      <div className="mt-5 flex items-center gap-4 lg:mt-[33px] lg:gap-6">
+        <div className="relative h-16 w-16 shrink-0 lg:h-[98px] lg:w-[98px]">
           <LearnerAvatar className="h-full w-full" />
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
             aria-label="Change photo"
-            className="absolute -bottom-[2px] -right-[2px] flex h-[34px] w-[34px] cursor-pointer items-center justify-center rounded-full border-2 border-[#fffdf9] bg-brand-gradient text-white"
+            className="absolute -bottom-[2px] -right-[2px] flex h-7 w-7 cursor-pointer lg:h-[34px] lg:w-[34px] items-center justify-center rounded-full border-2 border-[#fffdf9] bg-brand-gradient text-white"
           >
             <Pencil className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
           </button>
         </div>
         <div className="min-w-0">
-          <p className="truncate font-body text-[24px] font-bold leading-8 text-[#1c0e04]">
+          <p className="truncate font-body text-[17px] font-bold leading-6 text-[#1c0e04] lg:text-[24px] lg:leading-8">
             {[original.firstName, original.lastName].filter(Boolean).join(' ') || 'Your name'}
           </p>
-          <p className="truncate text-[19px] leading-7 text-[#7a6655]">{email}</p>
-          <button type="button" onClick={() => fileRef.current?.click()} className="cursor-pointer text-[19px] leading-7 text-brand hover:text-brand-light">
+          <p className="truncate text-[14px] leading-5 text-[#7a6655] lg:text-[19px] lg:leading-7">{email}</p>
+          <button type="button" onClick={() => fileRef.current?.click()} className="cursor-pointer text-[14px] leading-6 text-brand hover:text-brand-light lg:text-[19px] lg:leading-7">
             Change photo
           </button>
           <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="hidden" onChange={handlePhoto} />
         </div>
       </div>
 
-      <div className="mt-[33px] grid gap-x-[22px] gap-y-[22px] sm:grid-cols-2">
+      <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:mt-[33px] lg:gap-x-[22px] lg:gap-y-[22px]">
         <Field id="first-name" label="First Name" autoComplete="given-name" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
         <Field id="last-name" label="Last Name" autoComplete="family-name" value={lastName} onChange={(e) => setLastName(e.target.value)} />
         <Field id="email" label="Email" type="email" value={email} readOnly aria-describedby="email-note" />
@@ -139,11 +139,11 @@ function AccountSection() {
         </div>
       )}
 
-      <div className="mt-[30px] flex gap-[15px]">
+      <div className="mt-6 flex gap-3 lg:mt-[30px] lg:gap-[15px]">
         <button
           type="submit"
           disabled={saving || !user}
-          className="flex h-[58px] cursor-pointer items-center justify-center rounded-xl bg-brand-gradient px-[31px] font-body text-[20px] font-bold text-white shadow-lg shadow-brand/30 transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
+          className="flex h-11 cursor-pointer items-center justify-center rounded-xl bg-brand-gradient px-5 font-body text-[15px] font-bold lg:h-[58px] lg:px-[31px] lg:text-[20px] text-white shadow-lg shadow-brand/30 transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
         >
           {saving ? 'Saving…' : 'Save Changes'}
         </button>
@@ -154,7 +154,7 @@ function AccountSection() {
             setLastName(null);
             setStatus(null);
           }}
-          className="flex h-[58px] cursor-pointer items-center justify-center rounded-xl border-2 border-[#efe2d0] bg-[#fdf6ec] px-[25px] font-body text-[20px] font-semibold text-[#3d2b1f] transition-colors hover:bg-white"
+          className="flex h-11 cursor-pointer items-center justify-center rounded-xl border-2 border-[#efe2d0] bg-[#fdf6ec] px-4 font-body text-[15px] font-semibold lg:h-[58px] lg:px-[25px] lg:text-[20px] text-[#3d2b1f] transition-colors hover:bg-white"
         >
           Cancel
         </button>
@@ -165,9 +165,9 @@ function AccountSection() {
 
 function ComingSoon({ label }: { label: string }) {
   return (
-    <div className="mt-[33px] rounded-3xl border-2 border-[#efe2d0] bg-[#fffdf9] px-5 py-12 text-center sm:px-[37px]">
-      <h2 className="font-display text-[21px] font-bold text-[#1c0e04]">{label}</h2>
-      <p className="mx-auto mt-2 max-w-md text-base text-[#7a6655]">These settings are on their way. For now you can update your profile under Account.</p>
+    <div className="mt-5 rounded-2xl border-2 border-[#efe2d0] bg-[#fffdf9] px-4 py-8 text-center sm:px-[37px] lg:mt-[33px] lg:rounded-3xl lg:py-12">
+      <h2 className="font-display text-[17px] font-bold text-[#1c0e04] lg:text-[21px]">{label}</h2>
+      <p className="mx-auto mt-2 max-w-md text-[14px] text-[#7a6655] lg:text-base">These settings are on their way. For now you can update your profile under Account.</p>
     </div>
   );
 }
@@ -178,34 +178,35 @@ function SettingsContent() {
   const active: SectionId = SECTIONS.some((s) => s.id === requested) ? (requested as SectionId) : 'account';
   const current = SECTIONS.find((s) => s.id === active)!;
 
+  const hrefOf = (id: SectionId) => (id === 'account' ? '/settings' : `/settings?section=${id}`);
+
   return (
-    <div className="learner-compact flex flex-1 flex-col lg:flex-row">
-      <aside className="shrink-0 border-b border-[#e8d5bb] bg-[#fffdf9] px-4 py-6 sm:px-6 lg:w-[336px] lg:border-b-0 lg:border-r lg:px-[18px] lg:pt-[37px]">
-        <h1 className="font-display text-[23px] font-bold leading-8 text-[#1c0e04] lg:pl-[13px]">Settings</h1>
-        <nav className="mt-6 flex gap-1 overflow-x-auto lg:mt-[33px] lg:block lg:space-y-1" aria-label="Settings">
+    // Sections are tabs under the heading, so the menu rail stays the only sidebar.
+    <div className="learner-compact flex flex-1 flex-col">
+      <main className="mx-auto w-full max-w-[1100px] flex-1 px-4 pb-12 pt-5 sm:px-6 lg:px-[48px] lg:pt-[44px]">
+        <h1 className="font-display text-[24px] font-extrabold leading-8 text-[#1c0e04] lg:text-[36px] lg:leading-[44px]">Settings</h1>
+        <nav className="-mx-4 mt-5 flex gap-1 overflow-x-auto border-b border-[#e8dccb] px-4 [scrollbar-width:none] sm:mx-0 sm:px-0 lg:mt-7 lg:gap-2" aria-label="Settings">
           {SECTIONS.map((s) => {
             const isActive = s.id === active;
             return (
               <Link
                 key={s.id}
-                href={s.id === 'account' ? '/settings' : `/settings?section=${s.id}`}
+                href={hrefOf(s.id)}
                 aria-current={isActive ? 'page' : undefined}
                 className={cn(
-                  'flex h-[57px] shrink-0 items-center gap-[15px] whitespace-nowrap rounded-xl px-[22px] font-body text-[21px] transition-colors',
-                  isActive ? 'border-l-[3px] border-brand bg-[#fdeee4] pl-[19px] font-semibold text-brand' : 'text-[#5a4636] hover:bg-[#fdf6ec]'
+                  '-mb-px flex h-11 shrink-0 items-center gap-2 whitespace-nowrap border-b-[3px] px-3 font-body text-[14px] transition-colors lg:h-[58px] lg:gap-3 lg:px-5 lg:text-[19px]',
+                  isActive ? 'border-brand font-semibold text-brand' : 'border-transparent text-[#5a4636] hover:text-brand'
                 )}
               >
-                <s.icon className={cn('h-5 w-5', isActive ? 'text-brand' : 'text-[#7a6655]')} strokeWidth={1.8} aria-hidden="true" />
+                <s.icon className="h-4 w-4 lg:h-5 lg:w-5" strokeWidth={1.8} aria-hidden="true" />
                 {s.label}
               </Link>
             );
           })}
         </nav>
-      </aside>
 
-      <main className="min-w-0 flex-1 px-4 pb-12 pt-8 sm:px-6 lg:pl-[57px] lg:pr-[56px] lg:pt-[48px]">
-        <div className="max-w-[784px]">
-          <h2 className="font-display text-[29px] font-extrabold leading-9 text-[#1c0e04]">{current.label === 'Account' ? 'Account Settings' : current.label}</h2>
+        <div className="mt-5 max-w-[860px] lg:mt-10">
+          <h2 className="font-display text-[19px] font-extrabold leading-7 text-[#1c0e04] lg:text-[29px] lg:leading-9">{current.label === 'Account' ? 'Account Settings' : current.label}</h2>
           {active === 'account' ? <AccountSection /> : <ComingSoon label={current.label} />}
         </div>
       </main>

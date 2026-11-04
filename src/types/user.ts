@@ -43,6 +43,8 @@ export interface LearnerProfile {
   bio: string | null;
   xpTotal: number;
   streakDays: number;
+  /** Personal best streak (StreakRecord.longestStreak); not returned by GET /auth/me yet. */
+  longestStreak?: number;
   /** Set by learner onboarding; empty until the learner has completed it. */
   careerGoal?: string | null;
   skillLevel?: SkillLevel | null;
@@ -81,6 +83,13 @@ export interface User {
   updatedAt: string;
   learnerProfile?: LearnerProfile | null;
   instructorProfile?: InstructorProfile | null;
+  /** Current and best streak, if the API includes the streak record. */
+  streakRecord?: { currentStreak: number; longestStreak: number } | null;
+}
+
+/** The learner's personal best streak, from whichever field the API sends; undefined until it sends one. */
+export function bestStreakOf(user: User | null | undefined): number | undefined {
+  return user?.streakRecord?.longestStreak ?? user?.learnerProfile?.longestStreak;
 }
 
 /** Minimal user shape used in lists and references. */
