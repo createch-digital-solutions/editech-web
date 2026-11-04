@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { DashboardView } from '@/app/(learner)/(app)/dashboard/dashboard-view';
 import type { CourseSummary } from '@/lib/learner-data';
 
@@ -10,7 +11,7 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('@/hooks/auth/use-current-user', () => ({
   useCurrentUser: () => ({
-    user: { firstName: 'Ngozi', learnerProfile: { xpTotal: 1250, streakDays: 3 } },
+    user: { firstName: 'Ngozi', learnerProfile: { xpTotal: 1250, streakDays: 3, longestStreak: 9 } },
     isLoading: false,
     isSignedIn: true,
   }),
@@ -29,19 +30,28 @@ const course: CourseSummary = {
   category: 'web-development',
 };
 
+const renderDashboard = (recommended: CourseSummary[]) =>
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <DashboardView recommended={recommended} />
+    </QueryClientProvider>
+  );
+
 describe('Learner Route Group — Dashboard', () => {
-  it('shows the learner, their XP and streak from the API, and the featured courses', () => {
-    render(<DashboardView recommended={[course]} />);
+  it('shows the learner, their XP, streak and best streak from the API, and the featured courses', () => {
+    renderDashboard([course]);
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Ngozi');
     expect(screen.getByText('1,250')).toBeInTheDocument();
     expect(screen.getByText('3')).toBeInTheDocument();
+    expect(screen.getByText('Best: 9 days')).toBeInTheDocument();
     expect(screen.getByText('No courses in progress')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Recommended for You' })).toBeInTheDocument();
     expect(screen.getByText('React for Beginners')).toBeInTheDocument();
   });
 
-  it('hides recommendations when the API has none', () => {
-    render(<DashboardView recommended={[]} />);
+  it('hides empty recommendations, and leaves Aria to the course player', () => {
+    renderDashboard([]);
     expect(screen.queryByRole('heading', { name: 'Recommended for You' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Ask Aria')).not.toBeInTheDocument();
   });
 });

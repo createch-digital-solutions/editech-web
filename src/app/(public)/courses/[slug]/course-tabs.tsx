@@ -38,7 +38,7 @@ function Curriculum({ course, defaultOpen }: { course: CourseDetail; defaultOpen
             >
               {complete && <CircleCheck className="h-[18px] w-[18px] shrink-0 text-[#0d5c3a]" strokeWidth={2} aria-label="Completed" />}
               <span className={cn('font-body text-[17px] font-semibold', current ? 'text-brand' : 'text-[#1c0e04]')}>{s.title}</span>
-              <span className="rounded-full border border-[#e3d3bf] bg-[#f3e6d6] px-[9px] py-[2px] text-[11px] font-bold text-[#7a6655]">{s.summary}</span>
+              <span className="hidden shrink-0 whitespace-nowrap rounded-full border border-[#e3d3bf] bg-[#f3e6d6] px-[9px] py-[2px] text-[11px] font-bold text-[#7a6655] sm:inline">{s.summary}</span>
               <ChevronDown className={cn('ml-auto h-4 w-4 shrink-0 text-[#7a6655] transition-transform', isOpen && 'rotate-180')} aria-hidden="true" />
             </button>
             {isOpen && (
@@ -90,7 +90,7 @@ export function CourseTabs({ course, reviews }: { course: CourseDetail; reviews:
   const [tab, setTab] = useState<Tab>('Overview');
 
   return (
-    <div className="mx-auto w-full max-w-[1238px] px-4 pb-[60px] pt-[46px] sm:px-6 lg:px-[64px]">
+    <div className="w-full pb-16 pt-10">
       <div className="flex gap-1 overflow-x-auto overflow-y-hidden border-b-2 border-[#efe2d0]" role="tablist" aria-label="Course details">
         {TABS.map((t) => (
           <button
@@ -102,7 +102,7 @@ export function CourseTabs({ course, reviews }: { course: CourseDetail; reviews:
             aria-controls={`panel-${t}`}
             onClick={() => setTab(t)}
             className={cn(
-              '-mb-[2px] shrink-0 cursor-pointer border-b-[3px] px-6 pb-[13px] font-body text-[18px] transition-colors',
+              '-mb-[2px] shrink-0 cursor-pointer border-b-[3px] px-4 pb-3 font-body text-[15px] transition-colors sm:px-5',
               tab === t ? 'border-brand font-semibold text-brand' : 'border-transparent text-[#7a6655] hover:text-brand'
             )}
           >
@@ -111,9 +111,9 @@ export function CourseTabs({ course, reviews }: { course: CourseDetail; reviews:
         ))}
       </div>
 
-      <div id={`panel-${tab}`} role="tabpanel" aria-labelledby={`tab-${tab}`} className="mx-auto mt-[37px] max-w-[841px] lg:ml-[135px]">
+      <div id={`panel-${tab}`} role="tabpanel" aria-labelledby={`tab-${tab}`} className="mt-8">
         {tab === 'Overview' && (
-          <div className="grid gap-[44px] md:grid-cols-[minmax(0,532px)_265px]">
+          <div className="grid gap-10">
             <div>
               {course.outcomes.length > 0 && (
                 <>
@@ -134,7 +134,7 @@ export function CourseTabs({ course, reviews }: { course: CourseDetail; reviews:
               </div>
             </div>
             <div>
-              <h2 className="font-display text-[17px] font-bold leading-6 text-[#1c0e04]">Your Instructor</h2>
+              <h2 className="font-display text-[20px] font-bold leading-7 text-[#1c0e04]">Your Instructor</h2>
               <div className="mt-[16px]">
                 <InstructorCard course={course} />
               </div>
@@ -143,19 +143,19 @@ export function CourseTabs({ course, reviews }: { course: CourseDetail; reviews:
         )}
 
         {tab === 'Curriculum' && (
-          <div className="max-w-[532px]">
+          <div>
             <Curriculum course={course} defaultOpen={0} />
           </div>
         )}
 
         {tab === 'Instructor' && (
-          <div className="max-w-[420px]">
+          <div>
             <InstructorCard course={course} />
           </div>
         )}
 
         {tab === 'Reviews' && (
-          <div className="max-w-[640px]">
+          <div>
             <div className="flex items-center gap-3">
               <span className="font-display text-[34px] font-extrabold text-[#1c0e04]">{course.rating.toFixed(1)}</span>
               <div>

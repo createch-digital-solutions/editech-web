@@ -8,7 +8,8 @@ export const metadata: Metadata = {
 };
 
 /** /courses — the public course catalogue (GET /courses and GET /courses/categories). */
-export default async function CataloguePage() {
-  const catalogue = await getCatalogue();
-  return <CatalogueView catalogue={catalogue} />;
+export default async function CataloguePage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  const [catalogue, { q = '' }] = await Promise.all([getCatalogue(), searchParams]);
+  // The search comes from the top bar.
+  return <CatalogueView catalogue={catalogue} initialQuery={q} />;
 }

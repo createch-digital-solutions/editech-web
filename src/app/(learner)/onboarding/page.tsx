@@ -152,8 +152,7 @@ export default function OnboardingPage() {
     { label: 'Goal', value: labelsFor(goals, selectedGoals) },
     { label: 'Topics', value: labelsFor(topics, selectedTopics) },
     { label: 'Level', value: levels.find((l) => l.id === level)?.label ?? '' },
-    // TODO: Replace with the recommended path returned by the backend.
-    { label: 'Recommended path', value: '6 courses · 14 hrs' },
+    // TODO: Add the recommended path once the backend returns one.
   ];
 
   return (
@@ -260,7 +259,7 @@ export default function OnboardingPage() {
                   You are all set{user?.firstName ? `, ${user.firstName}` : ''}!
                 </h1>
                 <p className="mx-auto mt-[5px] max-w-[380px] text-sm leading-[21px] text-[#7a6655]">
-                  Aria has built your personal learning path based on your goals, topics, and level.
+                  We&apos;ve saved your goals, topics and level. Your dashboard is ready.
                 </p>
 
                 <dl className="mt-[35px] rounded-xl border-2 border-[#e8d5bb] bg-[#fffdf9] py-[13px] pl-5 pr-5 text-left sm:pr-[27px]">

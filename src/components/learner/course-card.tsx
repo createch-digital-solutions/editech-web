@@ -19,20 +19,20 @@ const solidBadgeStyles: Record<CourseBadge, string> = {
 };
 
 const sizes = {
-  // Catalogue grid (240px wide in the design).
+  // Catalogue grid: compact, Udemy-style (wide photo, two-line title, one-line rating).
   lg: {
-    image: 'aspect-[240/215]',
-    badge: 'left-[14px] top-[18px] px-3 py-[3px] text-[15px]',
-    body: 'px-[21px] pb-[22px] pt-[22px]',
-    title: 'text-[19px] leading-[27px] pr-3',
-    instructor: 'mt-[9px] text-[17px] leading-6',
-    rating: 'mt-[14px] gap-1.5',
-    ratingText: 'text-base',
-    students: 'text-[17px] leading-[25px]',
+    image: 'aspect-[16/10]',
+    badge: 'left-[12px] top-[12px] px-3 py-[3px] text-[14px]',
+    body: 'px-[18px] pb-[18px] pt-[16px]',
+    title: 'line-clamp-2 text-[19px] leading-[26px]',
+    instructor: 'mt-[6px] truncate text-[16px] leading-6',
+    rating: 'mt-[8px] gap-1.5',
+    ratingText: 'text-[16px]',
+    students: 'truncate whitespace-nowrap text-[15px] leading-6',
     stars: 'h-3.5 w-3.5',
-    price: 'text-[24px]',
-    enroll: 'h-[45px] px-[22px] text-[18px] rounded-xl',
-    footer: 'pt-[12px]',
+    price: 'text-[22px]',
+    enroll: 'h-[42px] px-[20px] text-[17px] rounded-xl',
+    footer: 'pt-[14px]',
   },
   // Dashboard "Recommended for You" (186px wide).
   sm: {
@@ -81,13 +81,13 @@ export function CourseCard({ course, size = 'lg', priority }: { course: CourseSu
         </h3>
         <p className={cn('font-body text-[#7a6655]', s.instructor)}>{course.instructor}</p>
 
-        <div className={cn('flex items-center', s.rating)}>
+        <div className={cn('flex min-w-0 items-center', s.rating)}>
           <Stars rating={course.rating} className={s.stars} />
           <span className={cn('font-body font-bold text-[#d4920a]', s.ratingText)}>{course.rating.toFixed(1)}</span>
-          <span className={cn('font-body text-[#a89282]', s.students, size === 'lg' && 'max-w-[4.5rem]')}>{course.students} students</span>
+          <span className={cn('min-w-0 font-body text-[#a89282]', s.students)}>({course.students} students)</span>
         </div>
 
-        <div className={cn('mt-auto flex items-center justify-between gap-2', s.footer)}>
+        <div className={cn('mt-auto flex flex-wrap items-center justify-between gap-2', s.footer)}>
           <span className={cn('font-display font-bold', s.price, course.price === 0 ? 'text-[#0d5c3a]' : 'text-[#1c0e04]')}>
             {formatPrice(course.price)}
           </span>
