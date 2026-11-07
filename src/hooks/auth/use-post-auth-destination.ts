@@ -61,7 +61,7 @@ export function usePostAuthDestination() {
       const clerkId = clerk.user?.id;
       if (claims?.status?.toUpperCase() !== 'ACTIVE' && clerkId) {
         try {
-          await apiClient.post('/auth/provision', { clerkId }, { skipAuth: true });
+          await apiClient.post('/auth/provision', { clerkId }, { skipAuth: true, signal: AbortSignal.timeout(PROFILE_CHECK_MS) });
           claims = readClaims(await clerk.session?.getToken({ skipCache: true }));
         } catch (provisionErr) {
           console.warn('JIT provision fallback failed:', provisionErr);
