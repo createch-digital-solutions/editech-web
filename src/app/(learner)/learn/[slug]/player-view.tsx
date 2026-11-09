@@ -134,6 +134,7 @@ export function PlayerView({ course, startLessonId }: { course: CourseDetail; st
           onClose={() => setAriaOpen(false)}
           context={{
             courseId: course.id,
+            courseSlug: course.slug,
             courseTitle: course.title,
             sectionTitle: lesson.section,
             lessonId: lesson.id,

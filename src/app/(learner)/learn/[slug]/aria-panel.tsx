@@ -1,24 +1,25 @@
 'use client';
 
-import { FormEvent, Fragment, useEffect, useState } from 'react';
+import { FormEvent, Fragment, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useUser } from '@clerk/nextjs';
-import { SendHorizontal, WandSparkles, X } from 'lucide-react';
+import Link from 'next/link';
+import { useAuth, useUser } from '@clerk/nextjs';
+import { SendHorizontal, Square, WandSparkles, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ApiClientError } from '@/lib/api-client';
+import { lessonConversation, streamTutorReply } from '@/lib/ai-tutor';
+import type { TutorMessage, TutorPersona } from '@/types/ai';
 
-const PERSONAS = [
+const PERSONAS: { id: TutorPersona; label: string }[] = [
   { id: 'friendly', label: 'Friendly' },
   { id: 'formal', label: 'Formal' },
   { id: 'socratic', label: 'Socratic' },
-] as const;
+];
 
-/**
- * Where the learner is, for Aria: the course and lesson open in the player and their enrolment progress.
- * This is what the AI module should receive with every message (proposed: POST /ai/coach/messages
- * { message, persona, context }).
- */
+/** Where the learner is, for Aria: the course and lesson open in the player and their enrolment progress. */
 export interface CoachContext {
   courseId: string;
+  courseSlug: string;
   courseTitle: string;
   sectionTitle: string;
   lessonId: string;
@@ -30,24 +31,33 @@ export interface CoachContext {
   progress: number | null;
 }
 
-/** Aria's text with **bold** spans and line breaks kept. */
+/** Aria's text: **bold**, `code`, "* " / "- " list lines as bullets, and line breaks kept. */
 function RichText({ text }: { text: string }) {
   return (
     <>
-      {text.split('\n').map((line, i) => (
-        <Fragment key={i}>
-          {i > 0 && <br />}
-          {line.split(/(\*\*[^*]+\*\*)/g).map((part, j) =>
-            part.startsWith('**') && part.endsWith('**') ? (
-              <strong key={j} className="font-semibold text-[#1c0e04]">
-                {part.slice(2, -2)}
-              </strong>
-            ) : (
-              <Fragment key={j}>{part}</Fragment>
-            )
-          )}
-        </Fragment>
-      ))}
+      {text.split('\n').map((raw, i) => {
+        const bullet = /^\s*[*-]\s+/.test(raw);
+        const line = bullet ? raw.replace(/^\s*[*-]\s+/, '') : raw;
+        return (
+          <Fragment key={i}>
+            {i > 0 && <br />}
+            {bullet && <span aria-hidden="true">• </span>}
+            {line.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).map((part, j) =>
+              part.startsWith('**') && part.endsWith('**') ? (
+                <strong key={j} className="font-semibold text-[#1c0e04]">
+                  {part.slice(2, -2)}
+                </strong>
+              ) : part.startsWith('`') && part.endsWith('`') ? (
+                <code key={j} className="rounded bg-[#f6efe6] px-1 py-px font-mono text-[13px] text-[#1c0e04]">
+                  {part.slice(1, -1)}
+                </code>
+              ) : (
+                <Fragment key={j}>{part}</Fragment>
+              )
+            )}
+          </Fragment>
+        );
+      })}
     </>
   );
 }
@@ -60,24 +70,45 @@ function AriaAvatar({ className }: { className?: string }) {
   );
 }
 
-/** What Aria says first: who she is, what she can see of the learner's progress, and that she is not live yet. */
+/** What Aria says first: who she is and what she can see of the learner's progress. */
 function greetingFor(firstName: string | null | undefined, c: CoachContext) {
   const hi = `Hi${firstName ? ` ${firstName}` : ''}! 👋 I'm Aria, your AI learning coach.`;
-  const where = `\n\nI can see you're on **${c.lessonTitle}**: lesson ${c.lessonNumber} of ${c.totalLessons}${
-    c.progress !== null ? `, and you're **${c.progress}%** through the course` : ', while previewing the course'
-  }.`;
-  return `${hi}${where}\n\nI'm **not switched on yet**. Once I am, you'll be able to ask me about this lesson in the style you pick above.`;
+  if (c.progress === null) return `${hi}\n\nI can see you're previewing **${c.lessonTitle}**. Enrol in the course and I can help you with every lesson in it.`;
+  return `${hi}\n\nI can see you're on **${c.lessonTitle}**: lesson ${c.lessonNumber} of ${c.totalLessons}, and you're **${c.progress}%** through the course. Ask me anything about it.`;
+}
+
+/** A plain reason when Aria cannot answer. */
+function problemText(err: unknown) {
+  if (err instanceof ApiClientError) {
+    if (err.status === 403) return 'Aria is only available in courses you are enrolled in.';
+    if (err.status === 401) return 'Your session has ended. Please sign in again to keep chatting.';
+  }
+  return 'Aria could not answer just now. Please try again.';
 }
 
 /**
- * Aria, popping up over the player: she sees the lesson being watched and the learner's progress. The
- * AI module has no chat endpoint yet, so she says so and the message box stays disabled rather than
- * answering with made-up replies.
- * TODO: Send messages, the persona and `context` to the AI module once it has a chat endpoint.
+ * Aria, popping up over the player (POST /ai/tutor/chat). She is told the course and lesson open in the
+ * player, so she knows exactly where the learner is, and answers in the coaching style picked above; her
+ * reply appears as it is written. The chat for each lesson is saved by the AI module and picked up again
+ * (GET /ai/conversations). Learners who are not enrolled are asked to enrol first, as the AI module requires.
  */
 export function AriaPanel({ open, onClose, context }: { open: boolean; onClose: () => void; context: CoachContext }) {
   const { user } = useUser();
-  const [persona, setPersona] = useState<(typeof PERSONAS)[number]['id']>('friendly');
+  const { getToken } = useAuth();
+  const enrolled = context.progress !== null;
+  const [persona, setPersona] = useState<TutorPersona>('friendly');
+  const [input, setInput] = useState('');
+  const [sending, setSending] = useState(false);
+  const [problem, setProblem] = useState<string | null>(null);
+  // One conversation per lesson: moving to another lesson starts (or picks up) that lesson's chat.
+  const [chat, setChat] = useState<{ lessonId: string; messages: TutorMessage[] }>({ lessonId: context.lessonId, messages: [] });
+  const [loadedFor, setLoadedFor] = useState<string | null>(null);
+  if (chat.lessonId !== context.lessonId) {
+    setChat({ lessonId: context.lessonId, messages: [] });
+    setProblem(null);
+  }
+  const listRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -86,11 +117,82 @@ export function AriaPanel({ open, onClose, context }: { open: boolean; onClose: 
     return () => document.removeEventListener('keydown', onKey);
   }, [open, onClose]);
 
+  // The first time Aria opens on a lesson: pick up the earlier chat about it, if there is one.
+  useEffect(() => {
+    if (!open || !enrolled || loadedFor === context.lessonId) return;
+    const lessonId = context.lessonId;
+    let cancelled = false;
+    (async () => {
+      try {
+        const past = await lessonConversation(lessonId, await getToken());
+        if (!cancelled && past.length > 0) setChat((c) => (c.lessonId === lessonId && c.messages.length === 0 ? { lessonId, messages: past } : c));
+      } catch {
+        // No earlier chat to show; Aria still answers new questions.
+      } finally {
+        if (!cancelled) setLoadedFor(lessonId);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, enrolled, context.lessonId, loadedFor, getToken]);
+
+  // A reply still coming in for a lesson the learner has left is stopped.
+  useEffect(() => () => abortRef.current?.abort(), [context.lessonId]);
+
+  // Keep the newest message in view as it is written.
+  useEffect(() => {
+    const list = listRef.current;
+    if (list) list.scrollTop = list.scrollHeight;
+  }, [chat.messages, open]);
+
   if (!open) return null;
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    const text = input.trim();
+    if (!text || sending || !enrolled) return;
+    const lessonId = context.lessonId;
+    // A reply stopped before it began left nothing to send back.
+    const history: TutorMessage[] = [...chat.messages.filter((m) => m.content), { role: 'user', content: text }];
+    // Aria's reply starts empty and fills in as it streams.
+    setChat({ lessonId, messages: [...history, { role: 'assistant', content: '' }] });
+    setInput('');
+    setProblem(null);
+    setSending(true);
+    const controller = new AbortController();
+    abortRef.current = controller;
+    let replied = false;
+    try {
+      await streamTutorReply(
+        { messages: history, courseId: context.courseId, lessonId, persona },
+        {
+          token: await getToken(),
+          signal: controller.signal,
+          onText: (piece) => {
+            if (piece) replied = true;
+            setChat((c) => (c.lessonId === lessonId ? { lessonId, messages: c.messages.map((m, i) => (i === c.messages.length - 1 ? { ...m, content: m.content + piece } : m)) } : c));
+          },
+        }
+      );
+      // The API answers 201 with an empty body when the AI provider fails.
+      if (!replied) throw new Error('Empty reply');
+    } catch (err) {
+      // Stopped by the learner (or by leaving the lesson): keep whatever Aria had written.
+      if (controller.signal.aborted) {
+        setChat((c) => (c.lessonId === lessonId ? { lessonId, messages: c.messages.filter((m) => m.content) } : c));
+        return;
+      }
+      // Drop the empty reply and give the question back to edit or resend.
+      setChat((c) => (c.lessonId === lessonId ? { lessonId, messages: history.slice(0, -1) } : c));
+      setInput(text);
+      setProblem(problemText(err));
+    } finally {
+      setSending(false);
+    }
   }
+
+  const waiting = sending && chat.messages.at(-1)?.content === '';
 
   // Rendered into <body>, outside the player's zoomed frame, so it sits at true size over the video.
   return createPortal(
@@ -99,13 +201,16 @@ export function AriaPanel({ open, onClose, context }: { open: boolean; onClose: 
       <section
         role="dialog"
         aria-label="Ask Aria"
-        className="relative flex h-[85vh] w-full flex-col overflow-hidden rounded-t-3xl bg-[#fffdf9] shadow-2xl sm:h-[min(600px,calc(100vh-7rem))] sm:w-[400px] sm:rounded-3xl"
+        className="relative flex h-[85vh] w-full flex-col overflow-hidden rounded-t-3xl bg-[#fffdf9] shadow-2xl sm:h-[min(620px,calc(100vh-7rem))] sm:w-[400px] sm:rounded-3xl"
       >
         <header className="flex items-center gap-3 bg-brand-night px-5 py-4 text-white">
           <AriaAvatar className="h-11 w-11" />
           <div className="min-w-0 flex-1">
             <h2 className="font-display text-[17px] font-bold leading-6">Aria</h2>
-            <p className="truncate text-[13px] text-white/60">AI Learning Coach · Coming soon</p>
+            <p className="flex items-center gap-1.5 truncate text-[13px] text-white/60">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#5fd3b5]" aria-hidden="true" />
+              AI Learning Coach
+            </p>
           </div>
           <button type="button" onClick={onClose} aria-label="Close Aria" className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-white/70 hover:bg-white/10 hover:text-white">
             <X className="h-5 w-5" />
@@ -130,7 +235,7 @@ export function AriaPanel({ open, onClose, context }: { open: boolean; onClose: 
           ))}
         </div>
 
-        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto bg-[#f8efe4] px-5 py-5" aria-live="polite">
+        <div ref={listRef} className="min-h-0 flex-1 space-y-4 overflow-y-auto bg-[#f8efe4] px-5 py-5" aria-live="polite">
           <div className="rounded-2xl border border-[#f5d3bd] bg-[#fdeee4] px-4 py-3">
             <p className="truncate text-[12px] text-[#7a6655]">{context.courseTitle}</p>
             <p className="mt-0.5 truncate text-[15px] font-bold text-brand">{context.lessonTitle}</p>
@@ -146,35 +251,88 @@ export function AriaPanel({ open, onClose, context }: { open: boolean; onClose: 
             )}
           </div>
 
-          <div className="flex items-start gap-3">
-            <AriaAvatar className="h-8 w-8" />
-            <p className="rounded-2xl rounded-tl-md border border-[#efe2d0] bg-[#fffdf9] px-4 py-3 text-[14px] leading-[22px] text-[#3d2b1f]">
-              <span className="sr-only">Aria: </span>
-              <RichText text={greetingFor(user?.firstName, context)} />
+          {[{ role: 'assistant' as const, content: greetingFor(user?.firstName, context) }, ...chat.messages].map((m, i) =>
+            m.role === 'assistant' ? (
+              // An empty reply is still on its way: shown below as the typing dots.
+              m.content && (
+                <div key={i} className="flex items-start gap-3">
+                  <AriaAvatar className="h-8 w-8" />
+                  <p className="min-w-0 rounded-2xl rounded-tl-md border border-[#efe2d0] bg-[#fffdf9] px-4 py-3 text-[14px] leading-[22px] text-[#3d2b1f] [overflow-wrap:anywhere]">
+                    <span className="sr-only">Aria: </span>
+                    <RichText text={m.content} />
+                  </p>
+                </div>
+              )
+            ) : (
+              <div key={i} className="flex justify-end">
+                <p className="max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-tr-md bg-brand px-4 py-2.5 text-[14px] leading-[22px] text-white [overflow-wrap:anywhere]">
+                  <span className="sr-only">You: </span>
+                  {m.content}
+                </p>
+              </div>
+            )
+          )}
+
+          {waiting && (
+            <div className="flex items-center gap-3" aria-label="Aria is typing">
+              <AriaAvatar className="h-8 w-8" />
+              <span className="flex gap-1 rounded-2xl rounded-tl-md border border-[#efe2d0] bg-[#fffdf9] px-4 py-3.5" aria-hidden="true">
+                {[0, 150, 300].map((delay) => (
+                  <span key={delay} className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#b9a593]" style={{ animationDelay: `${delay}ms` }} />
+                ))}
+              </span>
+            </div>
+          )}
+
+          {problem && (
+            <p className="rounded-xl border border-[#f3c9b8] bg-[#fdeee4] px-3 py-2 text-[13px] text-[#9a3412]" role="alert">
+              {problem}
             </p>
-          </div>
+          )}
         </div>
 
-        <form onSubmit={handleSubmit} className="flex gap-2.5 border-t border-[#efe2d0] bg-[#fdf6ec] px-4 py-3">
-          <label className="sr-only" htmlFor="ask-aria">
-            Ask Aria
-          </label>
-          <input
-            id="ask-aria"
-            disabled
-            placeholder="Aria isn't available yet"
-            autoComplete="off"
-            className="h-11 min-w-0 flex-1 cursor-not-allowed rounded-xl border border-[#efe2d0] bg-white px-4 text-[14px] text-[#1c0e04] placeholder:text-[#a89282] focus:border-brand focus:outline-none"
-          />
-          <button
-            type="submit"
-            disabled
-            aria-label="Send"
-            className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl bg-brand-gradient text-white disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <SendHorizontal className="h-[18px] w-[18px]" strokeWidth={1.8} aria-hidden="true" />
-          </button>
-        </form>
+        {enrolled ? (
+          <form onSubmit={handleSubmit} className="flex gap-2.5 border-t border-[#efe2d0] bg-[#fdf6ec] px-4 py-3">
+            <label className="sr-only" htmlFor="ask-aria">
+              Ask Aria
+            </label>
+            <input
+              id="ask-aria"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Ask Aria about this lesson…"
+              autoComplete="off"
+              autoFocus
+              className="h-11 min-w-0 flex-1 rounded-xl border border-[#efe2d0] bg-white px-4 text-[14px] text-[#1c0e04] placeholder:text-[#a89282] focus:border-brand focus:outline-none"
+            />
+            {sending ? (
+              <button
+                type="button"
+                onClick={() => abortRef.current?.abort()}
+                aria-label="Stop Aria's reply"
+                className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-[#e3d6c4] bg-white text-[#3d2b1f] hover:text-brand"
+              >
+                <Square className="h-4 w-4 fill-current" aria-hidden="true" />
+              </button>
+            ) : (
+              <button
+                type="submit"
+                disabled={!input.trim()}
+                aria-label="Send"
+                className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl bg-brand-gradient text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <SendHorizontal className="h-[18px] w-[18px]" strokeWidth={1.8} aria-hidden="true" />
+              </button>
+            )}
+          </form>
+        ) : (
+          <div className="flex items-center justify-between gap-3 border-t border-[#efe2d0] bg-[#fdf6ec] px-4 py-3">
+            <p className="text-[13px] leading-5 text-[#7a6655]">Enrol to chat with Aria about this course.</p>
+            <Link href={`/checkout/${context.courseSlug}`} className="flex h-10 shrink-0 items-center rounded-xl bg-brand-gradient px-4 text-[14px] font-bold text-white transition-opacity hover:opacity-90">
+              Enrol
+            </Link>
+          </div>
+        )}
       </section>
     </div>,
     document.body
