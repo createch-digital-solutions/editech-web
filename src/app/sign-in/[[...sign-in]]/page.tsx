@@ -105,6 +105,9 @@ function SignInContent() {
         ) {
           setIsSessionExists(true);
           setError('You are already signed in to an active session.');
+        } else if (signInError.code === 'strategy_for_user_invalid') {
+          // The account was made with Google or Apple and has no password.
+          setError('This account signs in with Google or Apple. Use the button below, or set a password with "Forgot password?".');
         } else {
           setError(signInError.longMessage ?? signInError.message);
         }
