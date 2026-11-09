@@ -1,11 +1,6 @@
-import { AppHeader } from '@/components/learner/app-header';
+import { LearnerShell } from '@/components/learner/learner-shell';
 
-/** Catalogue and course pages: public, with the learner top bar (Log In / Get Started when signed out). */
+/** Catalogue and course pages: public, in the learner frame (Log In / Get Started and no menu rail when signed out). */
 export default function CoursesLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex min-h-screen flex-col bg-[#fdf6ec] font-body">
-      <AppHeader />
-      {children}
-    </div>
-  );
+  return <LearnerShell>{children}</LearnerShell>;
 }

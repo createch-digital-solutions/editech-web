@@ -154,12 +154,14 @@ function toDetail(c: ApiRecord): CourseDetail | null {
   return {
     ...summary,
     fullTitle: summary.title,
+    categoryLabel: str(c.category) ?? '',
     description: str(c.description) ?? '',
     level: summary.level ?? 'BEGINNER',
     ratingsCount: (num(c.reviewCount) ?? 0).toLocaleString('en-NG'),
     studentsCount: (num(c.enrolmentCount) ?? 0).toLocaleString('en-NG'),
     duration: summary.durationMinutes ? formatDuration(summary.durationMinutes) : '',
-    updated: '',
+    // Course.updatedAt; GET /courses/{slug} does not send it (or publishedAt / createdAt) yet.
+    updated: str(c.updatedAt) ? new Date(String(c.updatedAt)).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '',
     instructorTitle: instructorStudents !== undefined ? `${instructorStudents.toLocaleString('en-NG')} students` : 'Instructor',
     instructorBio: str(instructor.bio) ?? '',
     instructorRating: num(instructor.averageRating) ?? summary.rating,

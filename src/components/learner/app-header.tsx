@@ -1,28 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
-import { Bell, Menu, UserRound, X } from 'lucide-react';
+import { Bell, Menu, Search, UserRound, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Logo } from '@/components/landing/logo';
+import { AccountMenu } from './account-menu';
+import { hasOwnSidebar, NavDrawer } from './learner-sidebar';
 
-const NAV = [
-  { href: '/dashboard', label: 'Dashboard' },
-  { href: '/dashboard#continue-learning', label: 'My Learning' },
-  { href: '/courses', label: 'Catalogue' },
-  { href: '/coach', label: 'AI Coach' },
-  { href: '/profile', label: 'Profile' },
-] as const;
-
-/** Which top-level item a path belongs to; everything else in the learner area sits under Dashboard. */
-function activeLabel(pathname: string) {
-  if (pathname.startsWith('/courses')) return 'Catalogue';
-  if (pathname.startsWith('/coach')) return 'AI Coach';
-  if (pathname.startsWith('/profile')) return 'Profile';
-  return 'Dashboard';
-}
+/** Shown beside the search on pages where the menu rail makes way for the page's own sidebar. */
+const TOP_LINKS = [
+  { href: '/dashboard', label: 'Dashboard', match: (p: string) => p === '/dashboard' },
+  { href: '/courses', label: 'Catalogue', match: (p: string) => p.startsWith('/courses') },
+];
 
 /** The logo at the learner header size. */
 export function AppLogo({ tone = 'dark' }: { tone?: 'dark' | 'light' }) {
@@ -61,41 +53,105 @@ export function LearnerAvatar({ className, src }: { className?: string; src?: st
   );
 }
 
+
+/** Search box in the top bar: opens the catalogue filtered by the words typed. */
+function HeaderSearch({ className, autoFocus }: { className?: string; autoFocus?: boolean }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const params = useSearchParams();
+  // Shows the catalogue's current search, and follows it when it changes (or is cleared there).
+  const current = pathname === '/courses' ? (params.get('q') ?? '') : '';
+  const [query, setQuery] = useState(current);
+  const [shown, setShown] = useState(current);
+  if (current !== shown) {
+    setShown(current);
+    setQuery(current);
+  }
+  return (
+    <form
+      role="search"
+      onSubmit={(e) => {
+        e.preventDefault();
+        const q = query.trim();
+        router.push(q ? `/courses?${new URLSearchParams({ q })}` : '/courses');
+      }}
+      className={cn('relative', className)}
+    >
+      <label htmlFor={autoFocus ? 'header-search-mobile' : 'header-search'} className="sr-only">
+        Search courses
+      </label>
+      <Search className="pointer-events-none absolute left-[18px] top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[#7a6655]" strokeWidth={1.9} aria-hidden="true" />
+      <input
+        id={autoFocus ? 'header-search-mobile' : 'header-search'}
+        type="search"
+        autoFocus={autoFocus}
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Search for courses"
+        className="h-12 w-full rounded-xl border border-[#e8dccb] bg-[#f8f2ea] pl-12 pr-4 font-body text-[15px] text-[#1c0e04] placeholder:text-[#9a8574] transition-colors focus:border-brand focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand/10"
+      />
+    </form>
+  );
+}
+
 /**
- * Top bar of the learner area: logo, Dashboard · My Learning · Catalogue · AI Coach · Profile, then
- * notifications and the avatar. Signed-out visitors (public catalogue and course pages) get Log In /
- * Get Started Free on the right instead.
+ * Top bar of the learner area: menu button (opens the side menu), logo, course search, then
+ * notifications and the account menu. Signed-out visitors (public catalogue and course pages) get
+ * Log In / Get Started Free on the right instead.
  */
 export function AppHeader() {
-  const pathname = usePathname();
   const { isLoaded, isSignedIn } = useUser();
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const active = activeLabel(pathname);
+  // Phones: the search icon opens a search row under the bar.
+  const [searching, setSearching] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[#e8d5bb] bg-[#fffdf9]">
-      <div className="flex h-16 items-center px-4 sm:px-6 lg:px-8">
-        <Link href={isSignedIn ? '/dashboard' : '/'} aria-label="Createch Elevate home" className="shrink-0">
-          <AppLogo />
-        </Link>
+    // Plain white with no line under it: with the side menu, one frame around the page.
+    <header className="sticky top-0 z-40 bg-white">
+      {/* Three columns, so the search sits in the middle. The sides never get narrower than what is in
+          them; when space runs short the search shrinks rather than covering the links. */}
+      <div className="grid h-16 grid-cols-[1fr_auto] items-center gap-3 px-4 sm:px-6 md:grid-cols-[minmax(max-content,1fr)_minmax(0,600px)_minmax(max-content,1fr)] lg:gap-6 lg:px-8">
+        <div className="flex min-w-0 items-center gap-3">
+          <Link href={isSignedIn ? '/dashboard' : '/'} aria-label="Createch Elevate home" className="shrink-0">
+            <AppLogo />
+          </Link>
+          {isSignedIn && hasOwnSidebar(pathname) && (
+            <nav aria-label="Main" className="ml-auto hidden items-center gap-1 lg:flex">
+              {TOP_LINKS.map((l) => {
+                const active = l.match(pathname);
+                return (
+                  <Link
+                    key={l.href}
+                    href={l.href}
+                    aria-current={active ? 'page' : undefined}
+                    className={cn(
+                      'flex h-10 items-center rounded-full px-4 font-body text-[15px] font-semibold transition-colors',
+                      active ? 'bg-[#fdeee4] text-brand' : 'text-[#5a4636] hover:bg-[#fdf1e7] hover:text-brand'
+                    )}
+                  >
+                    {l.label}
+                  </Link>
+                );
+              })}
+            </nav>
+          )}
+        </div>
 
-        <nav className="ml-8 hidden items-center gap-1 lg:flex" aria-label="Learner">
-          {NAV.map((item) => (
-            <Link
-              key={item.label}
-              href={item.href}
-              aria-current={item.label === active ? 'page' : undefined}
-              className={cn(
-                'flex h-10 items-center whitespace-nowrap rounded-lg px-4 font-body text-[15px] transition-colors',
-                item.label === active ? 'bg-[#fbece4] font-semibold text-brand' : 'font-medium text-[#7a6655] hover:text-brand'
-              )}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+        <Suspense>
+          <HeaderSearch className="hidden w-full md:block" />
+        </Suspense>
 
-        <div className="ml-auto flex items-center gap-3 lg:gap-5">
+        <div className="flex shrink-0 items-center justify-self-end gap-3 lg:gap-5">
+          <button
+            type="button"
+            onClick={() => setSearching((v) => !v)}
+            aria-expanded={searching}
+            aria-label={searching ? 'Close search' : 'Search courses'}
+            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg text-[#3d2b1f] md:hidden"
+          >
+            {searching ? <X className="h-[22px] w-[22px]" /> : <Search className="h-[22px] w-[22px]" strokeWidth={1.8} aria-hidden="true" />}
+          </button>
           {isLoaded && !isSignedIn ? (
             <>
               <Link
@@ -106,52 +162,46 @@ export function AppHeader() {
               </Link>
               <Link
                 href="/sign-up"
-                className="flex h-10 items-center rounded-lg bg-brand-gradient px-5 font-body text-sm font-semibold text-white shadow-md shadow-brand/30 transition-opacity hover:opacity-90"
+                className="hidden h-10 items-center rounded-lg bg-brand-gradient px-5 font-body text-sm font-semibold text-white shadow-md shadow-brand/30 transition-opacity hover:opacity-90 sm:flex"
               >
                 Get Started Free
               </Link>
             </>
           ) : (
             <>
-              <Link href="/settings?section=notifications" aria-label="Notifications (1 new)" className="relative text-[#7a6655] hover:text-brand">
-                <Bell className="h-[22px] w-[22px]" strokeWidth={1.8} aria-hidden="true" />
-                <span className="absolute -right-0.5 -top-0.5 h-[10px] w-[10px] rounded-full border-2 border-[#fffdf9] bg-brand" />
+              <Link
+                href="/settings?section=notifications"
+                aria-label="Notifications"
+                title="Notifications"
+                className="hidden h-11 w-11 items-center justify-center rounded-full border border-[#efe2d0] bg-white text-[#3d2b1f] shadow-sm transition-colors hover:border-brand/40 hover:text-brand sm:flex"
+              >
+                <Bell className="h-[22px] w-[22px]" strokeWidth={1.7} aria-hidden="true" />
               </Link>
-              <Link href="/profile" aria-label="Your profile">
-                <LearnerAvatar className="h-9 w-9 ring-1 ring-[#e8d5bb] lg:h-10 lg:w-10" />
-              </Link>
+              <AccountMenu />
             </>
           )}
+          {/* Phones and tablets: the menu, last on the right after the account picture. */}
           <button
             type="button"
-            onClick={() => setOpen((o) => !o)}
+            onClick={() => setOpen(true)}
             aria-expanded={open}
-            aria-label={open ? 'Close menu' : 'Open menu'}
-            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg text-[#3d2b1f] lg:hidden"
+            aria-label="Open menu"
+            className="-mr-2 flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-[#3d2b1f] hover:bg-[#fdf1e7] lg:hidden"
           >
-            {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            <Menu className="h-6 w-6" />
           </button>
         </div>
       </div>
 
-      {open && (
-        <nav className="border-t border-[#e8d5bb] px-4 pb-4 pt-2 lg:hidden" aria-label="Learner">
-          {NAV.map((item) => (
-            <Link
-              key={item.label}
-              href={item.href}
-              onClick={() => setOpen(false)}
-              aria-current={item.label === active ? 'page' : undefined}
-              className={cn(
-                'block rounded-lg px-3 py-3 font-body text-base',
-                item.label === active ? 'bg-[#fbece4] font-semibold text-brand' : 'font-medium text-[#3d2b1f]'
-              )}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+      {searching && (
+        <div className="border-t border-[#efe2d0] px-4 pb-3 pt-3 md:hidden">
+          <Suspense>
+            <HeaderSearch autoFocus />
+          </Suspense>
+        </div>
       )}
+
+      <NavDrawer open={open} onClose={() => setOpen(false)} />
     </header>
   );
 }

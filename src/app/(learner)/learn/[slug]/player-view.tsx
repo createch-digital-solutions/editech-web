@@ -7,8 +7,11 @@ import { ArrowLeft, ArrowRight, Bot, Check, ChevronRight, Lock, Maximize, Pause,
 import { cn } from '@/lib/utils';
 import { AppLogo } from '@/components/learner/app-header';
 import { clock, type CourseDetail, type Lesson } from '@/lib/learner-data';
+import { embedUrl } from '@/lib/video';
+import { AriaPanel } from './aria-panel';
 
 const SPEEDS = [1, 1.25, 1.5, 2];
+
 
 /**
  * The course player: the lesson video (with play, seek, speed, volume and full screen), Prev / Mark
@@ -30,6 +33,7 @@ export function PlayerView({ course, startLessonId }: { course: CourseDetail; st
   const [muted, setMuted] = useState(false);
   // Lessons whose video link failed to load (a dead or blocked link).
   const [failed, setFailed] = useState<Set<string>>(() => new Set());
+  const [ariaOpen, setAriaOpen] = useState(false);
   const playerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -48,7 +52,9 @@ export function PlayerView({ course, startLessonId }: { course: CourseDetail; st
     );
   }
 
-  const canPlay = !!lesson.videoUrl && !failed.has(lesson.id);
+  const embed = lesson.videoUrl ? embedUrl(lesson.videoUrl) : null;
+  // Our own controls drive a <video>; an embedded player brings its own.
+  const canPlay = !!lesson.videoUrl && !embed && !failed.has(lesson.id);
   const total = length || lesson.seconds;
 
   function togglePlay() {
@@ -113,16 +119,45 @@ export function PlayerView({ course, startLessonId }: { course: CourseDetail; st
               {lesson.section}
             </span>
           </nav>
-          <Link href="/coach" className="ml-auto flex shrink-0 items-center gap-2 text-[19px] font-semibold text-[#e8a33d] hover:text-[#f2bd61]">
+          <button
+            type="button"
+            onClick={() => setAriaOpen(!ariaOpen)}
+            aria-expanded={ariaOpen}
+            className="ml-auto flex shrink-0 cursor-pointer items-center gap-2 text-[19px] font-semibold text-[#e8a33d] hover:text-[#f2bd61]"
+          >
             <Bot className="h-6 w-6" strokeWidth={1.8} aria-hidden="true" />
             Ask Aria
-          </Link>
+          </button>
         </header>
+        <AriaPanel
+          open={ariaOpen}
+          onClose={() => setAriaOpen(false)}
+          context={{
+            courseId: course.id,
+            courseSlug: course.slug,
+            courseTitle: course.title,
+            sectionTitle: lesson.section,
+            lessonId: lesson.id,
+            lessonTitle: lesson.title,
+            lessonNumber: index + 1,
+            totalLessons: lessons.length,
+            progress: course.enrolment ? Math.round(course.enrolment.progress) : null,
+          }}
+        />
 
         <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
           <section className="flex min-w-0 flex-1 flex-col" aria-label="Lesson">
             <div ref={playerRef} className="relative min-h-[260px] flex-1 overflow-hidden bg-black">
-              {canPlay ? (
+              {embed ? (
+                <iframe
+                  key={lesson.id}
+                  src={embed}
+                  title={lesson.title}
+                  allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+                  allowFullScreen
+                  className="absolute inset-0 h-full w-full border-0"
+                />
+              ) : canPlay ? (
                 <video
                   key={lesson.id}
                   ref={videoRef}
@@ -245,7 +280,7 @@ export function PlayerView({ course, startLessonId }: { course: CourseDetail; st
                 <button
                   type="button"
                   onClick={markComplete}
-                  disabled={!canPlay}
+                  disabled={!canPlay && !embed}
                   className="flex h-[68px] min-w-[168px] cursor-pointer flex-col items-center justify-center rounded-xl bg-brand-gradient px-4 text-[16px] font-bold text-white shadow-lg shadow-brand/30 transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isDone(lesson) ? 'Completed' : 'Mark Complete'}

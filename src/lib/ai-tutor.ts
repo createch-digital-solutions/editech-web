@@ -1,5 +1,5 @@
-import { API_BASE_URL, ApiClientError } from '@/lib/api-client';
-import type { TutorChatRequest } from '@/types/ai';
+import { API_BASE_URL, ApiClientError, apiClient } from '@/lib/api-client';
+import type { AiConversation, TutorChatRequest, TutorMessage } from '@/types/ai';
 
 /**
  * Asks Aria (POST /ai/tutor/chat) and hands each piece of her reply to `onText` as it streams in. The shared
@@ -28,4 +28,11 @@ export async function streamTutorReply(
     if (done) break;
     onText(decoder.decode(value, { stream: true }));
   }
+}
+
+/** The learner's earlier chat with Aria about this lesson (GET /ai/conversations), oldest message first. */
+export async function lessonConversation(lessonId: string, token: string | null | undefined): Promise<TutorMessage[]> {
+  const conversations = await apiClient.get<AiConversation[]>('/ai/conversations', { params: { lessonId }, token: token ?? undefined });
+  const latest = conversations.find((c) => c.lessonId === lessonId);
+  return (latest?.messages ?? []).filter((m): m is TutorMessage => (m.role === 'user' || m.role === 'assistant') && !!m.content);
 }

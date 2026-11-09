@@ -64,6 +64,8 @@ export const clock = (seconds: number) => `${Math.floor(seconds / 60)}:${String(
 
 export interface CourseDetail extends CourseSummary {
   fullTitle: string;
+  /** The category as the API names it ("Web Development"). */
+  categoryLabel: string;
   description: string;
   level: CourseLevel;
   originalPrice?: number;
