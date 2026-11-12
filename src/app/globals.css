@@ -30,6 +30,87 @@
   background-image: linear-gradient(180deg, #1a0e05 0%, #2a1808 48%, #2a1e1f 68%, #1b2b6b 100%);
 }
 
+/*
+ * The type scale every page uses, so the same kind of text is the same size everywhere:
+ *
+ *                  phone   tablet & desktop
+ *   page title      24px   28px    (hero titles on dark banners: 26px / 34px)
+ *   section title   18px   20px
+ *   card title      16px   17px
+ *   body            14px   15px
+ *   small           12px   13px
+ *
+ * Pages inside .learner-compact are drawn at 80% on desktop (see below); --type-scale undoes that
+ * for these styles so they show at exactly the sizes above there too. Colour stays with each element.
+ */
+:root {
+  --type-scale: 1;
+}
+
+@utility type-hero-title {
+  font-family: var(--font-outfit);
+  font-weight: 800;
+  font-size: 26px;
+  line-height: 34px;
+  @media (min-width: 640px) {
+    font-size: calc(34px / var(--type-scale));
+    line-height: calc(42px / var(--type-scale));
+  }
+}
+
+@utility type-page-title {
+  font-family: var(--font-outfit);
+  font-weight: 800;
+  font-size: 24px;
+  line-height: 32px;
+  @media (min-width: 640px) {
+    font-size: calc(28px / var(--type-scale));
+    line-height: calc(36px / var(--type-scale));
+  }
+}
+
+@utility type-section-title {
+  font-family: var(--font-outfit);
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 26px;
+  @media (min-width: 640px) {
+    font-size: calc(20px / var(--type-scale));
+    line-height: calc(28px / var(--type-scale));
+  }
+}
+
+@utility type-card-title {
+  font-family: var(--font-outfit);
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 22px;
+  @media (min-width: 640px) {
+    font-size: calc(17px / var(--type-scale));
+    line-height: calc(24px / var(--type-scale));
+  }
+}
+
+@utility type-body {
+  font-family: var(--font-inter);
+  font-size: 14px;
+  line-height: 22px;
+  @media (min-width: 640px) {
+    font-size: calc(15px / var(--type-scale));
+    line-height: calc(24px / var(--type-scale));
+  }
+}
+
+@utility type-small {
+  font-family: var(--font-inter);
+  font-size: 12px;
+  line-height: 18px;
+  @media (min-width: 640px) {
+    font-size: calc(13px / var(--type-scale));
+    line-height: calc(20px / var(--type-scale));
+  }
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
@@ -82,6 +163,19 @@ input:-webkit-autofill:active {
 @media (min-width: 1024px) {
   .learner-compact {
     zoom: 0.8;
+    --type-scale: 0.8;
+  }
+}
+
+/*
+ * iPhones zoom the whole page in when a text box with text under 16px is tapped, and stay zoomed.
+ * On phones every text box gets 16px text, so tapping one leaves the page as it is.
+ */
+@media (max-width: 767px) {
+  input:not([type='checkbox'], [type='radio'], [type='range'], [type='file']),
+  select,
+  textarea {
+    font-size: 16px !important;
   }
 }
 

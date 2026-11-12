@@ -26,7 +26,7 @@ export function StatusScreen({
       {motif && <DiamondMotif className="left-[calc(50%-305px)] top-[calc(50%-283px)] h-[46px] w-[46px] text-[#d4920a] opacity-20" />}
       <div className="flex w-full max-w-[500px] flex-col items-center text-center">
         <span className={cn('flex h-[88px] w-[88px] items-center justify-center rounded-full border-[3px]', tones[tone])}>{icon}</span>
-        <h1 className="mt-[24px] font-display text-[26px] font-extrabold leading-[34px] text-[#1c0e04]">{title}</h1>
+        <h1 className="type-page-title mt-[24px] text-[#1c0e04]">{title}</h1>
         {children}
       </div>
     </main>

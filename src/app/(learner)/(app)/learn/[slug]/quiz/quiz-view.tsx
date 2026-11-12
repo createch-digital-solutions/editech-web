@@ -71,7 +71,7 @@ export function QuizView({ courseSlug, quiz }: { courseSlug: string; quiz: Quiz 
     <main className="mx-auto w-full max-w-[579px] flex-1 px-4 pb-[60px] pt-10 sm:px-0 lg:pt-[96px]">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="font-display text-[19px] font-bold leading-6 text-[#1c0e04]">{quiz.title}</h1>
+          <h1 className="type-section-title text-[#1c0e04]">{quiz.title}</h1>
           <p className="mt-[2px] text-[13px] text-[#7a6655]">{finished ? 'Finished' : `Question ${index + 1} of ${total}`}</p>
         </div>
         <p className={cn('mt-[3px] flex items-center gap-[5px] text-[13px] font-bold', secondsLeft <= 30 ? 'text-[#c62828]' : 'text-[#d4920a]')}>

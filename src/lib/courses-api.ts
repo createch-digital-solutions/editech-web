@@ -34,7 +34,7 @@ const imageUrl = (v: unknown) => {
 /** "2.3k" from 2300. */
 const compact = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, '')}k` : String(n));
 
-const slugify = (label: string) => label.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+export const slugify = (label: string) => label.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
 function instructorName(c: ApiRecord) {
   const i = c.instructor as ApiRecord | undefined;
@@ -191,8 +191,9 @@ export async function getReviews(courseId: string): Promise<{ id: string; name: 
 }
 
 /**
- * A published course by slug (GET /courses/{slug}); null when it does not exist or the API cannot be
- * reached. Pass the viewer's Clerk token to get their enrolment and unlocked lessons.
+ * A published course by slug (GET /courses/{slug}); null when it does not exist. Throws when the API
+ * cannot be reached or fails, so the page shows the error screen rather than "not found".
+ * Pass the viewer's Clerk token to get their enrolment and unlocked lessons.
  */
 export async function getCourse(slug: string, token?: string | null): Promise<CourseDetail | null> {
   try {
@@ -200,8 +201,9 @@ export async function getCourse(slug: string, token?: string | null): Promise<Co
     // The detail response has no thumbnail; the (cached) course list does.
     const listed = (Array.isArray(list) ? list : []).find((c) => (c as ApiRecord).slug === slug) as ApiRecord | undefined;
     return toDetail({ thumbnailUrl: listed?.thumbnailUrl, ...detail });
-  } catch {
-    return null;
+  } catch (err) {
+    if ((err as { status?: number }).status === 404) return null;
+    throw err;
   }
 }
 

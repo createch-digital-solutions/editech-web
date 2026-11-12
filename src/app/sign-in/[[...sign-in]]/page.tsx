@@ -243,7 +243,7 @@ function SignInContent() {
   return (
     <AuthShell leftContent={<SignInLeftPanel />}>
       <div className="w-full max-w-[404px]">
-        <h2 className="font-display text-[30px] font-extrabold leading-10 tracking-[-0.01em] text-[#1c0e04] sm:text-[34px]">
+        <h2 className="type-page-title text-[#1c0e04]">
           Sign in to your account
         </h2>
         <p className="mt-[10px] text-[17px] leading-6 text-[#7a6655]">

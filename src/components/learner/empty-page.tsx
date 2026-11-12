@@ -7,7 +7,7 @@ export function EmptyPage({ icon, title, message, action }: { icon: React.ReactN
       <span className="flex h-20 w-20 items-center justify-center rounded-full border-[3px] border-[#f5c9a8] bg-[#fdeee4] text-brand" aria-hidden="true">
         {icon}
       </span>
-      <h1 className="mt-6 font-display text-[26px] font-extrabold leading-[34px] text-[#1c0e04]">{title}</h1>
+      <h1 className="type-page-title mt-6 text-[#1c0e04]">{title}</h1>
       <p className="mt-2 max-w-md text-base leading-7 text-[#7a6655]">{message}</p>
       <Link
         href={action.href}

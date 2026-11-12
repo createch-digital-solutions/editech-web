@@ -104,9 +104,10 @@ const pageButton ='flex h-[50px] min-w-[50px] items-center justify-center rounde
  * and every filter applies at once. A search with no match suggests categories; filters alone that
  * leave nothing just offer to clear them.
  */
-export function CatalogueView({ catalogue, initialQuery = '' }: { catalogue: Catalogue; initialQuery?: string }) {
+export function CatalogueView({ catalogue, initialQuery = '', initialCategory = '' }: { catalogue: Catalogue; initialQuery?: string; initialCategory?: string }) {
+  const known = (slug: string) => (catalogue.categories.some((c) => c.slug === slug) ? slug : null);
   const [query, setQuery] = useState(initialQuery);
-  const [category, setCategory] = useState<string | null>(null);
+  const [category, setCategory] = useState<string | null>(() => known(initialCategory));
   const [level, setLevel] = useState<CourseLevel | null>(null);
   const [filter, setFilter] = useState<Filter>('All');
   const [sort, setSort] = useState<Sort>('popular');
@@ -118,7 +119,7 @@ export function CatalogueView({ catalogue, initialQuery = '' }: { catalogue: Cat
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [page, setPage] = useState(1);
   /** Filters in use, in the order they were first picked: the order of the filter tags. */
-  const [picked, setPicked] = useState<FilterKey[]>(initialQuery.trim() ? ['query'] : []);
+  const [picked, setPicked] = useState<FilterKey[]>(() => [...(initialQuery.trim() ? (['query'] as const) : []), ...(known(initialCategory) ? (['category'] as const) : [])]);
 
   // The search lives in the top bar (?q=); follow it when it changes, keeping the other filters.
   const router = useRouter();
@@ -128,6 +129,15 @@ export function CatalogueView({ catalogue, initialQuery = '' }: { catalogue: Cat
     setQuery(initialQuery);
     setPage(1);
     setPicked((p) => (initialQuery.trim() ? (p.includes('query') ? p : [...p, 'query']) : p.filter((k) => k !== 'query')));
+  }
+  // The menu's Explore list links to a category (?category=); follow it the same way.
+  const [linkedCategory, setLinkedCategory] = useState(initialCategory);
+  if (initialCategory !== linkedCategory) {
+    setLinkedCategory(initialCategory);
+    const next = known(initialCategory);
+    setCategory(next);
+    setPage(1);
+    setPicked((p) => (next ? (p.includes('category') ? p : [...p, 'category']) : p.filter((k) => k !== 'category')));
   }
   /** Drops the search from the address, which also clears the top-bar box. */
   const clearSearch = () => {
@@ -204,7 +214,7 @@ export function CatalogueView({ catalogue, initialQuery = '' }: { catalogue: Cat
   const filterPanel = (
     <nav aria-label="Explore">
       <div className="hidden items-center justify-between lg:flex">
-        <h2 className="font-display text-[30px] font-extrabold leading-9 text-[#1c0e04]">Explore</h2>
+        <h2 className="type-section-title text-[#1c0e04]">Explore</h2>
       </div>
       <ul className="space-y-1 lg:mt-6">
         <li>
@@ -262,7 +272,7 @@ export function CatalogueView({ catalogue, initialQuery = '' }: { catalogue: Cat
       <main className="min-w-0 flex-1 px-4 pb-12 pt-6 sm:px-6 lg:px-[40px] lg:pb-[37px] lg:pt-[36px]">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="font-display text-[26px] font-extrabold leading-8 text-[#1c0e04] lg:text-[34px] lg:leading-[42px]">
+            <h1 className="type-page-title text-[#1c0e04]">
               {category ? (categoryLabel(category) ?? 'All Courses') : 'All Courses'}
             </h1>
             <p className="mt-1 font-body text-[14px] text-[#7a6655] lg:text-[17px]" aria-live="polite">
@@ -356,7 +366,7 @@ export function CatalogueView({ catalogue, initialQuery = '' }: { catalogue: Cat
 
         {catalogue.courses.length === 0 ? (
           <section aria-labelledby="no-results-title" className="mt-6 flex flex-col items-center px-4 py-8 text-center lg:mt-[35px] lg:px-6 lg:py-10">
-            <h2 id="no-results-title" className="font-display text-[18px] font-extrabold text-[#1c0e04] lg:text-[24px]">
+            <h2 id="no-results-title" className="type-section-title text-[#1c0e04]">
               {catalogue.unavailable ? 'We couldn’t load the courses' : 'No courses yet'}
             </h2>
             <p className="mt-2 max-w-[520px] font-body text-[15px] text-[#7a6655] lg:text-[19px]">
@@ -365,7 +375,7 @@ export function CatalogueView({ catalogue, initialQuery = '' }: { catalogue: Cat
           </section>
         ) : sorted.length === 0 && !query.trim() ? (
           <section aria-labelledby="no-results-title" className="mt-6 flex flex-col items-center px-4 py-8 text-center lg:mt-[35px] lg:px-6 lg:py-10">
-            <h2 id="no-results-title" className="font-display text-[18px] font-extrabold text-[#1c0e04] lg:text-[24px]">
+            <h2 id="no-results-title" className="type-section-title text-[#1c0e04]">
               No courses match these filters yet
             </h2>
             <p className="mt-1.5 font-body text-[14px] text-[#7a6655] lg:mt-2 lg:text-[19px]">Remove a filter above, or clear them all.</p>
@@ -385,7 +395,7 @@ export function CatalogueView({ catalogue, initialQuery = '' }: { catalogue: Cat
             <span aria-hidden="true" className="flex h-20 w-20 items-center justify-center rounded-full bg-[#fbece4] text-brand">
               <SearchX className="h-9 w-9" strokeWidth={1.8} />
             </span>
-            <h2 id="no-results-title" className="mt-4 font-display text-[19px] font-extrabold text-[#1c0e04] lg:mt-[22px] lg:text-[28px]">
+            <h2 id="no-results-title" className="type-section-title mt-4 text-[#1c0e04] lg:mt-[22px]">
               No courses match “{query.trim()}”
             </h2>
             <p className="mt-2 max-w-[575px] font-body text-[14px] leading-[22px] text-[#7a6655] lg:mt-[10px] lg:text-[19px] lg:leading-[29px]">

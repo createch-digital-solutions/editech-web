@@ -31,7 +31,7 @@ export function Navbar() {
     role === 'ADMIN' ? 'Admin Console' : role === 'INSTRUCTOR' ? 'Instructor Portal' : 'Dashboard';
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[#e8d5bb] bg-[#fffdf9]">
+    <header className="sticky top-0 z-50 bg-[#fffdf9]">
       <div className="mx-auto flex h-[60px] max-w-[1400px] items-center px-6 xl:pl-[68px] xl:pr-[59px]">
         <Link href="/" className="shrink-0" aria-label="Createch Elevate home">
           <Logo />

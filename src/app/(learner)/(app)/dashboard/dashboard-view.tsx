@@ -17,11 +17,12 @@ function greeting(hour: number) {
 
 function StatCard({ icon, tint, value, label, note }: { icon: React.ReactNode; tint: string; value: string; label: string; note: string }) {
   return (
-    <div className="rounded-2xl border border-[#e8d5bb] bg-[#fffdf9] px-[22px] pb-[17px] pt-[21px] shadow-sm">
-      <span className={cn('flex h-[42px] w-[42px] items-center justify-center rounded-lg', tint)}>{icon}</span>
-      <p className="mt-[19px] font-display text-[22px] font-bold leading-7 text-[#1c0e04]">{value}</p>
-      <p className="mt-[3px] text-[13px] leading-[18px] text-[#3d2b1f]">{label}</p>
-      <p className="mt-[3px] text-[11px] leading-4 text-[#a89282]">{note}</p>
+    <div className="min-w-0 rounded-2xl border border-[#e8d5bb] bg-[#fffdf9] px-3 pb-3 pt-3 shadow-sm sm:px-[22px] sm:pb-[17px] sm:pt-[21px]">
+      <span className={cn('flex h-8 w-8 items-center justify-center rounded-lg sm:h-[42px] sm:w-[42px]', tint)}>{icon}</span>
+      <p className="mt-2.5 font-display text-[19px] font-bold leading-6 text-[#1c0e04] sm:mt-[19px] sm:text-[22px] sm:leading-7">{value}</p>
+      <p className="mt-[2px] truncate text-[12px] leading-4 text-[#3d2b1f] sm:mt-[3px] sm:text-[13px] sm:leading-[18px]">{label}</p>
+      {/* Three cards share a phone's width, so the note waits for a wider screen. */}
+      <p className="mt-[3px] hidden text-[11px] leading-4 text-[#a89282] sm:block">{note}</p>
     </div>
   );
 }
@@ -42,8 +43,8 @@ export function DashboardView({ recommended }: { recommended: CourseSummary[] })
 
   return (
     <main className="mx-auto w-full max-w-[1320px] flex-1 px-4 pb-12 pt-6 sm:px-6 lg:px-10 lg:pb-12 lg:pt-8">
-      <section className="grid gap-[23px] min-[640px]:grid-cols-2 min-[1180px]:grid-cols-[257px_repeat(3,minmax(0,1fr))]" aria-label="Your progress">
-        <div className="relative overflow-hidden rounded-2xl bg-brand-night px-[31px] pb-6 pt-[31px] text-white shadow-sm min-[640px]:col-span-2 min-[1180px]:col-span-1">
+      <section className="grid grid-cols-3 gap-3 sm:gap-[23px] min-[1180px]:grid-cols-[257px_repeat(3,minmax(0,1fr))]" aria-label="Your progress">
+        <div className="relative col-span-3 overflow-hidden rounded-2xl bg-brand-night px-6 pb-6 pt-6 text-white shadow-sm sm:px-[31px] sm:pt-[31px] min-[1180px]:col-span-1">
           <h1 className="font-display text-[20px] font-bold leading-[33px]">
             {greeting(new Date().getHours())}
             {firstName && (
@@ -77,7 +78,7 @@ export function DashboardView({ recommended }: { recommended: CourseSummary[] })
       </section>
 
       <section id="continue-learning" className="mt-10 scroll-mt-28" aria-labelledby="continue-title">
-        <h2 id="continue-title" className="font-display text-[24px] font-bold text-[#1c0e04]">
+        <h2 id="continue-title" className="type-section-title text-[#1c0e04]">
           Continue Learning
         </h2>
         <div className="mt-[18px] flex flex-col items-center rounded-2xl border-2 border-dashed border-[#e8d5bb] bg-[#fffdf9] px-6 py-10 text-center">
@@ -94,7 +95,7 @@ export function DashboardView({ recommended }: { recommended: CourseSummary[] })
 
       {recommended.length > 0 && (
         <section className="mt-[40px]" aria-labelledby="recommended-title">
-          <h2 id="recommended-title" className="flex items-center gap-2 font-display text-[24px] font-bold leading-8 text-[#1c0e04]">
+          <h2 id="recommended-title" className="type-section-title flex items-center gap-2 text-[#1c0e04]">
             Recommended for You
             <Sparkles className="h-5 w-5 text-[#d4920a]" aria-hidden="true" />
           </h2>

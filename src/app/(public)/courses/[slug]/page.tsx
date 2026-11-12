@@ -21,7 +21,9 @@ const longDate = (iso?: string) => (iso ? new Date(iso).toLocaleDateString('en-G
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
-  const course = await getCourse(slug);
+  // The page itself shows the error screen when the API is down; the title just falls back.
+  const course = await getCourse(slug).catch(() => undefined);
+  if (course === undefined) return {};
   if (!course) return { title: 'Course not found — Createch Elevate' };
   return { title: `${course.fullTitle} — Createch Elevate`, description: course.description };
 }
@@ -66,7 +68,7 @@ export default async function CoursePage({ params }: Params) {
             )}
           </nav>
 
-          <h1 className="mt-3 font-display text-[24px] font-extrabold leading-[1.25] sm:mt-4 sm:text-[38px] sm:leading-[1.2]">{course.fullTitle}</h1>
+          <h1 className="type-hero-title mt-3 sm:mt-4">{course.fullTitle}</h1>
           {course.description && <p className="mt-3 max-w-[680px] text-[15px] leading-6 text-white/80 sm:mt-4 sm:text-[18px] sm:leading-[28px]">{course.description}</p>}
 
           <div className="mt-4 flex flex-wrap items-center gap-2 sm:mt-5 sm:gap-2.5">
@@ -131,7 +133,8 @@ export default async function CoursePage({ params }: Params) {
                   {enrolLabel}
                 </Link>
                 {!course.enrolment && (
-                  <PreviewButton className="mt-2 flex h-11 w-full items-center justify-center rounded-lg border border-[#1c0e04] font-body text-[15px] font-bold text-[#1c0e04] transition-colors hover:bg-[#fbf6ef]">
+                  // Phones and tablets preview from the cover just above; on desktop the cover folds away while scrolling.
+                  <PreviewButton className="mt-2 hidden h-11 w-full items-center lg:flex justify-center rounded-lg border border-[#1c0e04] font-body text-[15px] font-bold text-[#1c0e04] transition-colors hover:bg-[#fbf6ef]">
                     Preview this course
                   </PreviewButton>
                 )}

@@ -5,7 +5,10 @@ import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
-import { ChevronsLeft, X } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { ChevronDown, ChevronsLeft, X } from 'lucide-react';
+import { apiClient } from '@/lib/api-client';
+import { slugify } from '@/lib/courses-api';
 import { cn } from '@/lib/utils';
 import { Logo } from '@/components/landing/logo';
 
@@ -238,6 +241,65 @@ function DrawerLink({ item, onNavigate }: { item: NavItem; onNavigate: () => voi
   );
 }
 
+/** GET /courses/categories: the categories that have published courses, with how many each has. */
+function useCategories(enabled: boolean) {
+  return useQuery({
+    queryKey: ['course-categories'],
+    queryFn: () => apiClient.get<{ name: string; courseCount: number }[]>('/courses/categories', { skipAuth: true }),
+    enabled,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+/**
+ * Explore in the drawer opens a list of the catalogue's categories (each opens the catalogue on that
+ * category); the level, price and tag filters stay on the catalogue page itself.
+ */
+function DrawerExplore({ item, onNavigate }: { item: NavItem; onNavigate: () => void }) {
+  const pathname = usePathname();
+  const active = item.match(pathname);
+  const [open, setOpen] = useState(active);
+  const { data: categories, isLoading } = useCategories(open);
+  const Icon = item.icon;
+  const sub = 'flex h-10 items-center justify-between gap-3 rounded-full pl-12 pr-4 font-body text-[14px] text-[#3d2b1f] hover:bg-[#fdf1e7] hover:text-brand';
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className={cn(
+          'flex h-12 w-full cursor-pointer items-center gap-3 rounded-full px-4 font-body text-[15px] transition-colors',
+          active ? 'bg-brand-gradient font-semibold text-white' : 'text-[#3d2b1f] hover:bg-[#fdf1e7] hover:text-brand'
+        )}
+      >
+        <Icon className="h-5 w-5" strokeWidth={1.8} aria-hidden="true" />
+        {item.label}
+        <ChevronDown className={cn('ml-auto h-4 w-4 transition-transform', open && 'rotate-180')} strokeWidth={2.2} aria-hidden="true" />
+      </button>
+      {open && (
+        <ul className="mt-1 space-y-0.5">
+          <li>
+            <Link href="/courses" onClick={onNavigate} className={cn(sub, 'font-semibold')}>
+              All courses
+            </Link>
+          </li>
+          {isLoading && <li className="py-2 pl-12 font-body text-[13px] text-[#a89282]">Loading…</li>}
+          {categories?.map((c) => (
+            <li key={c.name}>
+              <Link href={`/courses?category=${slugify(c.name)}`} onClick={onNavigate} className={sub}>
+                <span className="truncate">{c.name}</span>
+                <span className="font-body text-[12px] text-[#a89282]">{c.courseCount}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 /** The same menu sliding in from the right, opened by the menu button at the right of the top bar (below desktop width). */
 export function NavDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { isLoaded, isSignedIn } = useUser();
@@ -270,9 +332,9 @@ export function NavDrawer({ open, onClose }: { open: boolean; onClose: () => voi
           </button>
         </div>
         <div className="mt-3 space-y-1">
-          {(signedOut ? PUBLIC_ITEMS : MAIN).map((item) => (
-            <DrawerLink key={item.label} item={item} onNavigate={onClose} />
-          ))}
+          {(signedOut ? PUBLIC_ITEMS : MAIN).map((item) =>
+            item.href === '/courses' ? <DrawerExplore key={item.label} item={item} onNavigate={onClose} /> : <DrawerLink key={item.label} item={item} onNavigate={onClose} />
+          )}
           {!signedOut && (
             <>
               <div className="mx-3 my-3 border-t border-[#efe2d0]" />

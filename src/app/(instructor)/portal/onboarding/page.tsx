@@ -69,7 +69,7 @@ export default function InstructorOnboardingPage() {
     <div className="flex-1 p-8 max-w-3xl mx-auto w-full space-y-8">
       <div className="flex items-center justify-between border-b pb-6 border-gray-200 dark:border-gray-800">
         <div>
-          <h1 className="text-3xl font-bold">Instructor Onboarding & Setup</h1>
+          <h1 className="type-page-title">Instructor Onboarding & Setup</h1>
           <p className="text-gray-500 text-sm">
             Tell us about yourself to apply — an administrator reviews every instructor before courses can be published.
           </p>

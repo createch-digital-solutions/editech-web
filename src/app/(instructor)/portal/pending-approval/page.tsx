@@ -21,7 +21,7 @@ export default function InstructorPendingApprovalPage() {
     <div className="flex-1 p-8 max-w-3xl mx-auto w-full space-y-8">
       <div className="flex items-center justify-between border-b pb-6 border-gray-200 dark:border-gray-800">
         <div>
-          <h1 className="text-3xl font-bold">Application Under Review</h1>
+          <h1 className="type-page-title">Application Under Review</h1>
           <p className="text-gray-500 text-sm">
             Thanks for applying — an administrator will review your instructor profile shortly.
           </p>

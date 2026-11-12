@@ -23,7 +23,7 @@ const showcases = [
 
 export function ShowcaseGrid() {
   return (
-    <section className="bg-[#fdf6ec] px-6 pt-[72px]">
+    <section className="bg-[#fdf6ec] px-6 pb-[72px] pt-[72px]">
       <div className="mx-auto grid max-w-[1090px] gap-5 sm:grid-cols-3">
         {showcases.map((item) => (
           <div key={item.title} className="group relative overflow-hidden rounded-xl">

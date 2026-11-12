@@ -173,7 +173,7 @@ export default function OnboardingPage() {
                 <span className="relative inline-flex h-[26px] items-center rounded-full border border-[#c9c8ce] bg-[#ebe9ea] px-[13px] text-[11px] font-bold tracking-[0.02em] text-[#1b2b6b]">
                   STEP {step} OF 4
                 </span>
-                <h1 className="mt-[14px] font-display text-[22px] font-extrabold leading-8 tracking-[-0.01em] text-[#1c0e04] sm:text-[26px]">
+                <h1 className="type-page-title mt-[14px] text-[#1c0e04]">
                   {copy.title}
                 </h1>
                 <p className="mt-[6px] text-sm leading-[22px] text-[#7a6655]">{copy.subtitle}</p>
@@ -255,7 +255,7 @@ export default function OnboardingPage() {
                 <span className="mx-auto flex h-[50px] w-[50px] items-center justify-center rounded-full border-2 border-[#0b4f31] bg-[linear-gradient(135deg,#0d5c3a,#16a34a)] text-white">
                   <CircleCheckBig className="h-5 w-5" strokeWidth={2} aria-hidden="true" />
                 </span>
-                <h1 className="mt-[14px] font-display text-[22px] font-extrabold leading-8 tracking-[-0.01em] text-[#1c0e04] sm:text-[26px]">
+                <h1 className="type-page-title mt-[14px] text-[#1c0e04]">
                   You are all set{user?.firstName ? `, ${user.firstName}` : ''}!
                 </h1>
                 <p className="mx-auto mt-[5px] max-w-[380px] text-sm leading-[21px] text-[#7a6655]">

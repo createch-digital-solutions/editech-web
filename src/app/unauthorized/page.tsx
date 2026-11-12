@@ -64,7 +64,7 @@ export default function UnauthorizedPage() {
 
         {state === 'setup-failed' && (
           <>
-            <h1 className="font-display text-[22px] font-bold text-[#1c0e04]">We couldn&apos;t finish setting up your account</h1>
+            <h1 className="type-page-title text-[#1c0e04]">We couldn&apos;t finish setting up your account</h1>
             <p className="mt-2 text-sm leading-6 text-[#7a6655]">
               Our server didn&apos;t respond. It may be waking up, so please try again in a moment.
             </p>
@@ -92,7 +92,7 @@ export default function UnauthorizedPage() {
 
         {state === 'denied' && (
           <>
-            <h1 className="font-display text-[22px] font-bold text-[#1c0e04]">Access denied</h1>
+            <h1 className="type-page-title text-[#1c0e04]">Access denied</h1>
             <p className="mt-2 text-sm leading-6 text-[#7a6655]">You don&apos;t have permission to view this page.</p>
             <Link
               href="/"
