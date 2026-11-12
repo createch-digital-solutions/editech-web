@@ -9,7 +9,7 @@ const features = [
     title: 'Built for African Data',
     description:
       'Optimized for intermittent\nconnections.\nStudy on commute, offline, or\nin low-bandwidth conditions.',
-    descriptionGap: 'mt-[41px]',
+    descriptionGap: 'sm:mt-[41px]',
   },
   {
     icon: Bot,
@@ -17,14 +17,14 @@ const features = [
     title: 'Aria AI Coach',
     description:
       'Your personal AI tutor\nknows where you are and\nguides the next step in\nYoruba, Igbo, or English.',
-    descriptionGap: 'mt-[8px]',
+    descriptionGap: 'sm:mt-[8px]',
   },
   {
     icon: Trophy,
     iconStyle: 'bg-[#fbf4e4] text-brand-light',
     title: 'Earn as You Learn',
     description: 'XP, badges, streaks, and\nverifiable certificates — every\nmilestone means something.',
-    descriptionGap: 'mt-[32px]',
+    descriptionGap: 'sm:mt-[32px]',
   },
   {
     icon: GraduationCap,
@@ -32,7 +32,7 @@ const features = [
     title: 'Expert Instructors',
     description:
       'Learn from Nigerian and\npan-African professionals\nwith industry-proven\nexperience.',
-    descriptionGap: 'mt-[32px]',
+    descriptionGap: 'sm:mt-[32px]',
   },
 ];
 
@@ -48,11 +48,12 @@ export function FeaturesSection() {
         </h2>
       </div>
 
-      <div className="mx-auto mt-[96px] grid max-w-[1060px] gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Two to a row on phones, sized to their text; the design's tall cards from tablet up. */}
+      <div className="mx-auto mt-10 grid max-w-[1060px] grid-cols-2 gap-3 sm:mt-[96px] sm:gap-5 lg:grid-cols-4">
         {features.map((feature) => (
           <div
             key={feature.title}
-            className="relative min-h-[334px] overflow-hidden rounded-2xl border border-[#e8d5bb] border-t-2 bg-[#fffdf9] px-[20px] pb-8 pt-[20px]"
+            className="relative overflow-hidden rounded-2xl border border-[#e8d5bb] border-t-2 bg-[#fffdf9] px-3.5 pb-5 pt-4 sm:min-h-[334px] sm:px-[20px] sm:pb-8 sm:pt-[20px]"
           >
             {/* Two faint stacked tiles in the top-left corner, as in the design. */}
             <span className="absolute left-0 top-0 h-[13px] w-[24px] bg-[#fdf6f0]" aria-hidden="true" />
@@ -60,18 +61,18 @@ export function FeaturesSection() {
 
             <span
               className={cn(
-                'relative flex h-12 w-12 items-center justify-center rounded-xl',
+                'relative flex h-10 w-10 items-center justify-center rounded-xl sm:h-12 sm:w-12',
                 feature.iconStyle
               )}
             >
-              <feature.icon className="h-5 w-5" strokeWidth={1.8} aria-hidden="true" />
+              <feature.icon className="h-[18px] w-[18px] sm:h-5 sm:w-5" strokeWidth={1.8} aria-hidden="true" />
             </span>
-            <h3 className="mt-[16px] font-display text-base font-bold leading-6 text-[#1c0e04]">
+            <h3 className="mt-3 font-display text-[14px] font-bold leading-5 text-[#1c0e04] sm:mt-[16px] sm:text-base sm:leading-6">
               {feature.title}
             </h3>
             <p
               className={cn(
-                'whitespace-pre-line font-body text-[13px] leading-[21.7px] text-[#7a6655]',
+                'mt-1.5 font-body text-[12px] leading-[18px] text-[#7a6655] sm:whitespace-pre-line sm:text-[13px] sm:leading-[21.7px]',
                 feature.descriptionGap
               )}
             >

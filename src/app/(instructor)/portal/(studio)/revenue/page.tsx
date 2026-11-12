@@ -38,7 +38,7 @@ export default function RevenuePage() {
   return (
     <main className="mx-auto w-full max-w-[1200px] flex-1 px-4 pb-12 pt-7 sm:px-6 lg:px-10 lg:pt-9">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="font-display text-[26px] font-extrabold text-[#1c0e04]">Revenue</h1>
+        <h1 className="type-page-title text-[#1c0e04]">Revenue</h1>
         <div role="group" aria-label="Period" className="flex gap-2">
           {PERIODS.map((p) => (
             <button
@@ -77,14 +77,14 @@ export default function RevenuePage() {
 
       <div className="mt-6 grid gap-6 min-[1000px]:grid-cols-[minmax(0,1fr)_340px]">
         <section className={cn(card, 'p-6')} aria-labelledby="monthly-title">
-          <h2 id="monthly-title" className="font-display text-[19px] font-bold text-[#1c0e04]">
+          <h2 id="monthly-title" className="type-section-title text-[#1c0e04]">
             Monthly Earnings · last 12 months
           </h2>
           <RevenueChart values={monthlyShare} highlight={months} className="mt-8" />
         </section>
 
         <section className={cn(card, 'flex flex-col p-6')} aria-labelledby="split-title">
-          <h2 id="split-title" className="font-display text-[19px] font-bold text-[#1c0e04]">
+          <h2 id="split-title" className="type-section-title text-[#1c0e04]">
             Revenue Split
           </h2>
           <div

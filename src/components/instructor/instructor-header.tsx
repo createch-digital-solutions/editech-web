@@ -18,6 +18,7 @@ const NAV = [
 function activeLabel(pathname: string) {
   if (pathname.startsWith('/portal/revenue')) return 'Revenue';
   if (pathname.startsWith('/portal/payouts')) return 'Payouts';
+  if (pathname.startsWith('/portal/courses')) return 'My Courses';
   return 'Dashboard';
 }
 

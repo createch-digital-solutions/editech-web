@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono, Inter, Outfit, Sora } from 'next/font/google';
 import { ClerkProvider } from '@clerk/nextjs';
 import { ThemeProvider } from '@/components/providers/theme-provider';
@@ -37,6 +37,12 @@ const sora = Sora({
 export const metadata: Metadata = {
   title: 'Createch — AI-Powered Learning Marketplace',
   description: 'Next-generation AI-powered learning marketplace for skills and mastery.',
+};
+
+// Fit the screen's width (pinch-zoom stays available for anyone who needs it).
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function RootLayout({

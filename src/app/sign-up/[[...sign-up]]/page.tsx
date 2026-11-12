@@ -249,7 +249,7 @@ function SignUpContent() {
   return (
     <AuthShell leftContent={<SignUpLeftPanel />}>
       <div className="w-full max-w-[426px]">
-        <h2 className="font-display text-[28px] font-extrabold leading-10 tracking-[-0.01em] text-[#1c0e04] sm:text-[33px]">
+        <h2 className="type-page-title text-[#1c0e04]">
           Create your account
         </h2>
         <p className="mt-2 text-[17px] leading-6 text-[#7a6655]">

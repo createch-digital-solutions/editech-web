@@ -14,13 +14,14 @@ const badgeStyles: Record<CourseBadge, string> = {
 export function PopularCourses({ courses }: { courses: CourseSummary[] }) {
   if (courses.length === 0) return null;
   return (
-    <section className="bg-[#fdf6ec] px-6 pb-[70px] pt-[75px]">
+    // The showcase above ends with 72px of its own (kept for when this section is hidden), so 3px more makes the design's 75px.
+    <section className="bg-[#fdf6ec] px-6 pb-[70px] pt-[3px]">
       <div className="mx-auto max-w-[1058px]">
         <h2 className="text-center font-display text-[32px] font-extrabold leading-10 tracking-[-0.01em] text-[#1c0e04]">
           Popular Courses
         </h2>
 
-        <div className="mx-auto mt-[29px] grid max-w-[248px] gap-[22px] sm:max-w-[518px] sm:grid-cols-2 lg:max-w-none lg:grid-cols-4">
+        <div className="mx-auto mt-[29px] grid grid-cols-2 gap-3 sm:max-w-[518px] sm:gap-[22px] lg:max-w-none lg:grid-cols-4">
           {courses.map((course) => (
             <article
               key={course.id}
@@ -42,7 +43,7 @@ export function PopularCourses({ courses }: { courses: CourseSummary[] }) {
                 )}
               </div>
 
-              <div className="flex flex-1 flex-col px-[14px] pb-[13px] pt-[15px]">
+              <div className="flex flex-1 flex-col px-[10px] pb-[11px] pt-[12px] sm:px-[14px] sm:pb-[13px] sm:pt-[15px]">
                 <h3 className="font-display text-[13px] font-bold leading-[17px] text-[#1c0e04]">
                   <Link href={`/courses/${course.slug}`} className="after:absolute after:inset-0 focus:outline-none">
                     {course.title}
@@ -50,7 +51,7 @@ export function PopularCourses({ courses }: { courses: CourseSummary[] }) {
                 </h3>
                 <p className="mt-[9px] font-body text-[11px] leading-4 text-[#7a6655]">{course.instructor}</p>
 
-                <div className="mt-2 flex items-center justify-between px-[30px]">
+                <div className="mt-2 flex items-center justify-between sm:px-[30px]">
                   <div className="flex items-center gap-[5px]">
                     <div className="flex gap-px" aria-label={`Rated ${course.rating.toFixed(1)} out of 5`}>
                       {[1, 2, 3, 4, 5].map((n) => (
@@ -71,10 +72,10 @@ export function PopularCourses({ courses }: { courses: CourseSummary[] }) {
                 </div>
 
                 <div className="mt-auto flex items-center justify-between pt-[6px]">
-                  <span className={cn('font-display text-base font-bold', course.price === 0 ? 'text-[#0d5c3a]' : 'text-[#1c0e04]')}>{formatPrice(course.price)}</span>
+                  <span className={cn('font-display text-[14px] font-bold sm:text-base', course.price === 0 ? 'text-[#0d5c3a]' : 'text-[#1c0e04]')}>{formatPrice(course.price)}</span>
                   <Link
                     href={`/checkout/${course.slug}`}
-                    className="relative z-10 flex h-7 w-[58px] items-center justify-center rounded-md bg-brand-gradient font-body text-xs font-semibold text-white shadow-md shadow-brand/30 transition-opacity hover:opacity-90"
+                    className="relative z-10 flex h-7 w-[52px] items-center sm:w-[58px] justify-center rounded-md bg-brand-gradient font-body text-xs font-semibold text-white shadow-md shadow-brand/30 transition-opacity hover:opacity-90"
                   >
                     Enroll
                   </Link>

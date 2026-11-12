@@ -14,7 +14,7 @@ export default function AdminDashboardPage() {
     <div className="flex-1 p-8 max-w-5xl mx-auto w-full space-y-8">
       <div className="flex items-center justify-between border-b pb-6 border-gray-200 dark:border-gray-800">
         <div>
-          <h1 className="text-3xl font-bold">Admin Management Console</h1>
+          <h1 className="type-page-title">Admin Management Console</h1>
           <p className="text-gray-500 text-sm">
             {user ? `Welcome back, ${user.firstName || user.primaryEmailAddress?.emailAddress}!` : 'Platform governance, course approvals, user moderation, and financial audits.'}
           </p>

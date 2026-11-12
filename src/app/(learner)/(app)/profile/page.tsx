@@ -49,7 +49,7 @@ export default function ProfilePage() {
             </div>
 
             <div className="min-w-0 flex-1 md:ml-[4px] md:mt-[3px]">
-              <h1 className="font-display text-[24px] font-extrabold leading-8 text-white sm:text-[43px] sm:leading-[44px]">{name}</h1>
+              <h1 className="type-hero-title text-white">{name}</h1>
               <p className="mt-1 text-[14px] leading-5 text-[#a08a78] sm:text-[21px] sm:leading-7">
                 Learner{joined && ` · Joined ${joined}`}
               </p>
@@ -95,7 +95,7 @@ export default function ProfilePage() {
 
         <div className="mt-8 grid gap-8 sm:mt-[46px] sm:gap-[38px] lg:grid-cols-[699px_1fr]">
           <section id="my-courses" className="scroll-mt-28" aria-labelledby="my-courses-title">
-            <h2 id="my-courses-title" className="font-display text-[20px] font-extrabold leading-7 text-[#1c0e04] sm:text-[25px] sm:leading-8">
+            <h2 id="my-courses-title" className="type-section-title text-[#1c0e04]">
               My Courses
             </h2>
             <div className="mt-3 flex flex-col items-center rounded-2xl border-2 border-dashed border-[#efe2d0] bg-[#fffdf9] px-5 py-8 text-center sm:mt-[27px] sm:px-6 sm:py-12">
@@ -109,7 +109,7 @@ export default function ProfilePage() {
           </section>
 
           <section aria-labelledby="recent-badges-title">
-            <h2 id="recent-badges-title" className="font-display text-[20px] font-extrabold leading-7 text-[#1c0e04] sm:text-[25px] sm:leading-8">
+            <h2 id="recent-badges-title" className="type-section-title text-[#1c0e04]">
               Recent Badges
             </h2>
             <div className="mt-3 rounded-2xl border-2 border-[#efe2d0] bg-[#fffdf9] p-5 sm:mt-[27px] sm:p-[30px]">

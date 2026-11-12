@@ -10,7 +10,7 @@ export default function PayoutDashboardPage() {
 
   return (
     <main className="mx-auto w-full max-w-[920px] flex-1 px-4 pb-12 pt-7 sm:px-6 lg:pt-9">
-      <h1 className="font-display text-[26px] font-extrabold text-[#1c0e04]">Payout Dashboard</h1>
+      <h1 className="type-page-title text-[#1c0e04]">Payout Dashboard</h1>
 
       <section className="relative mt-6 overflow-hidden rounded-2xl bg-[#075c45] px-6 py-7 text-white shadow-sm sm:px-9" aria-labelledby="balance-title">
         <h2 id="balance-title" className="font-body text-[12px] font-bold uppercase tracking-[0.12em] text-[#7ee0b5]">
@@ -52,7 +52,7 @@ export default function PayoutDashboardPage() {
 
       <section className={cn(card, 'mt-5 px-5 py-5 sm:px-6')} aria-labelledby="recent-title">
         <div className="flex items-center justify-between">
-          <h2 id="recent-title" className="font-display text-[18px] font-bold text-[#1c0e04]">
+          <h2 id="recent-title" className="type-section-title text-[#1c0e04]">
             Recent Payouts
           </h2>
           <Link href="/portal/payouts/history" className="flex items-center gap-1 font-body text-[14px] font-semibold text-brand hover:text-brand-light">

@@ -54,21 +54,21 @@ export function CheckoutForm({ course }: { course: CourseDetail }) {
   }
 
   return (
-    <div className="mt-[44px] grid grid-cols-1 items-start gap-[46px] lg:grid-cols-[487px_minmax(0,546px)]">
-      <form onSubmit={handlePay} className="min-w-0 rounded-3xl border-2 border-[#efe2d0] bg-[#fffdf9] px-5 pb-[36px] pt-[44px] sm:px-[42px]">
+    <div className="mt-6 grid grid-cols-1 items-start gap-5 sm:mt-[44px] lg:grid-cols-[487px_minmax(0,546px)] lg:gap-[46px]">
+      <form onSubmit={handlePay} className="min-w-0 rounded-3xl border-2 border-[#efe2d0] bg-[#fffdf9] px-5 pb-6 pt-6 sm:px-[42px] sm:pb-[36px] sm:pt-[44px]">
         {isFree ? (
           <>
-            <h2 className="font-body text-[22px] font-bold leading-7 text-[#1c0e04]">This course is free</h2>
-            <p className="mt-3 text-[17px] leading-7 text-[#7a6655]">Enrolling in free courses opens soon. You can already watch the free preview lessons.</p>
+            <h2 className="type-section-title text-[#1c0e04]">This course is free</h2>
+            <p className="type-body mt-2 text-[#7a6655]">Enrolling in free courses opens soon. You can already watch the free preview lessons.</p>
           </>
         ) : (
           <>
-            <h2 className="font-body text-[22px] font-bold leading-7 text-[#1c0e04]">Payment Method</h2>
+            <h2 className="type-section-title text-[#1c0e04]">Payment Method</h2>
             <ul className="mt-[34px] grid grid-cols-3 gap-2.5 sm:gap-[18px]" aria-label="Ways to pay">
               {METHODS.map((m) => (
                 <li
                   key={m.label}
-                  className="flex h-[110px] min-w-0 flex-col items-center justify-center rounded-2xl border-[3px] border-[#efe2d0] bg-[#fffdf9] px-1 text-center font-body text-[15px] leading-[22px] text-[#5a4636] sm:h-[130px] sm:text-[19px]"
+                  className="flex h-[110px] min-w-0 flex-col items-center justify-center rounded-2xl border-[3px] border-[#efe2d0] bg-[#fffdf9] px-1 text-center type-body text-[#5a4636] sm:h-[130px]"
                 >
                   <span className="text-[26px] leading-8" aria-hidden="true">
                     {m.emoji}
@@ -77,7 +77,7 @@ export function CheckoutForm({ course }: { course: CourseDetail }) {
                 </li>
               ))}
             </ul>
-            <p className="mt-[28px] rounded-xl border-2 border-[#efe2d0] bg-[#fdf6ec] px-5 py-4 text-[17px] leading-7 text-[#5a4636]">
+            <p className="type-body mt-5 rounded-xl border-2 border-[#efe2d0] bg-[#fdf6ec] px-4 py-3 text-[#5a4636] sm:mt-[28px] sm:px-5 sm:py-4">
               You&apos;ll choose how to pay on Paystack&apos;s secure page, then come back here once the payment is confirmed.
             </p>
           </>
@@ -92,7 +92,7 @@ export function CheckoutForm({ course }: { course: CourseDetail }) {
         {isFree ? (
           <Link
             href={`/learn/${course.slug}`}
-            className="mt-[22px] flex h-[69px] w-full items-center justify-center gap-1.5 rounded-xl bg-brand-gradient font-body text-[22px] font-bold text-white shadow-lg shadow-brand/30 transition-opacity hover:opacity-90"
+            className="mt-5 flex h-12 w-full items-center justify-center gap-1.5 rounded-xl bg-brand-gradient font-body text-[16px] font-bold sm:mt-[22px] lg:h-[69px] lg:text-[22px] text-white shadow-lg shadow-brand/30 transition-opacity hover:opacity-90"
           >
             Watch the Free Preview
             <ArrowRight className="h-5 w-5" strokeWidth={2.5} aria-hidden="true" />
@@ -101,40 +101,40 @@ export function CheckoutForm({ course }: { course: CourseDetail }) {
           <button
             type="submit"
             disabled={busy || !api.isLoaded}
-            className="mt-[22px] flex h-[69px] w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-brand-gradient font-body text-[22px] font-bold text-white shadow-lg shadow-brand/30 transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
+            className="mt-5 flex h-12 w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-brand-gradient font-body text-[16px] font-bold sm:mt-[22px] lg:h-[69px] lg:text-[22px] text-white shadow-lg shadow-brand/30 transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
           >
             {busy ? 'Opening Paystack…' : `Pay ${formatPrice(course.price)}`}
             {!busy && <ArrowRight className="h-5 w-5" strokeWidth={2.5} aria-hidden="true" />}
           </button>
         )}
         {!isFree && (
-          <p className="mt-[24px] flex items-center justify-center gap-2 text-[18px] text-[#a89282]">
-            <Lock className="h-[18px] w-[18px]" strokeWidth={1.8} aria-hidden="true" />
+          <p className="type-small mt-4 flex items-center justify-center gap-2 text-[#a89282] sm:mt-[24px]">
+            <Lock className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" />
             Secured by Paystack
           </p>
         )}
       </form>
 
-      <section className="rounded-3xl border-2 border-[#efe2d0] bg-[#fffdf9] px-5 pb-[34px] pt-[34px] sm:px-[30px]" aria-labelledby="summary-title">
-        <h2 id="summary-title" className="font-body text-[21px] font-bold leading-7 text-[#1c0e04]">
+      <section className="rounded-3xl border-2 border-[#efe2d0] bg-[#fffdf9] px-5 pb-6 pt-6 sm:px-[30px] sm:pb-[34px] sm:pt-[34px]" aria-labelledby="summary-title">
+        <h2 id="summary-title" className="type-section-title text-[#1c0e04]">
           Order Summary
         </h2>
-        <div className="mt-[22px] flex items-center gap-[18px] border-b-2 border-[#efe2d0] pb-[24px]">
-          <Image src={course.image} alt="" width={196} height={196} unoptimized className="h-[98px] w-[98px] shrink-0 rounded-xl object-cover" />
+        <div className="mt-4 flex items-center gap-4 border-b-2 border-[#efe2d0] pb-5 sm:mt-[22px] sm:gap-[18px] sm:pb-[24px]">
+          <Image src={course.image} alt="" width={196} height={196} unoptimized className="h-16 w-16 shrink-0 rounded-xl object-cover sm:h-[98px] sm:w-[98px]" />
           <div className="min-w-0">
-            <p className="font-body text-[20px] font-bold leading-7 text-[#1c0e04]">{course.title}</p>
-            <p className="text-[18px] leading-7 text-[#7a6655]">
+            <p className="type-card-title text-[#1c0e04]">{course.title}</p>
+            <p className="type-body mt-0.5 text-[#7a6655]">
               {course.instructor}
               {course.duration && ` · ${course.duration}`}
             </p>
             <div className="flex items-center gap-1.5">
               <Stars rating={course.rating} />
-              <span className="text-[15px] font-bold text-[#d4920a]">{course.rating.toFixed(1)}</span>
+              <span className="type-small font-bold text-[#d4920a]">{course.rating.toFixed(1)}</span>
             </div>
           </div>
         </div>
-        <dl className="mt-[17px] space-y-[18px] text-[19px] text-[#7a6655]">
-          <div className="flex justify-between gap-4 pt-[4px] font-display text-[23px] font-bold text-[#1c0e04]">
+        <dl className="type-body mt-4 space-y-4 text-[#7a6655] sm:mt-[17px]">
+          <div className="flex justify-between gap-4 pt-[4px] type-section-title text-[#1c0e04]">
             <dt>Total</dt>
             <dd>{isFree ? '₦0' : formatPrice(course.price)}</dd>
           </div>

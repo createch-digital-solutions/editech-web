@@ -146,7 +146,7 @@ export default function WithdrawPage() {
         <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#075c45] text-[#7ee0b5]" aria-hidden="true">
           <Banknote className="h-8 w-8" strokeWidth={1.7} />
         </span>
-        <h1 className="mt-4 font-display text-[26px] font-extrabold text-[#1c0e04]">Withdrawal Request</h1>
+        <h1 className="type-page-title mt-4 text-[#1c0e04]">Withdrawal Request</h1>
         <p className="mt-1 font-body text-[15px] text-[#7a6655]">
           Available balance: <strong className="text-[#0d5c3a]">{naira(availableBalance)}</strong>
         </p>

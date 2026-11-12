@@ -4,7 +4,7 @@ import { FormEvent, Fragment, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useAuth, useUser } from '@clerk/nextjs';
-import { SendHorizontal, Square, WandSparkles, X } from 'lucide-react';
+import { PlayCircle, SendHorizontal, Square, WandSparkles, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ApiClientError } from '@/lib/api-client';
 import { lessonConversation, streamTutorReply } from '@/lib/ai-tutor';
@@ -203,7 +203,7 @@ export function AriaPanel({ open, onClose, context }: { open: boolean; onClose: 
         aria-label="Ask Aria"
         className="relative flex h-[85vh] w-full flex-col overflow-hidden rounded-t-3xl bg-[#fffdf9] shadow-2xl sm:h-[min(620px,calc(100vh-7rem))] sm:w-[400px] sm:rounded-3xl"
       >
-        <header className="flex items-center gap-3 bg-brand-night px-5 py-4 text-white">
+        <header className="flex shrink-0 items-center gap-3 bg-brand-night px-5 py-4 text-white">
           <AriaAvatar className="h-11 w-11" />
           <div className="min-w-0 flex-1">
             <h2 className="font-display text-[17px] font-bold leading-6">Aria</h2>
@@ -217,7 +217,7 @@ export function AriaPanel({ open, onClose, context }: { open: boolean; onClose: 
           </button>
         </header>
 
-        <div className="flex gap-2 border-b border-[#efe2d0] px-5 py-3" role="radiogroup" aria-label="Coaching style">
+        <div className="flex shrink-0 gap-2 px-5 py-3" role="radiogroup" aria-label="Coaching style">
           {PERSONAS.map((p) => (
             <button
               key={p.id}
@@ -235,21 +235,31 @@ export function AriaPanel({ open, onClose, context }: { open: boolean; onClose: 
           ))}
         </div>
 
-        <div ref={listRef} className="min-h-0 flex-1 space-y-4 overflow-y-auto bg-[#f8efe4] px-5 py-5" aria-live="polite">
-          <div className="rounded-2xl border border-[#f5d3bd] bg-[#fdeee4] px-4 py-3">
-            <p className="truncate text-[12px] text-[#7a6655]">{context.courseTitle}</p>
-            <p className="mt-0.5 truncate text-[15px] font-bold text-brand">{context.lessonTitle}</p>
-            <p className="mt-0.5 text-[12px] text-[#7a6655]">
-              {context.sectionTitle} · Lesson {context.lessonNumber} of {context.totalLessons}
+        {/* The lesson Aria is helping with: a fixed strip, so it never scrolls away with the chat. */}
+        <div className="shrink-0 border-b border-[#f5d3bd] bg-[#fdeee4] px-5 py-2.5">
+          <div className="flex items-center gap-2.5">
+            <PlayCircle className="h-4 w-4 shrink-0 text-brand" strokeWidth={2} aria-hidden="true" />
+            <p className="min-w-0 flex-1 truncate text-[13px] font-semibold text-[#1c0e04]" title={`${context.courseTitle} · ${context.sectionTitle}`}>
+              {context.lessonTitle}
             </p>
-            {context.progress !== null ? (
-              <div className="mt-2.5 h-[5px] rounded-full bg-[#f3dccb]" role="progressbar" aria-valuenow={context.progress} aria-valuemin={0} aria-valuemax={100} aria-label="Course progress">
-                <div className="h-full rounded-full bg-[linear-gradient(90deg,#c1440e,#d4920a)]" style={{ width: `${context.progress}%` }} />
-              </div>
-            ) : (
-              <p className="mt-1.5 text-[12px] font-medium text-brand">Previewing — not enrolled yet</p>
-            )}
+            <span className="shrink-0 text-[12px] text-[#7a6655]">
+              {context.lessonNumber} of {context.totalLessons}
+            </span>
           </div>
+          {context.progress !== null ? (
+            <div className="mt-2 h-1 rounded-full bg-[#f3dccb]" role="progressbar" aria-valuenow={context.progress} aria-valuemin={0} aria-valuemax={100} aria-label="Course progress">
+              <div className="h-full rounded-full bg-[linear-gradient(90deg,#c1440e,#d4920a)]" style={{ width: `${context.progress}%` }} />
+            </div>
+          ) : (
+            <p className="mt-0.5 pl-[26px] text-[12px] font-medium text-brand">Previewing — not enrolled yet</p>
+          )}
+        </div>
+
+        <div
+          ref={listRef}
+          className="min-h-0 flex-1 space-y-4 overflow-y-auto bg-[#f8efe4] px-5 py-5 [scrollbar-color:#e3d3bf_transparent] [scrollbar-width:thin]"
+          aria-live="polite"
+        >
 
           {[{ role: 'assistant' as const, content: greetingFor(user?.firstName, context) }, ...chat.messages].map((m, i) =>
             m.role === 'assistant' ? (

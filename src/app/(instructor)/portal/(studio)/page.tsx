@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useUser } from '@clerk/nextjs';
 import { BookOpen, DollarSign, Plus, Star, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -42,23 +43,20 @@ export default function InstructorDashboardPage() {
     <main className="mx-auto w-full max-w-[1200px] flex-1 px-4 pb-12 pt-7 sm:px-6 lg:px-10 lg:pt-9">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="font-display text-[26px] font-extrabold leading-9 text-[#1c0e04]">
+          <h1 className="type-page-title text-[#1c0e04]">
             {greeting(new Date().getHours())}, {firstName} <span aria-hidden="true">👋</span>
           </h1>
           <p className="mt-1 font-body text-[15px] text-[#7a6655]">
             {live.length} {live.length === 1 ? 'course' : 'courses'} live · {drafts} {drafts === 1 ? 'draft' : 'drafts'} · {naira(thisMonth)} earned this month
           </p>
         </div>
-        {/* The Course Builder (SCRUM-32/38) is waiting on its designs. */}
-        <button
-          type="button"
-          aria-disabled="true"
-          title="The Course Builder is coming next"
-          className="inline-flex h-11 cursor-not-allowed items-center gap-1.5 rounded-xl bg-brand-gradient px-5 font-body text-[15px] font-semibold text-white opacity-60 shadow-md shadow-brand/30"
+        <Link
+          href="/portal/courses/new"
+          className="inline-flex h-11 items-center gap-1.5 rounded-xl bg-brand-gradient px-5 font-body text-[15px] font-semibold text-white shadow-md shadow-brand/30 transition-opacity hover:opacity-90"
         >
           <Plus className="h-4 w-4" strokeWidth={2.5} aria-hidden="true" />
           Create Course
-        </button>
+        </Link>
       </div>
 
       <section className="mt-7 grid grid-cols-2 gap-3 sm:gap-4 min-[1100px]:grid-cols-4" aria-label="Your numbers">
@@ -89,7 +87,7 @@ export default function InstructorDashboardPage() {
       <div className="mt-7 grid gap-6 min-[1000px]:grid-cols-[minmax(0,1fr)_340px]">
         <section className={cn(card, 'p-6')} aria-labelledby="revenue-title">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 id="revenue-title" className="font-display text-[19px] font-bold text-[#1c0e04]">
+            <h2 id="revenue-title" className="type-section-title text-[#1c0e04]">
               Earnings · last 12 months
             </h2>
             <span className="rounded-full border border-[#0d5c3a]/20 bg-[#e6f0ea] px-3 py-1 font-body text-[13px] font-bold text-[#0d5c3a]">
@@ -100,7 +98,7 @@ export default function InstructorDashboardPage() {
         </section>
 
         <section id="my-courses" className="scroll-mt-24" aria-labelledby="courses-title">
-          <h2 id="courses-title" className="font-display text-[19px] font-bold text-[#1c0e04]">
+          <h2 id="courses-title" className="type-section-title text-[#1c0e04]">
             My Courses
           </h2>
           <ul className="mt-4 space-y-3">

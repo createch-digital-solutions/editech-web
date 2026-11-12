@@ -34,17 +34,17 @@ function Curriculum({ course, defaultOpen }: { course: CourseDetail; defaultOpen
               type="button"
               onClick={() => setOpen(isOpen ? null : i)}
               aria-expanded={isOpen}
-              className="flex min-h-[52px] w-full cursor-pointer items-center gap-[10px] px-[18px] py-2 text-left"
+              className="flex min-h-[48px] w-full cursor-pointer items-center gap-[10px] px-4 py-2 text-left sm:min-h-[50px] sm:px-5"
             >
               {complete && <CircleCheck className="h-[18px] w-[18px] shrink-0 text-[#0d5c3a]" strokeWidth={2} aria-label="Completed" />}
-              <span className={cn('font-body text-[17px] font-semibold', current ? 'text-brand' : 'text-[#1c0e04]')}>{s.title}</span>
+              <span className={cn('font-body text-[15px] font-semibold leading-[21px] sm:text-[16px] sm:leading-6', current ? 'text-brand' : 'text-[#1c0e04]')}>{s.title}</span>
               <span className="hidden shrink-0 whitespace-nowrap rounded-full border border-[#e3d3bf] bg-[#f3e6d6] px-[9px] py-[2px] text-[11px] font-bold text-[#7a6655] sm:inline">{s.summary}</span>
               <ChevronDown className={cn('ml-auto h-4 w-4 shrink-0 text-[#7a6655] transition-transform', isOpen && 'rotate-180')} aria-hidden="true" />
             </button>
             {isOpen && (
               <ul className="border-t border-[#efe2d0] bg-[#fffdf9] px-[18px] py-2">
                 {s.lessons.map((l) => (
-                  <li key={l.id} className="flex items-center gap-3 py-2 text-[15px] text-[#3d2b1f]">
+                  <li key={l.id} className="flex items-center gap-3 py-2 text-[14px] text-[#3d2b1f] sm:text-[15px]">
                     {l.done ? (
                       <CircleCheck className="h-4 w-4 shrink-0 text-[#0d5c3a]" aria-label="Watched" />
                     ) : l.locked ? (
@@ -68,19 +68,19 @@ function Curriculum({ course, defaultOpen }: { course: CourseDetail; defaultOpen
 
 function InstructorCard({ course }: { course: CourseDetail }) {
   return (
-    <div className="rounded-2xl border-2 border-[#efe2d0] bg-[#fffdf9] px-[23px] pb-[26px] pt-[36px]">
+    <div className="rounded-2xl border-2 border-[#efe2d0] bg-[#fffdf9] px-4 pb-5 pt-5 sm:px-6 sm:pb-6 sm:pt-6">
       <div className="flex items-start gap-[13px]">
-        <PersonAvatar name={course.instructor} src={course.instructorImage} size={64} />
+        <PersonAvatar name={course.instructor} src={course.instructorImage} size={56} />
         <div className="min-w-0">
-          <p className="font-body text-[18px] font-bold leading-6 text-[#1c0e04]">{course.instructor}</p>
-          <p className="mt-[3px] text-[14px] leading-[22px] text-[#7a6655]">{course.instructorTitle}</p>
+          <p className="type-card-title text-[#1c0e04]">{course.instructor}</p>
+          <p className="mt-[2px] text-[13px] leading-5 text-[#7a6655] sm:mt-[3px] sm:text-[14px] sm:leading-[22px]">{course.instructorTitle}</p>
           <div className="mt-[3px] flex items-center gap-1.5">
             <Stars rating={course.instructorRating} className="h-3 w-3" />
             <span className="text-[12px] font-bold text-[#d4920a]">{course.instructorRating.toFixed(1)}</span>
           </div>
         </div>
       </div>
-      {course.instructorBio && <p className="mt-[22px] text-[15px] leading-[25px] text-[#7a6655]">{course.instructorBio}</p>}
+      {course.instructorBio && <p className="mt-4 text-[14px] leading-[22px] text-[#7a6655] sm:mt-[22px] sm:text-[15px] sm:leading-[25px]">{course.instructorBio}</p>}
     </div>
   );
 }
@@ -91,7 +91,8 @@ export function CourseTabs({ course, reviews }: { course: CourseDetail; reviews:
 
   return (
     <div className="w-full pb-16 pt-10">
-      <div className="flex gap-1 overflow-x-auto overflow-y-hidden border-b-2 border-[#efe2d0]" role="tablist" aria-label="Course details">
+      {/* Phones: the four tabs share the width evenly, so the bar never scrolls. */}
+      <div className="grid grid-cols-4 border-b-2 border-[#efe2d0] sm:flex sm:gap-1" role="tablist" aria-label="Course details">
         {TABS.map((t) => (
           <button
             key={t}
@@ -102,7 +103,7 @@ export function CourseTabs({ course, reviews }: { course: CourseDetail; reviews:
             aria-controls={`panel-${t}`}
             onClick={() => setTab(t)}
             className={cn(
-              '-mb-[2px] shrink-0 cursor-pointer border-b-[3px] px-4 pb-3 font-body text-[15px] transition-colors sm:px-5',
+              '-mb-[2px] min-w-0 cursor-pointer truncate border-b-[3px] px-1 pb-3 font-body text-[14px] transition-colors sm:shrink-0 sm:px-5 sm:text-[15px]',
               tab === t ? 'border-brand font-semibold text-brand' : 'border-transparent text-[#7a6655] hover:text-brand'
             )}
           >
@@ -111,13 +112,13 @@ export function CourseTabs({ course, reviews }: { course: CourseDetail; reviews:
         ))}
       </div>
 
-      <div id={`panel-${tab}`} role="tabpanel" aria-labelledby={`tab-${tab}`} className="mt-8">
+      <div id={`panel-${tab}`} role="tabpanel" aria-labelledby={`tab-${tab}`} className="mt-6 sm:mt-8">
         {tab === 'Overview' && (
           <div className="grid gap-10">
             <div>
               {course.outcomes.length > 0 && (
                 <>
-                  <h2 className="font-display text-[20px] font-bold leading-7 text-[#1c0e04]">What you&apos;ll learn</h2>
+                  <h2 className="type-section-title text-[#1c0e04]">What you&apos;ll learn</h2>
                   <ul className="mt-[16px] grid gap-x-[18px] gap-y-[12px] sm:grid-cols-2">
                     {course.outcomes.map((o) => (
                       <li key={o} className="flex items-start gap-[10px] text-base leading-6 text-[#3d2b1f]">
@@ -128,13 +129,14 @@ export function CourseTabs({ course, reviews }: { course: CourseDetail; reviews:
                   </ul>
                 </>
               )}
-              <h2 className="mt-[44px] font-display text-[20px] font-bold leading-7 text-[#1c0e04]">Course Curriculum</h2>
+              {/* Space above only when "What you'll learn" is there to separate it from. */}
+              <h2 className={cn('type-section-title text-[#1c0e04]', course.outcomes.length > 0 && 'mt-10 sm:mt-[44px]')}>Course Curriculum</h2>
               <div className="mt-[16px]">
                 <Curriculum course={course} />
               </div>
             </div>
             <div>
-              <h2 className="font-display text-[20px] font-bold leading-7 text-[#1c0e04]">Your Instructor</h2>
+              <h2 className="type-section-title text-[#1c0e04]">Your Instructor</h2>
               <div className="mt-[16px]">
                 <InstructorCard course={course} />
               </div>
@@ -173,7 +175,7 @@ export function CourseTabs({ course, reviews }: { course: CourseDetail; reviews:
                       <p className="font-semibold text-[#1c0e04]">{r.name}</p>
                       <Stars rating={r.rating} className="h-3 w-3" />
                     </div>
-                    {r.text && <p className="mt-2 text-[15px] leading-6 text-[#7a6655]">{r.text}</p>}
+                    {r.text && <p className="mt-2 text-[14px] leading-[22px] text-[#7a6655] sm:text-[15px] sm:leading-6">{r.text}</p>}
                   </li>
                 ))}
               </ul>

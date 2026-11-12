@@ -33,7 +33,7 @@ export default function PayoutHistoryPage() {
     <main className="mx-auto w-full max-w-[1200px] flex-1 px-4 pb-12 pt-7 sm:px-6 lg:px-10 lg:pt-9">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="font-display text-[26px] font-extrabold text-[#1c0e04]">Payout History</h1>
+          <h1 className="type-page-title text-[#1c0e04]">Payout History</h1>
           <p className="mt-1 font-body text-[15px] text-[#7a6655]">All your payout requests and how they went</p>
         </div>
         <div className="flex flex-wrap gap-3">

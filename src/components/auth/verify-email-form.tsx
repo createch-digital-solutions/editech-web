@@ -128,7 +128,7 @@ export function VerifyEmailForm({
       <div className="w-full max-w-[459px] rounded-2xl border-2 border-[#efe2d0] bg-[#fffdf9] px-[19px] pb-[19px] pt-[19px] text-center sm:px-[19px]">
         <IconCircle icon={Mail} className="h-[72px] w-[72px]" />
 
-        <h1 className="mt-[22px] font-display text-2xl font-extrabold leading-7 text-[#1c0e04]">
+        <h1 className="type-page-title mt-[22px] text-[#1c0e04]">
           Check your inbox
         </h1>
         <p className="mt-[9px] text-sm leading-[23px] text-[#7a6655]">

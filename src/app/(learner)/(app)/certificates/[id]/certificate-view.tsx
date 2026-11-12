@@ -86,7 +86,7 @@ export function CertificateView({ certificate: c }: { certificate: Certificate }
 
       <div className="mt-[34px] grid gap-[27px] text-left md:grid-cols-2">
         <section className="rounded-3xl border-2 border-[#efe2d0] bg-[#fffdf9] px-[30px] pb-[30px] pt-[34px]" aria-labelledby="performance-title">
-          <h2 id="performance-title" className="font-body text-[20px] font-bold leading-7 text-[#1c0e04]">
+          <h2 id="performance-title" className="type-section-title text-[#1c0e04]">
             Your Performance
           </h2>
           <dl className="mt-[17px] space-y-[13px] text-[19px]">
@@ -100,7 +100,7 @@ export function CertificateView({ certificate: c }: { certificate: Certificate }
         </section>
 
         <section className="rounded-3xl border-2 border-[#efe2d0] bg-[#fffdf9] px-[30px] pb-[30px] pt-[34px]" aria-labelledby="unlocked-title">
-          <h2 id="unlocked-title" className="font-body text-[20px] font-bold leading-7 text-[#1c0e04]">
+          <h2 id="unlocked-title" className="type-section-title text-[#1c0e04]">
             Achievements Unlocked <span aria-hidden="true">🏅</span>
           </h2>
           <ul className="mt-[18px] flex flex-wrap gap-[15px]">

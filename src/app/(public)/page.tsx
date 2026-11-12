@@ -12,7 +12,8 @@ import { Footer } from '@/components/landing/footer';
 export default async function HomePage() {
   const popular = await getPopular();
   return (
-    <main className="flex-1 font-body">
+    // Cream behind the sections too, so no hairline of white shows where two cream sections meet.
+    <main className="flex-1 bg-[#fdf6ec] font-body">
       <Navbar />
       <Hero />
       <StripeDivider />

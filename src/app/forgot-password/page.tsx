@@ -87,7 +87,7 @@ export default function ForgotPasswordPage() {
 
         {step === 'email' ? (
           <>
-            <h1 className="mt-[22px] text-center font-display text-2xl font-extrabold leading-7 text-[#1c0e04]">
+            <h1 className="type-page-title mt-[22px] text-center text-[#1c0e04]">
               Forgot your password?
             </h1>
             <p className="mt-[10px] text-center text-sm leading-[23px] text-[#7a6655]">
@@ -122,7 +122,7 @@ export default function ForgotPasswordPage() {
           </>
         ) : (
           <>
-            <h1 className="mt-[22px] text-center font-display text-2xl font-extrabold leading-7 text-[#1c0e04]">
+            <h1 className="type-page-title mt-[22px] text-center text-[#1c0e04]">
               Check your inbox
             </h1>
             <p className="mt-[10px] text-center text-sm leading-[23px] text-[#7a6655]">
