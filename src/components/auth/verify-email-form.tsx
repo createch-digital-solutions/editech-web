@@ -185,14 +185,14 @@ export function VerifyEmailForm({
         </form>
 
         <p className="mt-[20px] text-[13px] leading-5 text-[#7a6655]">
-          Didn&apos;t get it?{' '}
+          Didn&apos;t get it? Check Spam or Promotions, or{' '}
           <button
             type="button"
             onClick={handleResend}
             disabled={isResending}
             className="cursor-pointer font-bold text-brand hover:text-brand-light disabled:cursor-wait disabled:opacity-60"
           >
-            {isResending ? 'Sending...' : 'Resend code'}
+            {isResending ? 'sending...' : 'resend it'}
           </button>{' '}
           &middot; {secondsLeft > 0 ? `expires in ${formatCountdown(secondsLeft)}` : 'code expired'}
         </p>

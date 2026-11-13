@@ -2,8 +2,8 @@
 
 import { FormEvent, useState } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { ArrowRight, Lock } from 'lucide-react';
+import { EnrolButton } from '@/components/learner/enrol-button';
 import { Stars } from '@/components/learner/stars';
 import { useApiClient } from '@/hooks/use-api-client';
 import { formatPrice, type CourseDetail } from '@/lib/learner-data';
@@ -25,8 +25,7 @@ interface CheckoutSession {
 /**
  * Order summary and payment. Pay starts a Paystack transaction (POST /payments/initiate) and sends the
  * learner to Paystack's own page, where they choose card, bank transfer or USSD; card details are
- * never typed into this site.
- * TODO: Enrol in free courses once the API has a free-enrolment endpoint (SCRUM-31).
+ * never typed into this site. A free course enrols at once (POST /learner/courses/:slug/enroll).
  */
 export function CheckoutForm({ course }: { course: CourseDetail }) {
   const api = useApiClient();
@@ -59,7 +58,7 @@ export function CheckoutForm({ course }: { course: CourseDetail }) {
         {isFree ? (
           <>
             <h2 className="type-section-title text-[#1c0e04]">This course is free</h2>
-            <p className="type-body mt-2 text-[#7a6655]">Enrolling in free courses opens soon. You can already watch the free preview lessons.</p>
+            <p className="type-body mt-2 text-[#7a6655]">No payment needed. Enrol and every lesson opens straight away.</p>
           </>
         ) : (
           <>
@@ -90,13 +89,13 @@ export function CheckoutForm({ course }: { course: CourseDetail }) {
         )}
 
         {isFree ? (
-          <Link
-            href={`/learn/${course.slug}`}
+          <EnrolButton
+            slug={course.slug}
             className="mt-5 flex h-12 w-full items-center justify-center gap-1.5 rounded-xl bg-brand-gradient font-body text-[16px] font-bold sm:mt-[22px] lg:h-[69px] lg:text-[22px] text-white shadow-lg shadow-brand/30 transition-opacity hover:opacity-90"
           >
-            Watch the Free Preview
+            Enrol for Free
             <ArrowRight className="h-5 w-5" strokeWidth={2.5} aria-hidden="true" />
-          </Link>
+          </EnrolButton>
         ) : (
           <button
             type="submit"

@@ -3,13 +3,34 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { EnrolButton } from '@/components/learner/enrol-button';
+
+const button =
+  'flex h-11 shrink-0 items-center justify-center rounded-lg bg-brand-gradient px-5 font-body text-[15px] font-bold text-white shadow-md shadow-brand/30 transition-opacity hover:opacity-90';
 
 /**
  * Phones and tablets: the course's price and enrol button in a bar along the bottom of the screen, once the
  * purchase card (the element with id `watch`) has scrolled up out of view, the way desktop keeps its card
  * beside the page. It slides away again when the card comes back.
  */
-export function EnrollBar({ watch, title, price, oldPrice, href, cta }: { watch: string; title: string; price: string; oldPrice?: string; href: string; cta: string }) {
+export function EnrollBar({
+  watch,
+  title,
+  price,
+  oldPrice,
+  href,
+  cta,
+  enrolSlug,
+}: {
+  watch: string;
+  title: string;
+  price: string;
+  oldPrice?: string;
+  href: string;
+  cta: string;
+  /** A free course's slug: the button enrols at once instead of following `href`. */
+  enrolSlug?: string;
+}) {
   const [shown, setShown] = useState(false);
 
   useEffect(() => {
@@ -41,13 +62,17 @@ export function EnrollBar({ watch, title, price, oldPrice, href, cta }: { watch:
               {oldPrice && <span className="text-[13px] text-[#9a8574] line-through">{oldPrice}</span>}
             </p>
           </div>
-          <Link
-            href={href}
-            tabIndex={shown ? undefined : -1}
-            className="flex h-11 shrink-0 items-center justify-center rounded-lg bg-brand-gradient px-5 font-body text-[15px] font-bold text-white shadow-md shadow-brand/30 transition-opacity hover:opacity-90"
-          >
-            {cta}
-          </Link>
+          {enrolSlug ? (
+            <div className="shrink-0">
+              <EnrolButton slug={enrolSlug} tabIndex={shown ? undefined : -1} className={button}>
+                {cta}
+              </EnrolButton>
+            </div>
+          ) : (
+            <Link href={href} tabIndex={shown ? undefined : -1} className={button}>
+              {cta}
+            </Link>
+          )}
         </div>
       </div>
     </>

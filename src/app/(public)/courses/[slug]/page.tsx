@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { BarChart3, CalendarDays, ChevronRight, CircleCheck, Clock, PlayCircle, Star, Users } from 'lucide-react';
 import { DiamondMotif } from '@/components/landing/diamond-motif';
+import { EnrolButton } from '@/components/learner/enrol-button';
 import { PersonAvatar } from '@/components/learner/person-avatar';
 import { Stars } from '@/components/learner/stars';
 import { getCourse, getPreviewVideos, getReviews } from '@/lib/courses-api';
@@ -45,6 +46,10 @@ export default async function CoursePage({ params }: Params) {
   const discount = course.originalPrice && course.originalPrice > course.price ? Math.round((1 - course.price / course.originalPrice) * 100) : 0;
   const enrolHref = course.enrolment ? `/learn/${course.slug}` : `/checkout/${course.slug}`;
   const enrolLabel = course.enrolment ? 'Continue Learning' : course.price === 0 ? 'Enroll for Free' : 'Enroll Now';
+  // A free course enrols in one click, with no checkout step (SCRUM-31).
+  const freeEnrol = !course.enrolment && course.price === 0;
+  const enrolClass =
+    'mt-3 flex h-11 w-full items-center justify-center rounded-lg bg-brand-gradient font-body text-[15px] font-bold text-white shadow-md shadow-brand/30 transition-opacity hover:opacity-90';
 
   return (
     <main className="relative flex-1 overflow-x-clip">
@@ -126,12 +131,15 @@ export default async function CoursePage({ params }: Params) {
                     </p>
                   )}
                 </div>
-                <Link
-                  href={enrolHref}
-                  className="mt-3 flex h-11 items-center justify-center rounded-lg bg-brand-gradient font-body text-[15px] font-bold text-white shadow-md shadow-brand/30 transition-opacity hover:opacity-90"
-                >
-                  {enrolLabel}
-                </Link>
+                {freeEnrol ? (
+                  <EnrolButton slug={course.slug} className={enrolClass}>
+                    {enrolLabel}
+                  </EnrolButton>
+                ) : (
+                  <Link href={enrolHref} className={enrolClass}>
+                    {enrolLabel}
+                  </Link>
+                )}
                 {!course.enrolment && (
                   // Phones and tablets preview from the cover just above; on desktop the cover folds away while scrolling.
                   <PreviewButton className="mt-2 hidden h-11 w-full items-center lg:flex justify-center rounded-lg border border-[#1c0e04] font-body text-[15px] font-bold text-[#1c0e04] transition-colors hover:bg-[#fbf6ef]">
@@ -191,6 +199,7 @@ export default async function CoursePage({ params }: Params) {
         oldPrice={discount > 0 ? formatPrice(course.originalPrice!) : undefined}
         href={enrolHref}
         cta={enrolLabel}
+        enrolSlug={freeEnrol ? course.slug : undefined}
       />
     </main>
   );
