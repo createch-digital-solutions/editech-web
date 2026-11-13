@@ -2,12 +2,14 @@
 
 import Link from 'next/link';
 import { useUser } from '@clerk/nextjs';
-import { ArrowRight, BookOpen, Flame, Sparkles, Trophy, Zap } from 'lucide-react';
+import { ArrowRight, Flame, Sparkles, Trophy, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CourseCard } from '@/components/learner/course-card';
 import { useCurrentUser } from '@/hooks/auth/use-current-user';
 import { bestStreakOf } from '@/types/user';
 import type { CourseSummary } from '@/lib/learner-data';
+import { useMyEnrolments } from '@/hooks/use-my-enrolments';
+import { ContinueLearning } from './continue-learning';
 
 function greeting(hour: number) {
   if (hour < 12) return 'Good morning';
@@ -28,10 +30,9 @@ function StatCard({ icon, tint, value, label, note }: { icon: React.ReactNode; t
 }
 
 /**
- * The learner's home: greeting, streak and XP (GET /auth/me), courses in progress and recommendations.
- * Text and course cards use the catalogue's sizes.
- * TODO: List enrolled courses with progress once the learner module has an enrolments endpoint, and
- * show the rank once gamification has a leaderboard.
+ * The learner's home: greeting, streak and XP (GET /auth/me), their courses (GET /learner/enrolments)
+ * and recommendations. Text and course cards use the catalogue's sizes.
+ * TODO: Show the rank once gamification has a leaderboard.
  */
 export function DashboardView({ recommended }: { recommended: CourseSummary[] }) {
   const { user: clerkUser } = useUser();
@@ -40,6 +41,10 @@ export function DashboardView({ recommended }: { recommended: CourseSummary[] })
   const streak = user?.learnerProfile?.streakDays ?? 0;
   const best = bestStreakOf(user);
   const xp = user?.learnerProfile?.xpTotal ?? 0;
+  // Recommendations leave out the courses the learner is already in.
+  const { data: enrolments } = useMyEnrolments();
+  const enrolled = new Set(enrolments?.map((e) => e.courseId));
+  const suggestions = recommended.filter((c) => !enrolled.has(c.id));
 
   return (
     <main className="mx-auto w-full max-w-[1320px] flex-1 px-4 pb-12 pt-6 sm:px-6 lg:px-10 lg:pb-12 lg:pt-8">
@@ -77,23 +82,9 @@ export function DashboardView({ recommended }: { recommended: CourseSummary[] })
         <StatCard icon={<Trophy className="h-[18px] w-[18px] text-[#1b2b6b]" strokeWidth={2} />} tint="bg-[#ecedf3]" value="—" label="Rank" note="Not ranked yet" />
       </section>
 
-      <section id="continue-learning" className="mt-10 scroll-mt-28" aria-labelledby="continue-title">
-        <h2 id="continue-title" className="type-section-title text-[#1c0e04]">
-          Continue Learning
-        </h2>
-        <div className="mt-[18px] flex flex-col items-center rounded-2xl border-2 border-dashed border-[#e8d5bb] bg-[#fffdf9] px-6 py-10 text-center">
-          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#fbece4] text-brand" aria-hidden="true">
-            <BookOpen className="h-7 w-7" strokeWidth={1.8} />
-          </span>
-          <p className="mt-3 font-display text-[19px] font-bold text-[#1c0e04]">No courses in progress</p>
-          <p className="mt-1 max-w-md text-[15px] leading-6 text-[#7a6655]">Courses you enrol in will show up here so you can pick up where you left off.</p>
-          <Link href="/courses" className="mt-4 text-[15px] font-semibold text-brand hover:text-brand-light">
-            Explore the catalogue →
-          </Link>
-        </div>
-      </section>
+      <ContinueLearning />
 
-      {recommended.length > 0 && (
+      {suggestions.length > 0 && (
         <section className="mt-[40px]" aria-labelledby="recommended-title">
           <h2 id="recommended-title" className="type-section-title flex items-center gap-2 text-[#1c0e04]">
             Recommended for You
@@ -101,7 +92,7 @@ export function DashboardView({ recommended }: { recommended: CourseSummary[] })
           </h2>
           {/* The catalogue card at its catalogue size (capped width), three to a row. */}
           <div className="learner-compact mt-[22px] grid gap-[30px] min-[640px]:grid-cols-[repeat(2,minmax(0,320px))] min-[1180px]:grid-cols-[repeat(3,minmax(0,320px))]">
-            {recommended.slice(0, 3).map((c) => (
+            {suggestions.slice(0, 3).map((c) => (
               <CourseCard key={c.id} course={c} />
             ))}
           </div>

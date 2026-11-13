@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { heroTrianglePattern } from '@/lib/patterns';
 import { DiamondMotif } from '@/components/landing/diamond-motif';
+import { WakeApi } from './wake-api';
 
 interface AuthShellProps {
   leftContent: ReactNode;
@@ -11,6 +12,7 @@ interface AuthShellProps {
 export function AuthShell({ leftContent, children }: AuthShellProps) {
   return (
     <main className="flex min-h-screen flex-col bg-[#fdf6ec] font-body lg:flex-row">
+      <WakeApi />
       <div className="relative flex flex-col overflow-hidden bg-brand-night px-6 pb-10 pt-10 sm:px-10 lg:w-[39.3%] lg:shrink-0 lg:px-0 lg:pb-[55px] lg:pt-0">
         <DiamondMotif className="-left-2 -top-1 h-[55px] w-[55px] opacity-10" />
         {/* Triangle field starts 26px down and fades in from the left, as in the design. */}

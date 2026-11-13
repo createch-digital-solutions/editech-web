@@ -9,6 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ChevronDown, ChevronsLeft, X } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { slugify } from '@/lib/courses-api';
+import { useMyEnrolments } from '@/hooks/use-my-enrolments';
 import { cn } from '@/lib/utils';
 import { Logo } from '@/components/landing/logo';
 
@@ -53,13 +54,21 @@ interface NavItem {
 
 const MAIN: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: DashboardIcon, match: (p) => p === '/dashboard' },
-  // The learner's courses; until enrolments are listed that is the dashboard's Continue Learning section.
+  // The learner's courses: the dashboard's Continue Learning section.
   { href: '/dashboard#continue-learning', label: 'My learning', icon: LearningIcon, match: () => false },
   { href: '/courses', label: 'Explore', icon: ExploreIcon, match: (p) => p.startsWith('/courses') },
   { href: '/dashboard/achievements', label: 'Achievements & XP', icon: AchievementsIcon, match: (p) => p.startsWith('/dashboard/achievements') },
-  // The player needs a course; until enrolments are listed it leads to the learner's courses section.
+  // The player needs a course: useMainItems points this at the latest unfinished one, if there is one.
   { href: '/dashboard#continue-learning', label: 'Course Player', icon: PlayerIcon, match: (p) => p.startsWith('/learn') },
 ];
+
+/** The main menu, with Course Player opening the learner's latest unfinished course (enrolments come newest first). */
+function useMainItems(signedIn: boolean): NavItem[] {
+  const { data: enrolments } = useMyEnrolments({ enabled: signedIn });
+  const current = enrolments?.find((e) => e.status === 'ACTIVE' && e.progressPercentage < 100);
+  if (!current) return MAIN;
+  return MAIN.map((item) => (item.label === 'Course Player' ? { ...item, href: `/learn/${current.course.slug}` } : item));
+}
 
 const ACCOUNT: NavItem[] = [
   { href: '/settings', label: 'Settings', icon: SettingsIcon, match: (p) => p.startsWith('/settings') },
@@ -119,6 +128,7 @@ export function SidebarRail() {
   const { isLoaded, isSignedIn } = useUser();
   const pathname = usePathname();
   const open = useSyncExternalStore(subscribe, readOpen, () => false);
+  const main = useMainItems(!!isSignedIn);
   // The name beside an icon: drawn outside the bar (fixed), so the bar can scroll without cutting it off.
   const [tip, setTip] = useState<{ label: string; top: number; left: number } | null>(null);
   const show = (label: string) => (e: SyntheticEvent<HTMLElement>) => {
@@ -159,12 +169,12 @@ export function SidebarRail() {
               list starts a little way down, not hard against the top bar. */}
           <div onScroll={hide} className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden px-[18px] py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <ul className="mt-4 flex flex-col gap-1">
-              {[...MAIN, ...ACCOUNT].map((item, i) => {
+              {[...main, ...ACCOUNT].map((item, i) => {
                 const active = item.match(pathname);
                 const Icon = item.icon;
                 return (
                   <li key={item.label}>
-                    {i === MAIN.length && <span aria-hidden="true" className={cn('my-1.5 block h-px bg-[#ece1d3]', open ? 'w-full' : 'mx-auto w-6')} />}
+                    {i === main.length && <span aria-hidden="true" className={cn('my-1.5 block h-px bg-[#ece1d3]', open ? 'w-full' : 'mx-auto w-6')} />}
                     <Link
                       href={item.href}
                       aria-current={active ? 'page' : undefined}
@@ -304,6 +314,7 @@ function DrawerExplore({ item, onNavigate }: { item: NavItem; onNavigate: () => 
 export function NavDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { isLoaded, isSignedIn } = useUser();
   const signedOut = isLoaded && !isSignedIn;
+  const main = useMainItems(!!isSignedIn);
 
   useEffect(() => {
     if (!open) return;
@@ -332,7 +343,7 @@ export function NavDrawer({ open, onClose }: { open: boolean; onClose: () => voi
           </button>
         </div>
         <div className="mt-3 space-y-1">
-          {(signedOut ? PUBLIC_ITEMS : MAIN).map((item) =>
+          {(signedOut ? PUBLIC_ITEMS : main).map((item) =>
             item.href === '/courses' ? <DrawerExplore key={item.label} item={item} onNavigate={onClose} /> : <DrawerLink key={item.label} item={item} onNavigate={onClose} />
           )}
           {!signedOut && (

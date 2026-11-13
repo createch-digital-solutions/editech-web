@@ -6,26 +6,30 @@ import { ArrowRight, Award, BookOpen, Flame, Medal, Pencil, Trophy } from 'lucid
 import { cn } from '@/lib/utils';
 import { DiamondMotif } from '@/components/landing/diamond-motif';
 import { LearnerAvatar } from '@/components/learner/app-header';
+import { EnrolmentCard, EnrolmentCardSkeletons } from '@/components/learner/enrolment-card';
 import { useCurrentUser } from '@/hooks/auth/use-current-user';
+import { useMyEnrolments } from '@/hooks/use-my-enrolments';
 import { bestStreakOf } from '@/types/user';
 
 
 /**
- * /profile — who the learner is (Clerk and GET /auth/me), their XP and streak, courses and badges.
- * TODO: List enrolled courses and earned badges once the learner and gamification modules have endpoints.
+ * /profile — who the learner is (Clerk and GET /auth/me), their XP and streak, their courses
+ * (GET /learner/enrolments) and badges.
+ * TODO: List earned badges once the gamification module has endpoints.
  */
 export default function ProfilePage() {
   const { user } = useUser();
   const { user: dbUser } = useCurrentUser();
+  const { data: enrolments, isLoading: coursesLoading } = useMyEnrolments();
   const name = user?.fullName || [dbUser?.firstName, dbUser?.lastName].filter(Boolean).join(' ') || 'Your profile';
   const created = user?.createdAt ?? (dbUser?.createdAt ? new Date(dbUser.createdAt) : null);
   const joined = created?.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
   const xp = dbUser?.learnerProfile?.xpTotal ?? 0;
   const streak = dbUser?.learnerProfile?.streakDays ?? 0;
   const best = bestStreakOf(dbUser);
-  // Enrolled courses, certificates and rank have no endpoint yet, so they show a dash.
+  // Certificates and rank have no endpoint yet; rank shows a dash.
   const stats = [
-    { label: 'Courses Enrolled', value: '—', icon: BookOpen, tint: 'bg-[#fbebe2] text-brand' },
+    { label: 'Courses Enrolled', value: enrolments ? String(enrolments.length) : '—', icon: BookOpen, tint: 'bg-[#fbebe2] text-brand' },
     { label: 'Certificates', value: '0', icon: Award, tint: 'bg-[#fbf3e0] text-[#d4920a]' },
     { label: 'Day Streak', value: String(streak), icon: Flame, tint: 'bg-[#fbebe2] text-brand' },
     { label: 'Global Rank', value: '—', icon: Trophy, tint: 'bg-[#ecedf3] text-[#1b2b6b]' },
@@ -98,14 +102,24 @@ export default function ProfilePage() {
             <h2 id="my-courses-title" className="type-section-title text-[#1c0e04]">
               My Courses
             </h2>
-            <div className="mt-3 flex flex-col items-center rounded-2xl border-2 border-dashed border-[#efe2d0] bg-[#fffdf9] px-5 py-8 text-center sm:mt-[27px] sm:px-6 sm:py-12">
-              <BookOpen className="h-7 w-7 text-brand sm:h-8 sm:w-8" strokeWidth={1.7} aria-hidden="true" />
-              <p className="mt-3 font-display text-[17px] font-bold text-[#1c0e04] sm:text-[21px]">No courses yet</p>
-              <p className="mt-1 max-w-sm text-[14px] text-[#7a6655] sm:text-[17px]">Courses you enrol in will show up here with your progress.</p>
-              <Link href="/courses" className="mt-3 text-[14px] font-semibold text-brand hover:text-brand-light sm:mt-4 sm:text-[17px]">
-                Explore the catalogue →
-              </Link>
-            </div>
+            {coursesLoading ? (
+              <EnrolmentCardSkeletons className="mt-3 grid gap-3 sm:mt-[27px]" />
+            ) : enrolments && enrolments.length > 0 ? (
+              <ul className="mt-3 grid gap-3 sm:mt-[27px]">
+                {enrolments.map((e) => (
+                  <EnrolmentCard key={e.id} enrolment={e} />
+                ))}
+              </ul>
+            ) : (
+              <div className="mt-3 flex flex-col items-center rounded-2xl border-2 border-dashed border-[#efe2d0] bg-[#fffdf9] px-5 py-8 text-center sm:mt-[27px] sm:px-6 sm:py-12">
+                <BookOpen className="h-7 w-7 text-brand sm:h-8 sm:w-8" strokeWidth={1.7} aria-hidden="true" />
+                <p className="mt-3 font-display text-[17px] font-bold text-[#1c0e04] sm:text-[21px]">No courses yet</p>
+                <p className="mt-1 max-w-sm text-[14px] text-[#7a6655] sm:text-[17px]">Courses you enrol in will show up here with your progress.</p>
+                <Link href="/courses" className="mt-3 text-[14px] font-semibold text-brand hover:text-brand-light sm:mt-4 sm:text-[17px]">
+                  Explore the catalogue →
+                </Link>
+              </div>
+            )}
           </section>
 
           <section aria-labelledby="recent-badges-title">
