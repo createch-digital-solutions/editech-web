@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useSignUp, useUser } from '@clerk/nextjs';
 import { Loader2 } from 'lucide-react';
 import { AuthShell } from '@/components/auth/auth-shell';
+import { HomeLink } from '@/components/auth/home-link';
 import { RoleToggle, SignUpRole } from '@/components/auth/role-toggle';
 import { TextField, Divider, SocialButtons, SubmitButton, FormError } from '@/components/auth/form-controls';
 import { VerifyEmailForm } from '@/components/auth/verify-email-form';
@@ -21,19 +22,21 @@ const stats = [
   { value: '4.9★', label: 'Rating' },
 ];
 
-// Sign-up fields sit 8px under their labels and 18px apart (tighter than sign-in).
-const fieldClass = 'mt-2 h-[52px]';
+// Fields are paired two to a row (names, passwords) so the whole form fits one screen.
+const fieldClass = 'h-12 lg:h-[53px]';
 
 function SignUpLeftPanel() {
   return (
-    <div className="lg:pl-[30px] lg:pt-[81px]">
-      <BadgeLogo tone="light" />
+    <div className="pl-[30px] pt-[clamp(24px,calc(50vh-291px),81px)]">
+      <HomeLink className="inline-block">
+        <BadgeLogo tone="light" />
+      </HomeLink>
 
       <span className="mt-[22px] flex h-8 w-full max-w-[346px] items-center rounded-full border border-brand-light/30 bg-brand-light/10 px-4 text-[13px] font-bold tracking-[0.02em] text-[#e8a33d]">
         JOIN 50,000+ LEARNERS
       </span>
 
-      <h1 className="mt-[23px] font-sora text-[36px] font-extrabold leading-[44px] tracking-[-0.02em] text-white sm:text-[47px] sm:leading-[52px]">
+      <h1 className="mt-[23px] font-sora text-[47px] font-extrabold leading-[52px] tracking-[-0.02em] text-white">
         Join
         <br />
         thousands
@@ -43,7 +46,7 @@ function SignUpLeftPanel() {
         that pay.
       </h1>
 
-      <dl className="mt-[43px] hidden grid-cols-[147px_147px] gap-x-3 gap-y-[13px] lg:grid">
+      <dl className="mt-[43px] grid grid-cols-[147px_147px] gap-x-3 gap-y-[13px]">
         {stats.map((stat) => (
           <div key={stat.label} className="flex h-[88px] flex-col justify-center rounded-[10px] bg-white/[0.08] pl-[17px]">
             <dt className="sr-only">{stat.label}</dt>
@@ -74,6 +77,8 @@ function SignUpContent() {
   const [step, setStep] = useState<'form' | 'verify'>('form');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Clerk's bot check can take a minute; after a few seconds say so, so it doesn't look frozen.
+  const [slowCheck, setSlowCheck] = useState(false);
   const [verifyLoadingText, setVerifyLoadingText] = useState('Verifying code...');
   const [isSessionExists, setIsSessionExists] = useState(false);
   const [socialLoading, setSocialLoading] = useState<'google' | 'apple' | null>(null);
@@ -100,6 +105,7 @@ function SignUpContent() {
     }
 
     setIsSubmitting(true);
+    const slowTimer = setTimeout(() => setSlowCheck(true), 8000);
     try {
       const { error: signUpError } = await signUp.password({
         emailAddress: email,
@@ -135,6 +141,9 @@ function SignUpContent() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred during account creation.');
       setIsSubmitting(false);
+    } finally {
+      clearTimeout(slowTimer);
+      setSlowCheck(false);
     }
   }
 
@@ -188,6 +197,8 @@ function SignUpContent() {
     setError(null);
     setIsSessionExists(false);
     setSocialLoading(strategy === 'oauth_google' ? 'google' : 'apple');
+    // The same bot check runs before Google / Apple opens; on success the page leaves, so only a failure clears it.
+    const slowTimer = setTimeout(() => setSlowCheck(true), 8000);
     try {
       try {
         sessionStorage.setItem(POST_AUTH_REDIRECT_KEY, redirectUrl ?? '');
@@ -196,17 +207,23 @@ function SignUpContent() {
       }
       const { error: ssoError } = await signUp.sso({
         strategy,
-        redirectUrl: '/sso-callback',
-        redirectCallbackUrl: '/sso-callback/complete',
+        // Signed in: straight to the last step. Needs another step (e.g. the Google account already has an
+        // account here, so it becomes a sign-in): /sso-callback, where Clerk finishes it.
+        redirectUrl: '/sso-callback/complete',
+        redirectCallbackUrl: '/sso-callback',
         unsafeMetadata: { role },
       });
       if (ssoError) {
         setError(ssoError.longMessage ?? ssoError.message);
         setSocialLoading(null);
+        clearTimeout(slowTimer);
+        setSlowCheck(false);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to start sign-up with that provider.');
       setSocialLoading(null);
+      clearTimeout(slowTimer);
+      setSlowCheck(false);
     }
   }
 
@@ -248,30 +265,30 @@ function SignUpContent() {
 
   return (
     <AuthShell leftContent={<SignUpLeftPanel />}>
-      <div className="w-full max-w-[426px]">
-        <h2 className="type-page-title text-[#1c0e04]">
+      <div className="w-full max-w-[426px] lg:max-w-[460px]">
+        <h2 className="type-page-title text-[#1c0e04] lg:text-[32px] lg:leading-10">
           Create your account
         </h2>
-        <p className="mt-2 text-[17px] leading-6 text-[#7a6655]">
+        <p className="mt-1.5 text-[15px] leading-6 text-[#7a6655] sm:text-[17px]">
           Already have one?{' '}
           <Link href="/sign-in" className="font-semibold text-brand hover:text-brand-light">
             Sign in
           </Link>
         </p>
 
-        <div className="mt-[29px]">
+        <div className="mt-5 sm:mt-6">
           <RoleToggle value={role} onChange={setRole} />
         </div>
 
-        <form onSubmit={handleCreate} className="mt-[25px]">
+        <form onSubmit={handleCreate} className="mt-4 sm:mt-5">
           {error && (
-            <div className="mb-[18px]">
+            <div className="mb-4">
               <FormError message={error} />
             </div>
           )}
 
           {isSessionExists && (
-            <div className="mb-[18px] space-y-3 rounded-xl border border-[#e8d5bb] bg-[#fdeee4] p-4 text-center">
+            <div className="mb-4 space-y-3 rounded-xl border border-[#e8d5bb] bg-[#fdeee4] p-4 text-center">
               <p className="text-sm text-[#7a6655]">
                 Would you like to proceed to your dashboard or sign out of your current session to create a new account?
               </p>
@@ -296,8 +313,8 @@ function SignUpContent() {
             </div>
           )}
 
-          <div className="space-y-[18px]">
-            <div className="grid grid-cols-2 gap-[15px]">
+          <div className="space-y-3.5 sm:space-y-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-[15px]">
               <TextField
                 label="First name"
                 autoComplete="given-name"
@@ -329,44 +346,54 @@ function SignUpContent() {
               className={fieldClass}
             />
 
-            <TextField
-              label="Password"
-              type="password"
-              autoComplete="new-password"
-              placeholder="Min. 8 characters"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={8}
-              className={fieldClass}
-            />
-
-            <TextField
-              label="Confirm password"
-              type="password"
-              autoComplete="new-password"
-              placeholder="Repeat password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              className={fieldClass}
-            />
+            <div className="grid grid-cols-2 gap-3 sm:gap-[15px]">
+              <TextField
+                label="Password"
+                type="password"
+                autoComplete="new-password"
+                placeholder="8+ characters"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={8}
+                className={fieldClass}
+              />
+              <TextField
+                label="Confirm password"
+                type="password"
+                autoComplete="new-password"
+                placeholder="Repeat it"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                className={fieldClass}
+              />
+            </div>
           </div>
+
+          {/* Clerk's bot check shows here when it needs the person to confirm they're human. Without this
+              spot it falls back to an invisible check that can fail and leave sign-up waiting forever. */}
+          <div id="clerk-captcha" className="mt-4 empty:hidden" />
 
           <SubmitButton
             loading={loading}
             loadingText="Creating account..."
             arrow
-            className="mt-[17px] h-[47px] text-[17px]"
+            className="mt-5 h-12 text-[17px] lg:h-[52px]"
           >
             Create Account
           </SubmitButton>
+          {slowCheck && (
+            <p className="mt-2 text-center text-[13px] text-[#7a6655]" role="status">
+              Running a quick security check. This can take up to a minute, please keep this page open.
+            </p>
+          )}
 
-          <div className="mt-5">
+          <div className="mt-4">
             <Divider />
           </div>
 
-          <div className="mt-5">
+          <div className="mt-4">
             <SocialButtons
               disabled={loading || !!socialLoading}
               loadingProvider={socialLoading}
