@@ -1,4 +1,4 @@
-import type { CourseDetailsInput, CourseLevel, LessonType, OutcomeTag } from '@/types/instructor';
+import type { CourseDetailsInput, CourseLevel, CourseOutlineSuggestion, LessonType, OutcomeTag } from '@/types/instructor';
 
 /** The fields of the Details step as typed (price and tags stay text until saved). */
 export interface DetailsForm {
@@ -31,15 +31,36 @@ export interface DraftSection {
   lessons: DraftLesson[];
 }
 
+/** A lesson the AI suggested, waiting for the instructor to keep, rename or drop it. `minutes` is its estimate. */
+export interface OutlineLesson {
+  key: string;
+  title: string;
+  type: LessonType;
+  minutes: number;
+  summary: string;
+  keep: boolean;
+}
+
+/** A suggested section; `createdId` once it exists on the API, so a retry adds to it instead of making another. */
+export interface OutlineSection {
+  key: string;
+  title: string;
+  keep: boolean;
+  createdId?: string;
+  lessons: OutlineLesson[];
+}
+
 /**
  * The course being built. The API has no endpoint to read an instructor's draft back yet, so what has
- * been saved to it is kept here (and in the browser) so a refresh doesn't lose the work.
+ * been saved to it is kept here (and in the browser) so a refresh doesn't lose the work. `outline` is
+ * the AI's suggested curriculum until the instructor adds it or discards it.
  */
 export interface Draft {
   courseId?: string;
   slug?: string;
   details: DetailsForm;
   sections: DraftSection[];
+  outline?: OutlineSection[];
   submitted?: boolean;
 }
 
@@ -82,6 +103,49 @@ export function toCourseInput(d: DetailsForm): CourseDetailsInput {
   };
 }
 
+/** The AI names categories freely ("Backend Development"); this picks the closest one we list, if any. */
+function closestCategory(name: string): string | undefined {
+  const rules: [RegExp, string][] = [
+    [/\b(ai|artificial|machine learning|ml|deep learning|llm|nlp)\b/i, 'AI & Machine Learning'],
+    [/data|analytic|sql|statistic|pandas/i, 'Data Science'],
+    [/devops|cloud|aws|azure|docker|kubernetes|infrastructure/i, 'DevOps & Cloud'],
+    [/design|ui|ux|figma|product design/i, 'UI/UX Design'],
+    [/business|finance|marketing|management|entrepreneur|sales|accounting/i, 'Business & Finance'],
+    [/web|front|back|full.?stack|javascript|typescript|react|node|software|programming|mobile|development/i, 'Web Development'],
+  ];
+  return CATEGORIES.find((c) => c.toLowerCase() === name.toLowerCase()) ?? rules.find(([pattern]) => pattern.test(name))?.[1];
+}
+
+/** The details form filled from an AI suggestion; price, cover image and anything it can't map stay as they were. */
+export function detailsFromSuggestion(s: CourseOutlineSuggestion, current: DetailsForm): DetailsForm {
+  return {
+    ...current,
+    title: s.title,
+    description: s.description,
+    category: closestCategory(s.category) ?? current.category,
+    level: LEVELS.some((l) => l.value === s.level) ? s.level : current.level,
+    outcomeTag: OUTCOMES.some((o) => o.value === s.outcomeTag) ? s.outcomeTag : current.outcomeTag,
+    tags: s.tags.join(', '),
+  };
+}
+
+/** The AI's sections and lessons, all kept to start with, ready for the instructor to review. */
+export function outlineFromSuggestion(s: CourseOutlineSuggestion): OutlineSection[] {
+  return [...s.sections]
+    .sort((a, b) => a.position - b.position)
+    .map((section, i) => ({
+      key: `s${i}`,
+      title: section.title,
+      keep: true,
+      lessons: [...section.lessons]
+        .sort((a, b) => a.position - b.position)
+        .map((l, j) => ({ key: `s${i}l${j}`, title: l.title, type: l.type, minutes: l.estimatedDuration, summary: l.contentSummary, keep: l.type !== 'QUIZ' })),
+    }));
+}
+
+/** Quiz lessons can't be saved until the API has quizzes, so only video and text lessons get added. */
+export const canAdd = (lesson: OutlineLesson) => lesson.type !== 'QUIZ';
+
 const storageKey = (userId: string) => `createch:course-draft:${userId}`;
 
 export function loadDraft(userId: string): Draft {
@@ -90,7 +154,7 @@ export function loadDraft(userId: string): Draft {
     if (saved) {
       const parsed = JSON.parse(saved) as Partial<Draft>;
       const empty = emptyDraft();
-      return { ...empty, ...parsed, details: { ...empty.details, ...parsed.details }, sections: parsed.sections ?? [] };
+      return { ...empty, ...parsed, details: { ...empty.details, ...parsed.details }, sections: parsed.sections ?? [], outline: parsed.outline };
     }
   } catch {
     // Private mode or a damaged entry: start fresh.

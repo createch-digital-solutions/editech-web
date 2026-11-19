@@ -20,6 +20,7 @@ import {
   videoFileDuration,
 } from '@/lib/course-builder-api';
 import type { LessonType } from '@/types/instructor';
+import { OutlineReview } from './ai-outline';
 import {
   formatLength,
   hintClass,
@@ -29,6 +30,7 @@ import {
   secondaryButton,
   type DraftLesson,
   type DraftSection,
+  type OutlineSection,
 } from './draft';
 
 type SectionsUpdate = (
@@ -41,17 +43,21 @@ type Uploads = Record<string, number | 'error'>;
  * Step 2: sections and their lessons (POST /instructor/courses/:id/sections, POST
  * /instructor/sections/:id/lessons). A video lesson takes a link or a file, which goes straight to
  * storage with a progress bar. The API can't edit or remove sections and lessons yet, so they are
- * added only.
+ * added only. An outline drafted with AI waits at the top for review (OutlineReview).
  */
 export function CurriculumStep({
   courseId,
   sections,
+  outline,
+  onOutlineChange,
   onChange,
   onBack,
   onNext,
 }: {
   courseId: string;
   sections: DraftSection[];
+  outline?: OutlineSection[];
+  onOutlineChange: (outline: OutlineSection[] | undefined) => void;
   onChange: SectionsUpdate;
   onBack: () => void;
   onNext: () => void;
@@ -98,6 +104,15 @@ export function CurriculumStep({
           lesson to submit the course.
         </p>
       </div>
+
+      {outline && outline.length > 0 && (
+        <OutlineReview
+          courseId={courseId}
+          outline={outline}
+          onOutlineChange={onOutlineChange}
+          onSectionsChange={onChange}
+        />
+      )}
 
       {sections.map((section, i) => (
         <SectionCard

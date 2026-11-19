@@ -65,6 +65,42 @@ export interface LessonUploadUrl {
   lessonId: string;
 }
 
+/** POST /ai/course-scaffold: what the instructor describes, plus any choices already made. */
+export interface CourseOutlineRequest {
+  /** At least 10 characters. */
+  prompt: string;
+  level?: CourseLevel;
+  outcomeTag?: OutcomeTag;
+  category?: string;
+}
+
+/** A suggested lesson. `estimatedDuration` is in minutes; quiz lessons come with questions. */
+export interface OutlineLessonSuggestion {
+  title: string;
+  type: LessonType;
+  position: number;
+  estimatedDuration: number;
+  contentSummary: string;
+  quizQuestions?: { questionText: string; options: string[]; correctOptionIndex: number; explanation?: string }[];
+}
+
+export interface OutlineSectionSuggestion {
+  title: string;
+  position: number;
+  lessons: OutlineLessonSuggestion[];
+}
+
+/** POST /ai/course-scaffold → a suggested course: its details and its sections of lessons. */
+export interface CourseOutlineSuggestion {
+  title: string;
+  description: string;
+  category: string;
+  level: CourseLevel;
+  outcomeTag: OutcomeTag;
+  tags: string[];
+  sections: OutlineSectionSuggestion[];
+}
+
 /** POST /instructor/courses/:id/submit → the course is now PENDING admin review. */
 export interface SubmittedCourse {
   courseId: string;
