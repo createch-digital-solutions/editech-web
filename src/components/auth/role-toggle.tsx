@@ -27,7 +27,7 @@ export function RoleToggle({ value, onChange }: RoleToggleProps) {
             aria-checked={selected}
             onClick={() => onChange(option.value)}
             className={cn(
-              'flex h-[54px] cursor-pointer items-center justify-center rounded-xl px-2 font-body text-base transition-colors',
+              'flex h-12 cursor-pointer lg:h-[54px] items-center justify-center rounded-xl px-2 font-body text-base transition-colors',
               selected
                 ? 'border-2 border-brand bg-[#fdeee6] font-semibold text-brand'
                 : 'border border-[#e8d5bb] bg-[#fffdf9] font-medium text-[#7a6655] hover:bg-white'

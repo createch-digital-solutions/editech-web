@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useSignIn, useUser } from '@clerk/nextjs';
 import { ArrowRight, Award, Sparkles, Trophy } from 'lucide-react';
 import { AuthShell } from '@/components/auth/auth-shell';
+import { HomeLink } from '@/components/auth/home-link';
 import {
   Checkbox,
   TextField,
@@ -21,33 +22,35 @@ import { getAuthDestination } from '@/lib/auth-redirect';
 
 const perks = [
   { icon: Sparkles, label: 'AI-personalised learning paths' },
-  { icon: Trophy, label: 'Track your XP and\nachievements' },
+  { icon: Trophy, label: 'Track your XP and achievements' },
   { icon: Award, label: 'Earn verifiable certificates' },
 ];
 
 function SignInLeftPanel() {
   return (
-    <div className="lg:pl-[48px] lg:pt-[126px]">
-      <Logo tone="light" size="lg" className="lg:ml-[2px]" />
+    <div className="pl-[48px] pt-[clamp(28px,calc(50vh-260px),126px)]">
+      <HomeLink className="inline-block">
+        <Logo tone="light" size="lg" className="ml-[2px]" />
+      </HomeLink>
 
-      <h1 className="mt-10 font-display text-[36px] font-extrabold leading-[44px] text-white sm:text-[46px] sm:leading-[53px] lg:mt-[75px]">
+      <h1 className="mt-10 font-display text-[46px] font-extrabold leading-[53px] text-white">
         Welcome back,
         <br />
         keep elevating.
       </h1>
-      <p className="mt-[10px] text-[17px] leading-[30px] text-white/85">
+      <p className="mt-4 text-[17px] leading-[26px] text-white/85">
         Your AI coach Aria has been
         <br />
         keeping your path warm.
       </p>
 
-      <ul className="mt-[49px] hidden space-y-[21px] lg:block">
+      <ul className="mt-9 space-y-4">
         {perks.map((perk) => (
           <li key={perk.label} className="flex items-center gap-4">
             <span className="flex h-[37px] w-[37px] shrink-0 items-center justify-center rounded-lg bg-white/10 text-brand-light">
               <perk.icon className="h-[18px] w-[18px]" strokeWidth={1.8} aria-hidden="true" />
             </span>
-            <span className="whitespace-pre-line text-[16.5px] leading-[25px] text-white/90">{perk.label}</span>
+            <span className="text-[16.5px] leading-[25px] text-white/90">{perk.label}</span>
           </li>
         ))}
       </ul>
@@ -211,8 +214,10 @@ function SignInContent() {
       }
       const { error: ssoError } = await signIn.sso({
         strategy,
-        redirectUrl: '/sso-callback',
-        redirectCallbackUrl: '/sso-callback/complete',
+        // Signed in: straight to the last step. Needs another step (e.g. no account yet, so it becomes a
+        // sign-up): /sso-callback, where Clerk finishes it.
+        redirectUrl: '/sso-callback/complete',
+        redirectCallbackUrl: '/sso-callback',
       });
       if (ssoError) {
         setError(ssoError.longMessage ?? ssoError.message);
@@ -242,11 +247,11 @@ function SignInContent() {
 
   return (
     <AuthShell leftContent={<SignInLeftPanel />}>
-      <div className="w-full max-w-[404px]">
-        <h2 className="type-page-title text-[#1c0e04]">
+      <div className="w-full max-w-[404px] lg:max-w-[440px]">
+        <h2 className="type-page-title text-[#1c0e04] lg:text-[32px] lg:leading-10">
           Sign in to your account
         </h2>
-        <p className="mt-[10px] text-[17px] leading-6 text-[#7a6655]">
+        <p className="mt-1.5 text-[15px] leading-6 text-[#7a6655] sm:text-[17px]">
           No account yet?{' '}
           <Link
             href="/sign-up"
@@ -257,7 +262,7 @@ function SignInContent() {
           </Link>
         </p>
 
-        <form onSubmit={handleSubmit} className="mt-10">
+        <form onSubmit={handleSubmit} className="mt-6 sm:mt-8">
           {error && (
             <div className="mb-5">
               <FormError message={error} />
@@ -322,7 +327,7 @@ function SignInContent() {
             </Link>
           </div>
 
-          <SubmitButton loading={loading} loadingText="Signing in..." arrow className="mt-[19px]">
+          <SubmitButton loading={loading} loadingText="Signing in..." arrow className="mt-[19px] lg:h-[52px] lg:text-[17px]">
             Sign In
           </SubmitButton>
 
