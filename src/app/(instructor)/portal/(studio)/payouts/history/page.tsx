@@ -34,7 +34,7 @@ export default function PayoutHistoryPage() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="type-page-title text-[#1c0e04]">Payout History</h1>
-          <p className="mt-1 font-body text-[15px] text-[#7a6655]">All your payout requests and how they went</p>
+          <p className="mt-1 font-body text-[15px] text-[#7a6655]">All completed and failed payouts</p>
         </div>
         <div className="flex flex-wrap gap-3">
           <button
