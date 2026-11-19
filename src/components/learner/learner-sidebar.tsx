@@ -9,6 +9,8 @@ import { useQuery } from '@tanstack/react-query';
 import { ChevronDown, ChevronsLeft, X } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { slugify } from '@/lib/courses-api';
+import { getRoleDashboard } from '@/lib/auth-redirect';
+import { useRole } from '@/hooks/auth/use-role';
 import { useMyEnrolments } from '@/hooks/use-my-enrolments';
 import { cn } from '@/lib/utils';
 import { Logo } from '@/components/landing/logo';
@@ -313,6 +315,7 @@ function DrawerExplore({ item, onNavigate }: { item: NavItem; onNavigate: () => 
 /** The same menu sliding in from the right, opened by the menu button at the right of the top bar (below desktop width). */
 export function NavDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { isLoaded, isSignedIn } = useUser();
+  const { role } = useRole();
   const signedOut = isLoaded && !isSignedIn;
   const main = useMainItems(!!isSignedIn);
 
@@ -335,7 +338,7 @@ export function NavDrawer({ open, onClose }: { open: boolean; onClose: () => voi
       <div className="absolute inset-0 bg-[#1c0e04]/40" onClick={onClose} aria-hidden="true" />
       <nav aria-label="Learner" className="absolute inset-y-0 right-0 flex w-[290px] max-w-[85vw] flex-col overflow-y-auto bg-[#fffdf9] px-4 pb-6 shadow-2xl">
         <div className="flex h-16 shrink-0 items-center justify-between">
-          <Link href={isSignedIn ? '/dashboard' : '/'} onClick={onClose} aria-label="Createch Elevate home">
+          <Link href={isSignedIn ? getRoleDashboard(role) : '/'} onClick={onClose} aria-label="Createch Elevate home">
             <Logo size="md" />
           </Link>
           <button type="button" onClick={onClose} aria-label="Close menu" className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-[#3d2b1f] hover:bg-[#fdf1e7]">

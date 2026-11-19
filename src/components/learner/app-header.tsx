@@ -6,6 +6,8 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
 import { Bell, Menu, Search, UserRound, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getRoleDashboard } from '@/lib/auth-redirect';
+import { useRole } from '@/hooks/auth/use-role';
 import { Logo } from '@/components/landing/logo';
 import { AccountMenu } from './account-menu';
 import { hasOwnSidebar, NavDrawer } from './learner-sidebar';
@@ -101,6 +103,9 @@ function HeaderSearch({ className, autoFocus }: { className?: string; autoFocus?
  */
 export function AppHeader() {
   const { isLoaded, isSignedIn } = useUser();
+  const { role } = useRole();
+  // Each person's own home: the learner dashboard, the instructor studio or the admin portal.
+  const home = isSignedIn ? getRoleDashboard(role) : '/';
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   // Phones: the search icon opens a search row under the bar.
@@ -113,7 +118,7 @@ export function AppHeader() {
           them; when space runs short the search shrinks rather than covering the links. */}
       <div className="grid h-16 grid-cols-[1fr_auto] items-center gap-3 px-4 sm:px-6 md:grid-cols-[minmax(max-content,1fr)_minmax(0,600px)_minmax(max-content,1fr)] lg:gap-6 lg:px-8">
         <div className="flex min-w-0 items-center gap-3">
-          <Link href={isSignedIn ? '/dashboard' : '/'} aria-label="Createch Elevate home" className="shrink-0">
+          <Link href={home} aria-label="Createch Elevate home" className="shrink-0">
             <AppLogo />
           </Link>
           {isSignedIn && hasOwnSidebar(pathname) && (
@@ -123,7 +128,7 @@ export function AppHeader() {
                 return (
                   <Link
                     key={l.href}
-                    href={l.href}
+                    href={l.href === '/dashboard' ? home : l.href}
                     aria-current={active ? 'page' : undefined}
                     className={cn(
                       'flex h-10 items-center rounded-full px-4 font-body text-[15px] font-semibold transition-colors',
