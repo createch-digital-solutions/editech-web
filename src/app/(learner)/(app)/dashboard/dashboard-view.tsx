@@ -8,6 +8,7 @@ import { CourseCard } from '@/components/learner/course-card';
 import { useCurrentUser } from '@/hooks/auth/use-current-user';
 import { bestStreakOf } from '@/types/user';
 import type { CourseSummary } from '@/lib/learner-data';
+import { hasPreferences, preferenceSummary, recommendFor } from '@/lib/recommendations';
 import { useMyEnrolments } from '@/hooks/use-my-enrolments';
 import { ContinueLearning } from './continue-learning';
 
@@ -31,10 +32,11 @@ function StatCard({ icon, tint, value, label, note }: { icon: React.ReactNode; t
 
 /**
  * The learner's home: greeting, streak and XP (GET /auth/me), their courses (GET /learner/enrolments)
- * and recommendations. Text and course cards use the catalogue's sizes.
+ * and recommendations: the catalogue ranked by the topics, goals and level picked in onboarding, or the
+ * featured courses for a learner who hasn't picked any. Text and course cards use the catalogue's sizes.
  * TODO: Show the rank once gamification has a leaderboard.
  */
-export function DashboardView({ recommended }: { recommended: CourseSummary[] }) {
+export function DashboardView({ recommended, catalogue = [] }: { recommended: CourseSummary[]; catalogue?: CourseSummary[] }) {
   const { user: clerkUser } = useUser();
   const { user } = useCurrentUser();
   const firstName = user?.firstName || clerkUser?.firstName || '';
@@ -44,7 +46,10 @@ export function DashboardView({ recommended }: { recommended: CourseSummary[] })
   // Recommendations leave out the courses the learner is already in.
   const { data: enrolments } = useMyEnrolments();
   const enrolled = new Set(enrolments?.map((e) => e.courseId));
-  const suggestions = recommended.filter((c) => !enrolled.has(c.id));
+  const prefs = user?.learnerProfile;
+  const personalised = hasPreferences(prefs) && catalogue.length > 0;
+  const suggestions = personalised ? recommendFor(catalogue, prefs, enrolled) : recommended.filter((c) => !enrolled.has(c.id));
+  const basedOn = personalised ? preferenceSummary(prefs) : null;
 
   return (
     <main className="mx-auto w-full max-w-[1320px] flex-1 px-4 pb-12 pt-6 sm:px-6 lg:px-10 lg:pb-12 lg:pt-8">
@@ -90,6 +95,7 @@ export function DashboardView({ recommended }: { recommended: CourseSummary[] })
             Recommended for You
             <Sparkles className="h-5 w-5 text-[#d4920a]" aria-hidden="true" />
           </h2>
+          {basedOn && <p className="type-small mt-1 text-[#7a6655]">{basedOn}</p>}
           {/* The catalogue card at its catalogue size (capped width), three to a row. */}
           <div className="learner-compact mt-[22px] grid gap-[30px] min-[640px]:grid-cols-[repeat(2,minmax(0,320px))] min-[1180px]:grid-cols-[repeat(3,minmax(0,320px))]">
             {suggestions.slice(0, 3).map((c) => (
