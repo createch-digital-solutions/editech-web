@@ -103,12 +103,15 @@ function Builder({ userId }: { userId: string }) {
               setDraft((d) => ({ ...d, ...saved }));
               setStep('curriculum');
             }}
+            onOutline={(outline) => setDraft((d) => ({ ...d, outline }))}
           />
         )}
         {step === 'curriculum' && draft.courseId && (
           <CurriculumStep
             courseId={draft.courseId}
             sections={draft.sections}
+            outline={draft.outline}
+            onOutlineChange={(outline) => setDraft((d) => ({ ...d, outline }))}
             onChange={(update) => setDraft((d) => ({ ...d, sections: update(d.sections) }))}
             onBack={() => setStep('details')}
             onNext={() => setStep('review')}

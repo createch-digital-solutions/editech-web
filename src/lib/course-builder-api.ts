@@ -1,6 +1,8 @@
 import { ApiClientError, apiClient } from '@/lib/api-client';
 import type {
   CourseDetailsInput,
+  CourseOutlineRequest,
+  CourseOutlineSuggestion,
   CreatedCourse,
   CreatedLesson,
   CreatedSection,
@@ -16,6 +18,8 @@ export const courseBuilderApi = {
   addSection: (courseId: string, title: string) => apiClient.post<CreatedSection>(`/instructor/courses/${courseId}/sections`, { title }),
   addLesson: (sectionId: string, lesson: LessonInput) => apiClient.post<CreatedLesson>(`/instructor/sections/${sectionId}/lessons`, lesson),
   submitCourse: (courseId: string) => apiClient.post<SubmittedCourse>(`/instructor/courses/${courseId}/submit`),
+  /** Asks the AI for a course outline from a description; takes 10–30 seconds. */
+  generateOutline: (input: CourseOutlineRequest) => apiClient.post<CourseOutlineSuggestion>('/ai/course-scaffold', input),
 };
 
 /**
@@ -75,6 +79,7 @@ export function builderErrorText(err: unknown): string {
       case 'FORBIDDEN':
         return "You don't have permission to change this course.";
     }
+    if (err.status === 429) return "You've asked the AI for a lot just now. Wait a minute, then try again.";
     if (err.status === 401) return 'Your session has ended. Please sign in again.';
     if (err.status >= 500) return 'Our server had a problem. Please try again in a moment.';
     return err.message;
