@@ -1,77 +1,60 @@
 'use client';
 
-import Link from 'next/link';
+import { CircleCheck, Clock, Mail, Sparkles } from 'lucide-react';
 import { useCurrentUser } from '@/hooks/auth/use-current-user';
-import { useSignOut } from '@/hooks/auth';
-import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Clock, ShieldCheck, AlertCircle } from 'lucide-react';
+import { ApplicationHeader } from '@/components/instructor/application-header';
+
+const STEPS = [
+  { icon: CircleCheck, title: 'Application sent', note: 'Done', tint: 'bg-[#e6f0ea] text-[#0d5c3a]' },
+  { icon: Clock, title: 'Our team reviews it', note: 'Usually within 24–48 hours', tint: 'bg-[#fdf5e1] text-[#a86f00]' },
+  { icon: Mail, title: 'You get an email', note: 'Once your account has been reviewed', tint: 'bg-[#ecedf3] text-[#1e2a78]' },
+  { icon: Sparkles, title: 'Your studio opens', note: 'Create courses, upload videos and get paid', tint: 'bg-[#fbebe2] text-brand' },
+];
 
 /**
  * /portal/pending-approval — shown while an instructor's application (sent from /portal/onboarding)
- * waits for an administrator's review (profileStatus PENDING_APPROVAL).
+ * waits for an administrator's review (profileStatus PENDING_APPROVAL). Always light, like the rest of
+ * the site.
  */
 export default function InstructorPendingApprovalPage() {
   const { user } = useCurrentUser();
-  const { signOut } = useSignOut();
-
-  const status = user?.instructorProfile?.status ?? 'PENDING';
+  const name = user?.firstName || user?.email;
 
   return (
-    <div className="flex-1 p-8 max-w-3xl mx-auto w-full space-y-8">
-      <div className="flex items-center justify-between border-b pb-6 border-gray-200 dark:border-gray-800">
-        <div>
-          <h1 className="type-page-title">Application Under Review</h1>
-          <p className="text-gray-500 text-sm">
-            Thanks for applying — an administrator will review your instructor profile shortly.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Link href="/">
-            <Button variant="outline">Home</Button>
-          </Link>
-          <Button variant="outline" onClick={() => signOut()}>
-            Sign Out
-          </Button>
+    <main className="flex min-h-screen flex-col bg-[#fdf6ec] font-body">
+      <ApplicationHeader />
+      <div className="flex flex-1 justify-center px-4 pb-12 pt-4 sm:px-6 sm:pt-8">
+        <div className="w-full max-w-[600px]">
+          <section className="rounded-2xl border border-[#efe2d0] bg-[#fffdf9] p-6 text-center shadow-sm sm:p-10" aria-labelledby="review-title">
+            <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#fdf5e1] text-[#d4920a]" aria-hidden="true">
+              <Clock className="h-8 w-8" strokeWidth={1.8} />
+            </span>
+            <h1 id="review-title" className="type-page-title mt-5 text-[#1c0e04]">
+              Your application is under review
+            </h1>
+            <p className="type-body mx-auto mt-2 max-w-[440px] text-[#7a6655]">
+              Thanks for applying{name ? `, ${name}` : ''}! Our team checks every instructor before their courses go live, to keep Createch Elevate&apos;s quality high.
+            </p>
+            <span className="mt-4 inline-flex rounded-full border border-[#d4920a]/25 bg-[#fdf5e1] px-3 py-1 font-body text-[13px] font-bold text-[#a86f00]">
+              Waiting for review
+            </span>
+
+            <ol className="mt-8 space-y-4 text-left">
+              {STEPS.map((s) => (
+                <li key={s.title} className="flex items-center gap-4">
+                  <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${s.tint}`} aria-hidden="true">
+                    <s.icon className="h-5 w-5" strokeWidth={1.9} />
+                  </span>
+                  <span>
+                    <span className="type-card-title block text-[#1c0e04]">{s.title}</span>
+                    <span className="type-small block text-[#7a6655]">{s.note}</span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </section>
         </div>
       </div>
-
-      <Card className="border-amber-500/20 bg-amber-50/50 dark:bg-amber-950/10">
-        <CardHeader className="flex flex-row items-center gap-4">
-          <div className="rounded-full bg-amber-100 p-3 text-amber-600 dark:bg-amber-900/30">
-            <Clock className="h-6 w-6" />
-          </div>
-          <div>
-            <CardTitle>Profile Under Verification ({status})</CardTitle>
-            <CardDescription>
-              Your instructor profile has been registered and is pending verification.
-            </CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Welcome, <strong>{user?.firstName || user?.email}</strong>! You are registered on the instructor track.
-            Before you can create, publish, or monetize courses on Editech, our administrators verify each instructor to maintain platform quality.
-          </p>
-
-          <div className="rounded-lg border p-4 bg-background space-y-2">
-            <h4 className="font-semibold text-sm flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-primary" />
-              What to expect:
-            </h4>
-            <ul className="text-sm text-gray-500 space-y-1 list-disc list-inside">
-              <li>Profile review takes approximately 24-48 business hours.</li>
-              <li>You will receive an email confirmation once your account has been reviewed.</li>
-              <li>Once verified, your full course creation suite and studio tools will be unlocked.</li>
-            </ul>
-          </div>
-
-          <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2">
-            <AlertCircle className="h-4 w-4" />
-            <span>Need to update your application details? Contact support@editech.example.com</span>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    </main>
   );
 }
