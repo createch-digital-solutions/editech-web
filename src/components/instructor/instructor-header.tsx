@@ -22,8 +22,8 @@ function activeLabel(pathname: string) {
   return 'Dashboard';
 }
 
-/** Avatar that opens a one-item menu to sign out (the studio has no profile or settings page yet). */
-function AccountMenu() {
+/** Avatar that opens a one-item menu to sign out (the studio and admin portal have no profile page yet). */
+export function AccountMenu() {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const { signOut } = useSignOut();
