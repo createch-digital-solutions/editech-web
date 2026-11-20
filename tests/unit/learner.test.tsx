@@ -12,9 +12,11 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
 }));
 
+// What the learner picked in onboarding; empty unless a test sets it.
+let picks: { interests?: string[]; skillLevel?: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED'; careerGoal?: string } = {};
 vi.mock('@/hooks/auth/use-current-user', () => ({
   useCurrentUser: () => ({
-    user: { firstName: 'Ngozi', learnerProfile: { xpTotal: 1250, streakDays: 3, longestStreak: 9 } },
+    user: { firstName: 'Ngozi', learnerProfile: { xpTotal: 1250, streakDays: 3, longestStreak: 9, ...picks } },
     isLoading: false,
     isSignedIn: true,
   }),
@@ -94,6 +96,23 @@ describe('Learner Route Group — Dashboard', () => {
     expect(screen.getByRole('link', { name: /Explore the catalogue/ })).toHaveAttribute('href', '/courses');
     expect(screen.queryByRole('heading', { name: 'Recommended for You' })).not.toBeInTheDocument();
     expect(screen.queryByText('Ask Aria')).not.toBeInTheDocument();
+  });
+
+  it('recommends from the catalogue by the topics and level picked in onboarding', async () => {
+    picks = { interests: ['UI/UX Design'], skillLevel: 'BEGINNER' };
+    vi.mocked(enrolmentsApi.mine).mockResolvedValue([]);
+    const design = { ...course, id: 'c3', slug: 'design-basics', title: 'Design Basics', category: 'ui-ux-design', level: 'BEGINNER' as const };
+    const node = { ...course, id: 'c4', slug: 'node-advanced', title: 'Advanced Node', category: 'web-development', level: 'ADVANCED' as const };
+    render(
+      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+        <DashboardView recommended={[course]} catalogue={[node, course, design]} />
+      </QueryClientProvider>
+    );
+    expect(await screen.findByText('Based on your interest in UI/UX Design · Beginner')).toBeInTheDocument();
+    const titles = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
+    expect(titles[0]).toBe('Design Basics');
+    expect(titles.at(-1)).toBe('Advanced Node');
+    picks = {};
   });
 });
 
